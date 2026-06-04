@@ -7,8 +7,10 @@ import com.greenlink.common.util.PageResult;
 import com.greenlink.glmember.domain.MemberAccount;
 import com.greenlink.glmember.domain.MemberUnit;
 import com.greenlink.glmember.domain.RbacAccountRole;
+import com.greenlink.glmember.dto.request.AuditMemberRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
+import com.greenlink.glmember.dto.response.AdminAccountVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
@@ -297,6 +299,63 @@ public class MemberServiceImpl implements MemberService {
             throw new BizException(ResultCode.SMS_CODE_INVALID, "短信验证码错误或已过期");
         }
         redisTemplate.delete(key);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void auditMember(Long memberId, AuditMemberRequest request, Long auditorId) {
+        MemberUnit unit = memberUnitMapper.selectById(memberId);
+        if (unit == null) {
+            throw new BizException(ResultCode.MEMBER_NOT_FOUND);
+        }
+        if (unit.getStatus() != STATUS_PENDING) {
+            throw new BizException(ResultCode.PARAM_ERROR, "该会员不在待审核状态，无法审核");
+        }
+        int newStatus = "APPROVE".equals(request.getAction()) ? STATUS_ACTIVE : 0;
+        unit.setStatus(newStatus);
+        if (newStatus == STATUS_ACTIVE && unit.getJoinDate() == null) {
+            unit.setJoinDate(java.time.LocalDate.now());
+        }
+        unit.setUpdatedAt(LocalDateTime.now());
+        memberUnitMapper.updateById(unit);
+        log.info("会员审核完成: memberId={}, action={}, auditorId={}, remark={}",
+                memberId, request.getAction(), auditorId, request.getRemark());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateMemberStatus(Long memberId, int status) {
+        MemberUnit unit = memberUnitMapper.selectById(memberId);
+        if (unit == null) {
+            throw new BizException(ResultCode.MEMBER_NOT_FOUND);
+        }
+        unit.setStatus(status);
+        unit.setUpdatedAt(LocalDateTime.now());
+        memberUnitMapper.updateById(unit);
+        log.info("管理端更新会员状态: memberId={}, status={}", memberId, status);
+    }
+
+    @Override
+    public PageResult<AdminAccountVO> listAllAccounts(int page, int size,
+                                                      Long memberId, Integer status, String keyword) {
+        var iPage = accountMapper.pageAllAccounts(new Page<>(page, size), memberId, status, keyword);
+        List<AdminAccountVO> records = iPage.getRecords().stream().map(acc -> {
+            MemberUnit unit = memberUnitMapper.selectById(acc.getMemberId());
+            return AdminAccountVO.builder()
+                    .id(acc.getId())
+                    .memberId(acc.getMemberId())
+                    .memberName(unit != null ? unit.getName() : null)
+                    .parentId(acc.getParentId())
+                    .username(acc.getUsername())
+                    .realName(acc.getRealName())
+                    .phone(MaskUtil.maskPhone(acc.getPhone()))
+                    .status(acc.getStatus())
+                    .roles(rbacRoleMapper.findRoleCodesByAccountId(acc.getId()))
+                    .lastLoginAt(acc.getLastLoginAt())
+                    .createdAt(acc.getCreatedAt())
+                    .build();
+        }).collect(Collectors.toList());
+        return PageResult.of(records, iPage.getTotal(), page, size);
     }
 
     private void checkUpdatePermission(Long memberId, Long requestingAccountId, String roles) {

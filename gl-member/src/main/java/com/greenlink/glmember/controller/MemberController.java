@@ -2,8 +2,11 @@ package com.greenlink.glmember.controller;
 
 import com.greenlink.common.result.Result;
 import com.greenlink.common.util.PageResult;
+import com.greenlink.glmember.dto.request.AuditMemberRequest;
+import com.greenlink.glmember.dto.request.MemberStatusRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
+import com.greenlink.glmember.dto.response.AdminAccountVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
@@ -65,6 +68,57 @@ public class MemberController {
         String roles = request.getHeader("X-Roles");
         memberService.updateMember(memberId, req, accountId, roles);
         return Result.ok();
+    }
+
+    /** 审核会员（AUDITOR / SUPER_ADMIN） */
+    @PostMapping("/{memberId}/audit")
+    public Result<Void> auditMember(@PathVariable Long memberId,
+                                    @Valid @RequestBody AuditMemberRequest req,
+                                    HttpServletRequest request) {
+        requireAuditor(request);
+        Long auditorId = extractAccountId(request);
+        memberService.auditMember(memberId, req, auditorId);
+        return Result.ok();
+    }
+
+    /** 管理员强制修改会员状态（SUPER_ADMIN） */
+    @PatchMapping("/{memberId}/status")
+    public Result<Void> updateMemberStatus(@PathVariable Long memberId,
+                                           @Valid @RequestBody MemberStatusRequest req,
+                                           HttpServletRequest request) {
+        requireSuperAdmin(request);
+        memberService.updateMemberStatus(memberId, req.getStatus());
+        return Result.ok();
+    }
+
+    /** 管理端账号列表（SUPER_ADMIN / AUDITOR） */
+    @GetMapping("/accounts")
+    public Result<PageResult<AdminAccountVO>> listAllAccounts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Long memberId,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest request) {
+        requireAuditor(request);
+        return Result.ok(memberService.listAllAccounts(page, size, memberId, status, keyword));
+    }
+
+    private void requireAuditor(HttpServletRequest request) {
+        String roles = request.getHeader("X-Roles");
+        if (roles == null || (!roles.contains("SUPER_ADMIN") && !roles.contains("AUDITOR")
+                && !roles.contains("CONTENT_ADMIN") && !roles.contains("FINANCE"))) {
+            throw new com.greenlink.common.exception.BizException(
+                    com.greenlink.common.result.ResultCode.FORBIDDEN);
+        }
+    }
+
+    private void requireSuperAdmin(HttpServletRequest request) {
+        String roles = request.getHeader("X-Roles");
+        if (roles == null || !roles.contains("SUPER_ADMIN")) {
+            throw new com.greenlink.common.exception.BizException(
+                    com.greenlink.common.result.ResultCode.FORBIDDEN);
+        }
     }
 
     private Long extractAccountId(HttpServletRequest request) {

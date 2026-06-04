@@ -1,8 +1,10 @@
 package com.greenlink.glmember.service;
 
 import com.greenlink.common.util.PageResult;
+import com.greenlink.glmember.dto.request.AuditMemberRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
+import com.greenlink.glmember.dto.response.AdminAccountVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
@@ -22,4 +24,11 @@ public interface MemberService {
                       Long requestingAccountId, String roles);
 
     MemberMeVO getMe(Long accountId);
+
+    void auditMember(Long memberId, AuditMemberRequest request, Long auditorId);
+
+    void updateMemberStatus(Long memberId, int status);
+
+    PageResult<AdminAccountVO> listAllAccounts(int page, int size,
+                                               Long memberId, Integer status, String keyword);
 }

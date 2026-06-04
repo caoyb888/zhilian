@@ -4,6 +4,7 @@ import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
 import com.greenlink.glmember.domain.MemberAccount;
 import com.greenlink.glmember.domain.MemberUnit;
+import com.greenlink.glmember.dto.request.AuditMemberRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.response.RegisterResponse;
 import com.greenlink.glmember.repository.MemberAccountMapper;
@@ -120,6 +121,85 @@ class MemberServiceTest {
         assertThat(resp.getMemberId()).isEqualTo(100L);
         assertThat(resp.getAccountId()).isEqualTo(200L);
         assertThat(resp.getMemberStatus()).isEqualTo(2);
+    }
+
+    @Test
+    void auditMember_approve_success() {
+        MemberUnit pending = buildPendingUnit();
+        when(memberUnitMapper.selectById(10L)).thenReturn(pending);
+        when(memberUnitMapper.updateById(any(MemberUnit.class))).thenReturn(1);
+
+        AuditMemberRequest req = new AuditMemberRequest();
+        req.setAction("APPROVE");
+        req.setRemark("资质齐全，审核通过");
+
+        memberService.auditMember(10L, req, 1L);
+
+        assertThat(pending.getStatus()).isEqualTo(1);
+        assertThat(pending.getJoinDate()).isNotNull();
+        verify(memberUnitMapper).updateById(pending);
+    }
+
+    @Test
+    void auditMember_reject_setsStatusDisabled() {
+        MemberUnit pending = buildPendingUnit();
+        when(memberUnitMapper.selectById(10L)).thenReturn(pending);
+        when(memberUnitMapper.updateById(any(MemberUnit.class))).thenReturn(1);
+
+        AuditMemberRequest req = new AuditMemberRequest();
+        req.setAction("REJECT");
+        req.setRemark("材料不完整");
+
+        memberService.auditMember(10L, req, 1L);
+
+        assertThat(pending.getStatus()).isEqualTo(0);
+    }
+
+    @Test
+    void auditMember_notPending_throws() {
+        MemberUnit active = buildPendingUnit();
+        active.setStatus(1);
+        when(memberUnitMapper.selectById(10L)).thenReturn(active);
+
+        AuditMemberRequest req = new AuditMemberRequest();
+        req.setAction("APPROVE");
+
+        assertThatThrownBy(() -> memberService.auditMember(10L, req, 1L))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不在待审核状态");
+    }
+
+    @Test
+    void auditMember_memberNotFound_throws() {
+        when(memberUnitMapper.selectById(999L)).thenReturn(null);
+
+        AuditMemberRequest req = new AuditMemberRequest();
+        req.setAction("APPROVE");
+
+        assertThatThrownBy(() -> memberService.auditMember(999L, req, 1L))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void updateMemberStatus_success() {
+        MemberUnit unit = buildPendingUnit();
+        unit.setStatus(1);
+        when(memberUnitMapper.selectById(10L)).thenReturn(unit);
+        when(memberUnitMapper.updateById(any(MemberUnit.class))).thenReturn(1);
+
+        memberService.updateMemberStatus(10L, 0);
+
+        assertThat(unit.getStatus()).isEqualTo(0);
+        verify(memberUnitMapper).updateById(unit);
+    }
+
+    private MemberUnit buildPendingUnit() {
+        MemberUnit u = new MemberUnit();
+        u.setId(10L);
+        u.setName("测试公司");
+        u.setStatus(2);
+        u.setIsDeleted(0);
+        return u;
     }
 
     private RegisterRequest buildRegisterRequest() {
