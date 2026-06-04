@@ -31,6 +31,12 @@ spring:
   elasticsearch:
     uris: ${ES_URIS:http://10.30.10.49:9200}
 
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESERVER:10.30.10.49:9876}
+  producer:
+    group: gl-match-producer
+    send-message-timeout: 3000
+
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.greenlink.glmatch.domain

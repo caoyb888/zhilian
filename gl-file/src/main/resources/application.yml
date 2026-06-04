@@ -28,6 +28,12 @@ spring:
       password: ${REDIS_PASS:GreenLink@2026}
       database: 0
 
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://10.30.10.49:9020}
+  access-key: ${MINIO_ACCESS_KEY:greenlink}
+  secret-key: ${MINIO_SECRET_KEY:GreenLink_MinIO@2026}
+  bucket-name: ${MINIO_BUCKET:greenlink}
+
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.greenlink.glfile.domain
