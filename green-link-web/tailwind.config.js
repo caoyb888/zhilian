@@ -5,7 +5,7 @@ export default {
     extend: {
       colors: {
         brand: {
-          // 保留原有通用 emerald 色阶（AGENTS.md 品牌主色 #10b981）
+          // 保留原有通用 emerald 色阶（CLAUDE.md 品牌主色 #10b981）
           50: '#ecfdf5',
           100: '#d1fae5',
           200: '#a7f3d0',
