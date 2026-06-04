@@ -1,0 +1,22 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: gl-admin
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos.dev.greenlink.local:8848}
+        namespace: dev
+      config:
+        server-addr: ${NACOS_ADDR:nacos.dev.greenlink.local:8848}
+        namespace: dev
+        file-extension: yaml
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

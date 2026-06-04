@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gl-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos.dev.greenlink.local:8848}
+        namespace: dev
+      config:
+        server-addr: ${NACOS_ADDR:nacos.dev.greenlink.local:8848}
+        namespace: dev
+        file-extension: yaml
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: gl-auth
+          uri: lb://gl-auth
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: gl-member
+          uri: lb://gl-member
+          predicates:
+            - Path=/api/v1/members/**,/api/v1/accounts/**
+        - id: gl-portal
+          uri: lb://gl-portal
+          predicates:
+            - Path=/api/v1/articles/**,/api/v1/categories/**,/api/v1/activities/**
+        - id: gl-supply
+          uri: lb://gl-supply
+          predicates:
+            - Path=/api/v1/resources/**,/api/v1/demands/**
+        - id: gl-match
+          uri: lb://gl-match
+          predicates:
+            - Path=/api/v1/matches/**,/api/v1/favorites/**
+        - id: gl-message
+          uri: lb://gl-message
+          predicates:
+            - Path=/api/v1/messages/**,/api/v1/notifications/**
+        - id: gl-file
+          uri: lb://gl-file
+          predicates:
+            - Path=/api/v1/files/**
+        - id: gl-admin
+          uri: lb://gl-admin
+          predicates:
+            - Path=/api/v1/admin/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

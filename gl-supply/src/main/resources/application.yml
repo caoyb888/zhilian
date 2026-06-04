@@ -1,0 +1,48 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: gl-supply
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_ADDR:nacos.dev.greenlink.local:8848}
+        namespace: dev
+      config:
+        server-addr: ${NACOS_ADDR:nacos.dev.greenlink.local:8848}
+        namespace: dev
+        file-extension: yaml
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql.dev.greenlink.local}:3306/gl_supply?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USER:greenlink}
+    password: ${MYSQL_PASS:changeme}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+  data:
+    redis:
+      host: ${REDIS_HOST:redis.dev.greenlink.local}
+      port: 6379
+      password: ${REDIS_PASS:}
+      database: 0
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.greenlink.glsupply.domain
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
