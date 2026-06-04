@@ -14,7 +14,7 @@ spring:
         namespace: dev
         file-extension: yaml
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:mysql.dev.greenlink.local}:3306/gl_auth?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${MYSQL_HOST:mysql.dev.greenlink.local}:3306/gl_member?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:greenlink}
     password: ${MYSQL_PASS:changeme}
     driver-class-name: com.mysql.cj.jdbc.Driver
