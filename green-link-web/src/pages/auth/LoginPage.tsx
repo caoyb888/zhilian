@@ -57,9 +57,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (accountInfo) {
-      redirectByRole(accountInfo.roles)
+      if (accountInfo.roles.some((r) => ADMIN_ROLES.includes(r))) {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate('/supply', { replace: true })
+      }
     }
-  }, [accountInfo])
+  }, [accountInfo, navigate])
 
   function redirectByRole(roles: string[]) {
     if (roles.some((r) => ADMIN_ROLES.includes(r))) {
