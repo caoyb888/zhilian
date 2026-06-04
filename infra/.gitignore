@@ -1,0 +1,9 @@
+# 中间件运行时数据（不提交到 Git）
+*/data/
+*/logs/
+mysql/data/
+redis/data/
+elasticsearch/data/
+minio/data/
+nacos/data/
+nacos/logs/

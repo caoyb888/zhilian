@@ -1,0 +1,107 @@
+# ---------------------------------------------------------
+# 绿产智链 K8s Namespace 隔离方案
+# 对应 Sprint 0 任务 T0-01-5
+# ---------------------------------------------------------
+# 命名空间命名规范：greenlink-{环境}
+#   - greenlink-dev   : 开发联调环境
+#   - greenlink-test  : 测试/集成环境
+#   - greenlink-prod  : 生产环境（一期暂不部署业务，预留）
+#
+# 隔离策略：
+#   1. 网络隔离：各环境 Service 仅在同 Namespace 内可见
+#   2. RBAC 隔离：后续通过 Role/RoleBinding 限制各环境操作权限
+#   3. 资源配额：后续通过 ResourceQuota 限制各环境资源上限
+#   4. 标签规范：所有资源须带 app.greenlink.io/env 标签
+# ---------------------------------------------------------
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenlink-dev
+  labels:
+    app.greenlink.io/env: dev
+    app.greenlink.io/project: greenlink
+    app.greenlink.io/managed-by: infra-script
+  annotations:
+    description: "绿产智链 — 开发联调环境"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenlink-test
+  labels:
+    app.greenlink.io/env: test
+    app.greenlink.io/project: greenlink
+    app.greenlink.io/managed-by: infra-script
+  annotations:
+    description: "绿产智链 — 测试/集成环境"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenlink-prod
+  labels:
+    app.greenlink.io/env: prod
+    app.greenlink.io/project: greenlink
+    app.greenlink.io/managed-by: infra-script
+  annotations:
+    description: "绿产智链 — 生产环境（一期预留）"
+---
+# 基础资源配额限制（测试环境/开发环境）
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: greenlink-dev-quota
+  namespace: greenlink-dev
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "20"
+    services: "10"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: greenlink-test-quota
+  namespace: greenlink-test
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "20"
+    services: "10"
+---
+# 默认限制范围（LimitRange）——防止 Pod 无限制申请资源
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: greenlink-dev-limits
+  namespace: greenlink-dev
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: greenlink-test-limits
+  namespace: greenlink-test
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
