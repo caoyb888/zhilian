@@ -31,6 +31,10 @@ public class Result<T> implements Serializable {
         return new Result<>(ResultCode.SUCCESS.getCode(), ResultCode.SUCCESS.getMsg(), data);
     }
 
+    public static <T> Result<T> ok(T data, String msg) {
+        return new Result<>(ResultCode.SUCCESS.getCode(), msg, data);
+    }
+
     public static <T> Result<T> ok() {
         return ok(null);
     }
