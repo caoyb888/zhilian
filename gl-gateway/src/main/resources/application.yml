@@ -14,6 +14,14 @@ spring:
         namespace: dev
         file-extension: yaml
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
       discovery:
         locator:
           enabled: true
@@ -51,6 +59,25 @@ spring:
           uri: lb://gl-admin
           predicates:
             - Path=/api/v1/admin/**
+  data:
+    redis:
+      host: ${REDIS_HOST:10.30.10.49}
+      port: 6382
+      password: ${REDIS_PASS:GreenLink@2026}
+      database: 0
+
+jwt:
+  secret: ${JWT_SECRET:gl-platform-secret-key-2026-change-in-prod}
+  whitelist:
+    - /api/v1/auth/login
+    - /api/v1/auth/sms-login
+    - /api/v1/auth/wechat-login
+    - /api/v1/auth/refresh-token
+    - /api/v1/auth/captcha
+    - /api/v1/auth/sms-code
+    - /api/v1/members/register
+    - /api/v1/portal/**
+    - /actuator/**
 
 management:
   endpoints:

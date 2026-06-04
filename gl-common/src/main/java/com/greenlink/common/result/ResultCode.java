@@ -12,22 +12,27 @@ public enum ResultCode {
 
     SUCCESS(0, "success"),
 
-    // 通用错误
+    // 通用错误 1000-1999
+    SYSTEM_ERROR(1000, "系统繁忙，请稍后重试"),
     PARAM_ERROR(1001, "参数错误"),
     UNAUTHORIZED(1002, "未登录或登录已过期"),
     FORBIDDEN(1003, "无操作权限"),
     NOT_FOUND(1004, "资源不存在"),
-    SYSTEM_ERROR(1000, "系统繁忙，请稍后重试"),
+    TOO_MANY_REQUESTS(1030, "请求过于频繁，请稍后再试"),
 
     // 会员/认证模块 2000-2999
-    USER_NOT_FOUND(2001, "用户不存在"),
-    PASSWORD_ERROR(2002, "密码错误"),
-    ACCOUNT_LOCKED(2003, "账号已锁定，请30分钟后再试"),
-    ACCOUNT_DISABLED(2004, "账号已禁用"),
+    LOGIN_FAIL(2000, "用户名或密码错误"),
+    ACCOUNT_LOCKED(2001, "账号已锁定，请稍后再试"),
+    ACCOUNT_DISABLED(2002, "账号已禁用，请联系管理员"),
+    CAPTCHA_INVALID(2003, "验证码错误或已过期"),
+    SMS_CODE_INVALID(2004, "短信验证码错误或已过期"),
     TOKEN_EXPIRED(2005, "Token 已过期"),
     TOKEN_INVALID(2006, "Token 非法"),
+    USER_NOT_FOUND(2007, "用户不存在"),
     MEMBER_NOT_FOUND(2010, "会员单位不存在"),
-    MEMBER_NOT_CERTIFIED(2011, "会员单位未认证"),
+    USERNAME_EXISTS(2011, "用户名已被占用"),
+    PHONE_EXISTS(2012, "手机号已被注册"),
+    PERMISSION_DENIED(2013, "无权操作该资源"),
 
     // 供需/匹配模块 3000-3999
     RESOURCE_NOT_FOUND(3001, "资源不存在"),

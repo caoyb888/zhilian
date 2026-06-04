@@ -35,6 +35,28 @@
             <groupId>com.greenlink</groupId>
             <artifactId>gl-common</artifactId>
         </dependency>
+        <!-- JWT 验签 -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+        </dependency>
+        <!-- Redis 黑名单检查 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
         <!-- Gateway 不使用 spring-boot-starter-web，使用 WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
