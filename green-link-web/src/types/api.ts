@@ -42,6 +42,18 @@ export interface PageData<T> {
   pages: number
 }
 
+export interface MeProfile {
+  accountId: number
+  memberId: number
+  username: string
+  realName: string | null
+  avatarUrl: string | null
+  roles: string[]
+  permissions: string[]
+  memberName: string
+  memberLevel: number
+}
+
 export type AdminRole = 'SUPER_ADMIN' | 'CONTENT_ADMIN' | 'AUDITOR' | 'FINANCE'
 export type MemberRole = 'MEMBER' | 'VIP_MEMBER' | 'EXPERT'
 
