@@ -544,7 +544,7 @@ com.greenlink.<service>/
 - Controller 层不允许出现业务逻辑，只做入参校验（`@Valid`）和响应封装。
 - Service 层必须写接口，`@Transactional` 注解只加在 Service 实现上。
 - 所有 API 响应统一使用 `Result<T>` 包装类，格式：`{code, msg, data, timestamp}`。
-- HTTP 状态码统一返回 200，业务错误通过 `code` 字段区分。
+- HTTP 状态码统一返回 200，业务错误通过 `code` 字段区分。**例外：Gateway JwtAuthFilter 对 token 缺失/过期/非法返回 HTTP 401**，使前端 axios 拦截器能触发自动刷新 token 流程；业务服务内部不得自行返回 4xx。
 - 全局异常通过 `@RestControllerAdvice` 统一处理，不允许在业务方法中直接返回 error 字符串。
 - 禁止在代码中硬编码敏感信息（数据库密码、AppSecret 等），统一通过 Nacos 配置中心或环境变量注入。
 - 日志使用 SLF4J + Logback，禁止使用 `System.out.println`；入参出参、异常必须打印日志，日志级别按规范使用。
