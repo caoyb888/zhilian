@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Select;
 public interface PortalActivitySignupMapper extends BaseMapper<PortalActivitySignup> {
 
     @Select("SELECT COUNT(1) FROM portal_activity_signup " +
-            "WHERE activity_id = #{activityId} AND account_id = #{accountId}")
+            "WHERE activity_id = #{activityId} AND account_id = #{accountId} AND status != 3")
     long countByActivityAndAccount(@Param("activityId") Long activityId,
                                    @Param("accountId") Long accountId);
 

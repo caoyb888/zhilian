@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
+import org.springframework.dao.DuplicateKeyException;
 import com.greenlink.glportal.domain.PortalActivity;
 import com.greenlink.glportal.domain.PortalActivitySignup;
 import com.greenlink.glportal.dto.request.ActivityPageRequest;
@@ -170,7 +171,11 @@ public class PortalActivityServiceImpl implements PortalActivityService {
             signup.setMemberId(memberId != null ? memberId : 0L);
             signup.setRemark(request != null ? request.getRemark() : null);
             signup.setStatus(1);
-            signupMapper.insert(signup);
+            try {
+                signupMapper.insert(signup);
+            } catch (DuplicateKeyException e) {
+                throw new BizException(ResultCode.SIGNUP_DUPLICATE);
+            }
 
             // 原子递增 reg_count（DB 级最终防线）
             int rows = activityMapper.incrementRegCount(activityId);

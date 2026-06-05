@@ -87,7 +87,7 @@ public class PortalBannerServiceImpl implements PortalBannerService {
         PortalBanner banner = requireBanner(id);
         if (request.getTitle() != null) banner.setTitle(request.getTitle());
         if (request.getImageUrl() != null) banner.setImageUrl(request.getImageUrl());
-        if (request.getLinkUrl() != null) banner.setLinkUrl(request.getLinkUrl());
+        if (request.getLinkUrl() != null) banner.setLinkUrl(request.getLinkUrl().isEmpty() ? null : request.getLinkUrl());
         if (request.getSortOrder() != null) banner.setSortOrder(request.getSortOrder());
         if (request.getIsActive() != null) banner.setIsActive(request.getIsActive());
         if (request.getStartDate() != null) banner.setStartDate(request.getStartDate());

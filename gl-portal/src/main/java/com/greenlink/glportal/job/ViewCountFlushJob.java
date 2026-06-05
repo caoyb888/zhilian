@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class ViewCountFlushJob {
 
     private final StringRedisTemplate redisTemplate;
+    private final ViewCountHelper viewCountHelper;
     private final PortalArticleMapper articleMapper;
 
     @Scheduled(fixedDelay = 600_000)
@@ -28,11 +29,9 @@ public class ViewCountFlushJob {
         try (Cursor<String> cursor = redisTemplate.scan(opts)) {
             while (cursor.hasNext()) {
                 String key = cursor.next();
-                String val = redisTemplate.opsForValue().getAndDelete(key);
-                if (val == null) continue;
-                long delta = Long.parseLong(val);
-                if (delta <= 0) continue;
                 Long articleId = Long.parseLong(key.substring(ViewCountHelper.KEY_PREFIX.length()));
+                Long delta = viewCountHelper.getAndDelete(articleId);
+                if (delta == null || delta <= 0) continue;
                 articleMapper.addViewCount(articleId, delta);
                 flushed++;
             }

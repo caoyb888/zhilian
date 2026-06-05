@@ -41,8 +41,8 @@ public class PortalArticleServiceImpl implements PortalArticleService {
     public Page<ArticleVO> pageList(ArticlePageRequest request) {
         LambdaQueryWrapper<PortalArticle> wrapper = new LambdaQueryWrapper<PortalArticle>()
                 .eq(request.getCategoryId() != null, PortalArticle::getCategoryId, request.getCategoryId())
-                .eq(request.getIsTop() != null, PortalArticle::getIsTop, request.getIsTop() != null && request.getIsTop() ? 1 : 0)
-                .eq(request.getPublished() != null, PortalArticle::getIsPublished, request.getPublished() != null && request.getPublished() ? 1 : 0)
+                .eq(request.getIsTop() != null, PortalArticle::getIsTop, Boolean.TRUE.equals(request.getIsTop()) ? 1 : 0)
+                .eq(request.getPublished() != null, PortalArticle::getIsPublished, Boolean.TRUE.equals(request.getPublished()) ? 1 : 0)
                 .and(StringUtils.hasText(request.getKeyword()), q -> q
                         .like(PortalArticle::getTitle, request.getKeyword())
                         .or().like(PortalArticle::getSummary, request.getKeyword()))
@@ -56,7 +56,9 @@ public class PortalArticleServiceImpl implements PortalArticleService {
                 .map(PortalArticle::getCategoryId).distinct().toList();
         Map<Long, String> catNames = catIds.isEmpty() ? Map.of() :
                 categoryMapper.selectList(
-                        new LambdaQueryWrapper<PortalCategory>().in(PortalCategory::getId, catIds))
+                        new LambdaQueryWrapper<PortalCategory>()
+                                .select(PortalCategory::getId, PortalCategory::getName)
+                                .in(PortalCategory::getId, catIds))
                         .stream()
                         .collect(Collectors.toMap(PortalCategory::getId, PortalCategory::getName));
 
