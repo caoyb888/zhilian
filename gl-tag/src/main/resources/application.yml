@@ -21,6 +21,12 @@ spring:
     hikari:
       minimum-idle: 3
       maximum-pool-size: 10
+  data:
+    redis:
+      host: ${REDIS_HOST:10.30.10.49}
+      port: 6382
+      password: ${REDIS_PASS:GreenLink@2026}
+      database: 0
 
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml

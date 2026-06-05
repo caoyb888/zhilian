@@ -6,6 +6,7 @@ import com.greenlink.glportal.domain.PortalCategory;
 import com.greenlink.glportal.dto.request.CreateCategoryRequest;
 import com.greenlink.glportal.dto.request.UpdateCategoryRequest;
 import com.greenlink.glportal.dto.response.CategoryVO;
+import com.greenlink.glportal.helper.PortalCategoryCacheHelper;
 import com.greenlink.glportal.repository.PortalArticleMapper;
 import com.greenlink.glportal.repository.PortalCategoryMapper;
 import com.greenlink.glportal.service.impl.PortalCategoryServiceImpl;
@@ -26,13 +27,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PortalCategoryServiceTest {
 
-    @Mock
-    PortalCategoryMapper categoryMapper;
-    @Mock
-    PortalArticleMapper articleMapper;
+    @Mock PortalCategoryMapper categoryMapper;
+    @Mock PortalArticleMapper articleMapper;
+    @Mock PortalCategoryCacheHelper cacheHelper;
 
-    @InjectMocks
-    PortalCategoryServiceImpl service;
+    @InjectMocks PortalCategoryServiceImpl service;
 
     private PortalCategory existingCategory;
 
@@ -47,6 +46,76 @@ class PortalCategoryServiceTest {
         existingCategory.setIsVisible(1);
     }
 
+    // ── cache behavior ──────────────────────────────────────────────────────
+
+    @Test
+    void listTree_cacheHit_skipsDb() {
+        CategoryVO vo = new CategoryVO();
+        vo.setCode("NEWS");
+        vo.setChildren(List.of());
+        when(cacheHelper.get()).thenReturn(List.of(vo));
+
+        List<CategoryVO> result = service.listTree();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getCode()).isEqualTo("NEWS");
+        verifyNoInteractions(categoryMapper);
+        verify(cacheHelper, never()).set(any());
+    }
+
+    @Test
+    void listTree_cacheMiss_queriesDbAndSetsCache() {
+        when(cacheHelper.get()).thenReturn(null);
+        when(categoryMapper.selectList(any(LambdaQueryWrapper.class)))
+                .thenReturn(List.of(existingCategory));
+
+        List<CategoryVO> result = service.listTree();
+
+        assertThat(result).hasSize(1);
+        verify(categoryMapper).selectList(any());
+        verify(cacheHelper).set(result);
+    }
+
+    @Test
+    void create_evictsCache() {
+        when(categoryMapper.findIdByCode("POLICY")).thenReturn(null);
+        when(categoryMapper.insert(any(PortalCategory.class))).thenReturn(1);
+
+        CreateCategoryRequest req = new CreateCategoryRequest();
+        req.setName("政策法规");
+        req.setCode("POLICY");
+
+        service.create(req);
+
+        verify(cacheHelper).evict();
+    }
+
+    @Test
+    void update_evictsCache() {
+        when(categoryMapper.selectById(1L)).thenReturn(existingCategory);
+        when(categoryMapper.updateById(any(PortalCategory.class))).thenReturn(1);
+
+        UpdateCategoryRequest req = new UpdateCategoryRequest();
+        req.setName("新闻资讯（更新）");
+
+        service.update(1L, req);
+
+        verify(cacheHelper).evict();
+    }
+
+    @Test
+    void delete_evictsCache() {
+        when(categoryMapper.selectById(1L)).thenReturn(existingCategory);
+        when(categoryMapper.countChildren(1L)).thenReturn(0L);
+        when(articleMapper.countByCategory(1L)).thenReturn(0L);
+
+        service.delete(1L);
+
+        verify(cacheHelper).evict();
+    }
+
+    // ── business logic (unchanged) ──────────────────────────────────────────
+
     @Test
     void listTree_rootAndChild_buildsTree() {
         PortalCategory child = new PortalCategory();
@@ -57,6 +126,7 @@ class PortalCategoryServiceTest {
         child.setSortOrder(0);
         child.setIsVisible(1);
 
+        when(cacheHelper.get()).thenReturn(null);
         when(categoryMapper.selectList(any(LambdaQueryWrapper.class)))
                 .thenReturn(List.of(existingCategory, child));
 

@@ -7,6 +7,7 @@ import com.greenlink.glportal.domain.PortalCategory;
 import com.greenlink.glportal.dto.request.CreateCategoryRequest;
 import com.greenlink.glportal.dto.request.UpdateCategoryRequest;
 import com.greenlink.glportal.dto.response.CategoryVO;
+import com.greenlink.glportal.helper.PortalCategoryCacheHelper;
 import com.greenlink.glportal.repository.PortalArticleMapper;
 import com.greenlink.glportal.repository.PortalCategoryMapper;
 import com.greenlink.glportal.service.PortalCategoryService;
@@ -26,9 +27,15 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
 
     private final PortalCategoryMapper categoryMapper;
     private final PortalArticleMapper articleMapper;
+    private final PortalCategoryCacheHelper cacheHelper;
 
     @Override
     public List<CategoryVO> listTree() {
+        List<CategoryVO> cached = cacheHelper.get();
+        if (cached != null) {
+            return cached;
+        }
+
         List<PortalCategory> all = categoryMapper.selectList(
                 new LambdaQueryWrapper<PortalCategory>().orderByAsc(PortalCategory::getSortOrder));
 
@@ -37,7 +44,7 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
                 .map(this::toVO)
                 .collect(Collectors.groupingBy(CategoryVO::getParentId));
 
-        return all.stream()
+        List<CategoryVO> result = all.stream()
                 .filter(c -> c.getParentId() == null)
                 .map(c -> {
                     CategoryVO vo = toVO(c);
@@ -45,6 +52,8 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
                     return vo;
                 })
                 .toList();
+        cacheHelper.set(result);
+        return result;
     }
 
     @Override
@@ -72,6 +81,7 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
         cat.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
         cat.setIsVisible(request.getIsVisible() == null || request.getIsVisible() ? 1 : 0);
         categoryMapper.insert(cat);
+        cacheHelper.evict();
         log.info("创建门户栏目 id={} code={}", cat.getId(), cat.getCode());
         return toVO(cat);
     }
@@ -87,6 +97,7 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
         if (request.getSortOrder() != null) cat.setSortOrder(request.getSortOrder());
         if (request.getIsVisible() != null) cat.setIsVisible(request.getIsVisible() ? 1 : 0);
         categoryMapper.updateById(cat);
+        cacheHelper.evict();
         log.info("更新门户栏目 id={}", id);
         return toVO(cat);
     }
@@ -105,6 +116,7 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
             throw new BizException(ResultCode.PARAM_ERROR, "栏目下存在文章，请先删除或转移文章");
         }
         categoryMapper.deleteById(id);
+        cacheHelper.evict();
         log.info("删除门户栏目 id={}", id);
     }
 

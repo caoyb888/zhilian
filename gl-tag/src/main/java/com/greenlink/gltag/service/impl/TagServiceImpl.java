@@ -9,6 +9,7 @@ import com.greenlink.gltag.domain.TagCategory;
 import com.greenlink.gltag.dto.request.CreateTagRequest;
 import com.greenlink.gltag.dto.request.UpdateTagRequest;
 import com.greenlink.gltag.dto.response.TagVO;
+import com.greenlink.gltag.helper.TagTreeCacheHelper;
 import com.greenlink.gltag.repository.TagCategoryMapper;
 import com.greenlink.gltag.repository.TagMapper;
 import com.greenlink.gltag.service.TagService;
@@ -25,6 +26,7 @@ public class TagServiceImpl implements TagService {
 
     private final TagMapper tagMapper;
     private final TagCategoryMapper categoryMapper;
+    private final TagTreeCacheHelper cacheHelper;
 
     @Override
     public Page<TagVO> list(Long categoryId, String keyword, int page, int size) {
@@ -67,6 +69,7 @@ public class TagServiceImpl implements TagService {
         tag.setIsActive(1);
         tag.setIsDeleted(0);
         tagMapper.insert(tag);
+        cacheHelper.evict();
         log.info("创建标签 id={} name={} categoryId={}", tag.getId(), tag.getName(), tag.getCategoryId());
         return toVO(tag, category.getCode());
     }
@@ -89,6 +92,7 @@ public class TagServiceImpl implements TagService {
         if (request.getSortOrder() != null) tag.setSortOrder(request.getSortOrder());
         if (request.getIsActive() != null) tag.setIsActive(request.getIsActive());
         tagMapper.updateById(tag);
+        cacheHelper.evict();
         return toVO(tag);
     }
 
@@ -100,6 +104,7 @@ public class TagServiceImpl implements TagService {
             throw new BizException(ResultCode.NOT_FOUND, "标签不存在");
         }
         tagMapper.deleteById(id);
+        cacheHelper.evict();
         log.info("删除标签 id={}", id);
     }
 

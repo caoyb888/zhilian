@@ -9,6 +9,7 @@ import com.greenlink.gltag.dto.request.CreateTagCategoryRequest;
 import com.greenlink.gltag.dto.request.UpdateTagCategoryRequest;
 import com.greenlink.gltag.dto.response.TagCategoryVO;
 import com.greenlink.gltag.dto.response.TagVO;
+import com.greenlink.gltag.helper.TagTreeCacheHelper;
 import com.greenlink.gltag.repository.TagCategoryMapper;
 import com.greenlink.gltag.repository.TagMapper;
 import com.greenlink.gltag.service.TagCategoryService;
@@ -28,9 +29,15 @@ public class TagCategoryServiceImpl implements TagCategoryService {
 
     private final TagCategoryMapper categoryMapper;
     private final TagMapper tagMapper;
+    private final TagTreeCacheHelper cacheHelper;
 
     @Override
     public List<TagCategoryVO> listAll() {
+        List<TagCategoryVO> cached = cacheHelper.get();
+        if (cached != null) {
+            return cached;
+        }
+
         List<TagCategory> categories = categoryMapper.selectList(
                 new LambdaQueryWrapper<TagCategory>().orderByAsc(TagCategory::getSortOrder));
 
@@ -42,9 +49,11 @@ public class TagCategoryServiceImpl implements TagCategoryService {
         Map<Long, List<Tag>> tagsByCat = allTags.stream()
                 .collect(Collectors.groupingBy(Tag::getCategoryId));
 
-        return categories.stream()
+        List<TagCategoryVO> result = categories.stream()
                 .map(cat -> toVO(cat, tagsByCat.getOrDefault(cat.getId(), List.of())))
                 .toList();
+        cacheHelper.set(result);
+        return result;
     }
 
     @Override
@@ -59,6 +68,7 @@ public class TagCategoryServiceImpl implements TagCategoryService {
         cat.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
         cat.setIsActive(1);
         categoryMapper.insert(cat);
+        cacheHelper.evict();
         log.info("创建标签分类 id={} code={}", cat.getId(), cat.getCode());
         return toVO(cat, List.of());
     }
@@ -74,6 +84,7 @@ public class TagCategoryServiceImpl implements TagCategoryService {
         if (request.getSortOrder() != null) cat.setSortOrder(request.getSortOrder());
         if (request.getIsActive() != null) cat.setIsActive(request.getIsActive());
         categoryMapper.updateById(cat);
+        cacheHelper.evict();
         return toVO(cat, List.of());
     }
 
@@ -90,6 +101,7 @@ public class TagCategoryServiceImpl implements TagCategoryService {
             throw new BizException(ResultCode.PARAM_ERROR, "分类下存在标签，请先删除标签");
         }
         categoryMapper.deleteById(id);
+        cacheHelper.evict();
         log.info("删除标签分类 id={}", id);
     }
 
