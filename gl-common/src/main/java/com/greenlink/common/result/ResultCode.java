@@ -48,6 +48,7 @@ public enum ResultCode {
     ACTIVITY_CLOSED(4004, "活动报名已截止"),
     ACTIVITY_STATUS_NOT_OPEN(4005, "活动当前不接受报名"),
     SIGNUP_DUPLICATE(4006, "已报名该活动，请勿重复提交"),
+    BANNER_NOT_FOUND(4007, "轮播图不存在"),
 
     // 消息/通知模块 5000-5999
     MESSAGE_SEND_FAIL(5001, "消息发送失败"),
