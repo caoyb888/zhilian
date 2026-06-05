@@ -18,6 +18,7 @@
         <module>gl-member</module>
         <module>gl-portal</module>
         <module>gl-supply</module>
+        <module>gl-tag</module>
         <module>gl-match</module>
         <module>gl-message</module>
         <module>gl-file</module>
