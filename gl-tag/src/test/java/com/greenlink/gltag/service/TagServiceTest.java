@@ -7,6 +7,7 @@ import com.greenlink.gltag.domain.TagCategory;
 import com.greenlink.gltag.dto.request.CreateTagRequest;
 import com.greenlink.gltag.dto.request.UpdateTagRequest;
 import com.greenlink.gltag.dto.response.TagVO;
+import com.greenlink.gltag.helper.TagTreeCacheHelper;
 import com.greenlink.gltag.repository.TagCategoryMapper;
 import com.greenlink.gltag.repository.TagMapper;
 import com.greenlink.gltag.service.impl.TagServiceImpl;
@@ -20,8 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +28,7 @@ class TagServiceTest {
 
     @Mock TagMapper tagMapper;
     @Mock TagCategoryMapper categoryMapper;
+    @Mock TagTreeCacheHelper cacheHelper;
 
     @InjectMocks TagServiceImpl service;
 
@@ -50,6 +50,49 @@ class TagServiceTest {
         existingTag.setIsDeleted(0);
         existingTag.setSortOrder(0);
     }
+
+    // ── cache eviction ──────────────────────────────────────────────────────
+
+    @Test
+    void create_evictsCache() {
+        when(categoryMapper.selectById(1L)).thenReturn(category);
+        when(tagMapper.findIdByNameAndCategory("光伏", 1L)).thenReturn(null);
+        when(tagMapper.insert(any(Tag.class))).thenReturn(1);
+
+        CreateTagRequest req = new CreateTagRequest();
+        req.setCategoryId(1L);
+        req.setName("光伏");
+
+        service.create(req);
+
+        verify(cacheHelper).evict();
+    }
+
+    @Test
+    void update_evictsCache() {
+        when(tagMapper.selectById(10L)).thenReturn(existingTag);
+        when(tagMapper.findIdByNameAndCategory("风能", 1L)).thenReturn(null);
+        when(tagMapper.updateById(any(Tag.class))).thenReturn(1);
+        when(categoryMapper.selectById(1L)).thenReturn(category);
+
+        UpdateTagRequest req = new UpdateTagRequest();
+        req.setName("风能");
+
+        service.update(10L, req);
+
+        verify(cacheHelper).evict();
+    }
+
+    @Test
+    void delete_evictsCache() {
+        when(tagMapper.selectById(10L)).thenReturn(existingTag);
+
+        service.delete(10L);
+
+        verify(cacheHelper).evict();
+    }
+
+    // ── business logic (unchanged) ──────────────────────────────────────────
 
     @Test
     void create_success() {

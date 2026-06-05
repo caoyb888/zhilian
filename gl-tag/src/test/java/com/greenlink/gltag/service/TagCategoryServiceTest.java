@@ -7,6 +7,7 @@ import com.greenlink.gltag.domain.TagCategory;
 import com.greenlink.gltag.dto.request.CreateTagCategoryRequest;
 import com.greenlink.gltag.dto.request.UpdateTagCategoryRequest;
 import com.greenlink.gltag.dto.response.TagCategoryVO;
+import com.greenlink.gltag.helper.TagTreeCacheHelper;
 import com.greenlink.gltag.repository.TagCategoryMapper;
 import com.greenlink.gltag.repository.TagMapper;
 import com.greenlink.gltag.service.impl.TagCategoryServiceImpl;
@@ -17,7 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,6 +30,7 @@ class TagCategoryServiceTest {
 
     @Mock TagCategoryMapper categoryMapper;
     @Mock TagMapper tagMapper;
+    @Mock TagTreeCacheHelper cacheHelper;
 
     @InjectMocks TagCategoryServiceImpl service;
 
@@ -43,6 +45,75 @@ class TagCategoryServiceTest {
         existingCategory.setSortOrder(0);
         existingCategory.setIsActive(1);
     }
+
+    // ── cache behavior ──────────────────────────────────────────────────────
+
+    @Test
+    void listAll_cacheHit_skipsDb() {
+        TagCategoryVO vo = new TagCategoryVO();
+        vo.setCode("INDUSTRY");
+        when(cacheHelper.get()).thenReturn(List.of(vo));
+
+        List<TagCategoryVO> result = service.listAll();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getCode()).isEqualTo("INDUSTRY");
+        verifyNoInteractions(categoryMapper, tagMapper);
+        verify(cacheHelper, never()).set(any());
+    }
+
+    @Test
+    void listAll_cacheMiss_queriesDbAndSetsCache() {
+        when(cacheHelper.get()).thenReturn(null);
+        when(categoryMapper.selectList(any(LambdaQueryWrapper.class)))
+                .thenReturn(List.of(existingCategory));
+        when(tagMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of());
+
+        List<TagCategoryVO> result = service.listAll();
+
+        assertThat(result).hasSize(1);
+        verify(categoryMapper).selectList(any());
+        verify(cacheHelper).set(result);
+    }
+
+    @Test
+    void create_evictsCache() {
+        when(categoryMapper.findIdByCode("NEW")).thenReturn(null);
+        when(categoryMapper.insert(any(TagCategory.class))).thenReturn(1);
+
+        CreateTagCategoryRequest req = new CreateTagCategoryRequest();
+        req.setName("新分类");
+        req.setCode("NEW");
+
+        service.create(req);
+
+        verify(cacheHelper).evict();
+    }
+
+    @Test
+    void update_evictsCache() {
+        when(categoryMapper.selectById(1L)).thenReturn(existingCategory);
+        when(categoryMapper.updateById(any(TagCategory.class))).thenReturn(1);
+
+        UpdateTagCategoryRequest req = new UpdateTagCategoryRequest();
+        req.setName("更新名称");
+
+        service.update(1L, req);
+
+        verify(cacheHelper).evict();
+    }
+
+    @Test
+    void delete_evictsCache() {
+        when(categoryMapper.selectById(1L)).thenReturn(existingCategory);
+        when(tagMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+
+        service.delete(1L);
+
+        verify(cacheHelper).evict();
+    }
+
+    // ── business logic (unchanged) ──────────────────────────────────────────
 
     @Test
     void create_success() {
