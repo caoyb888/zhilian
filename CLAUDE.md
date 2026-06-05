@@ -549,6 +549,9 @@ com.greenlink.<service>/
 - 禁止在代码中硬编码敏感信息（数据库密码、AppSecret 等），统一通过 Nacos 配置中心或环境变量注入。
 - 日志使用 SLF4J + Logback，禁止使用 `System.out.println`；入参出参、异常必须打印日志，日志级别按规范使用。
 - 分页查询统一使用 MyBatis-Plus 的 `Page<T>`，禁止 `SELECT *` 全量查询。
+- **每个微服务必须在 `config/` 包下配置 `MybatisPlusConfig`，注册 `PaginationInnerInterceptor(DbType.MYSQL)`**。MyBatis-Plus 3.5+ 不再自动注册分页插件，缺失时 `selectPage` 的 `total` 始终为 0。
+- 分页列表查询统一使用 `QueryWrapper`（字符串列名）+ `selectPage`，禁止用 `@Select` 注解配合 `IPage<T>` 返回值——该组合的 COUNT 子查询由分页插件生成，实测不可靠。
+- `LambdaQueryWrapper` 可用于条件过滤，但不能在其上调用 `.select(字段引用…)`；指定查询列时改用 `QueryWrapper.select("col1", "col2", …)`，避免在无 Spring 上下文的单元测试中触发 lambda cache 查找失败。
 - 密码存储统一使用 BCrypt，禁止 MD5 / SHA1。
 
 ### 5.2 前端编码规范
