@@ -6,6 +6,7 @@ import com.greenlink.glportal.domain.PortalCategory;
 import com.greenlink.glportal.dto.request.CreateCategoryRequest;
 import com.greenlink.glportal.dto.request.UpdateCategoryRequest;
 import com.greenlink.glportal.dto.response.CategoryVO;
+import com.greenlink.glportal.repository.PortalArticleMapper;
 import com.greenlink.glportal.repository.PortalCategoryMapper;
 import com.greenlink.glportal.service.impl.PortalCategoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,8 @@ class PortalCategoryServiceTest {
 
     @Mock
     PortalCategoryMapper categoryMapper;
+    @Mock
+    PortalArticleMapper articleMapper;
 
     @InjectMocks
     PortalCategoryServiceImpl service;
@@ -169,9 +172,21 @@ class PortalCategoryServiceTest {
     }
 
     @Test
-    void delete_noChildren_success() {
+    void delete_withArticles_throwsBizException() {
         when(categoryMapper.selectById(1L)).thenReturn(existingCategory);
         when(categoryMapper.countChildren(1L)).thenReturn(0L);
+        when(articleMapper.countByCategory(1L)).thenReturn(3L);
+
+        assertThatThrownBy(() -> service.delete(1L))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("文章");
+    }
+
+    @Test
+    void delete_noChildren_noArticles_success() {
+        when(categoryMapper.selectById(1L)).thenReturn(existingCategory);
+        when(categoryMapper.countChildren(1L)).thenReturn(0L);
+        when(articleMapper.countByCategory(1L)).thenReturn(0L);
 
         service.delete(1L);
 

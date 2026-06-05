@@ -7,6 +7,7 @@ import com.greenlink.glportal.domain.PortalCategory;
 import com.greenlink.glportal.dto.request.CreateCategoryRequest;
 import com.greenlink.glportal.dto.request.UpdateCategoryRequest;
 import com.greenlink.glportal.dto.response.CategoryVO;
+import com.greenlink.glportal.repository.PortalArticleMapper;
 import com.greenlink.glportal.repository.PortalCategoryMapper;
 import com.greenlink.glportal.service.PortalCategoryService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class PortalCategoryServiceImpl implements PortalCategoryService {
 
     private final PortalCategoryMapper categoryMapper;
+    private final PortalArticleMapper articleMapper;
 
     @Override
     public List<CategoryVO> listTree() {
@@ -98,6 +100,9 @@ public class PortalCategoryServiceImpl implements PortalCategoryService {
         }
         if (categoryMapper.countChildren(id) > 0) {
             throw new BizException(ResultCode.PARAM_ERROR, "栏目下存在子栏目，请先删除子栏目");
+        }
+        if (articleMapper.countByCategory(id) > 0) {
+            throw new BizException(ResultCode.PARAM_ERROR, "栏目下存在文章，请先删除或转移文章");
         }
         categoryMapper.deleteById(id);
         log.info("删除门户栏目 id={}", id);
