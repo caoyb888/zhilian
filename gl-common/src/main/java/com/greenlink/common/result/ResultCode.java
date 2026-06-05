@@ -41,6 +41,7 @@ public enum ResultCode {
     MATCH_NOT_FOUND(3010, "对接记录不存在"),
 
     // 门户模块 4000-4999
+    CATEGORY_NOT_FOUND(4000, "栏目不存在"),
     ARTICLE_NOT_FOUND(4001, "文章不存在"),
     ACTIVITY_NOT_FOUND(4002, "活动不存在"),
     ACTIVITY_FULL(4003, "活动报名已满"),
