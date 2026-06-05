@@ -92,6 +92,7 @@
 | `gl-supply` | 资源/需求发布、审核、搜索 | `gl_supply` |
 | `gl-match` | 智能匹配引擎（召回 + 排序） | `gl_match` |
 | `gl-message` | 站内信、微信模板消息 | `gl_message` |
+| `gl-tag` | 标签体系：标签分类、标签、业务标签关联 | `gl_common` |
 | `gl-admin` | 协会管理端 BFF（聚合各服务） | — |
 | `gl-file` | 文件上传/下载（MinIO/OSS 封装） | `gl_file` |
 
