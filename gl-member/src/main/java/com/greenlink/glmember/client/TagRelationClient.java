@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "gl-tag", fallback = TagRelationClientFallback.class)
+@FeignClient(name = "gl-tag", url = "${gl.tag.url:http://localhost:8089}", fallback = TagRelationClientFallback.class)
 public interface TagRelationClient {
 
     @GetMapping("/api/v1/tag-relations")
