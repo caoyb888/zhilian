@@ -1,5 +1,6 @@
 package com.greenlink.glmember.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.Result;
@@ -100,8 +101,18 @@ public class MemberServiceImpl implements MemberService {
     public PageResult<MemberVO> listMembers(int page, int size, String keyword,
                                             String industry, String province,
                                             Integer memberLevel, Integer status) {
-        Page<MemberUnit> p = new Page<>(page, size);
-        var iPage = memberUnitMapper.pageList(p, keyword, industry, province, memberLevel, status);
+        QueryWrapper<MemberUnit> wrapper = new QueryWrapper<MemberUnit>()
+                .select("id", "name", "short_name", "industry", "province", "city",
+                        "member_level", "logo_url", "is_certified", "status",
+                        "created_at", "updated_at")
+                .like(StringUtils.hasText(keyword), "name", keyword)
+                .eq(StringUtils.hasText(industry), "industry", industry)
+                .eq(StringUtils.hasText(province), "province", province)
+                .eq(memberLevel != null, "member_level", memberLevel)
+                .eq(status != null, "status", status)
+                .orderByDesc("created_at");
+
+        Page<MemberUnit> iPage = memberUnitMapper.selectPage(new Page<>(page, size), wrapper);
 
         List<MemberVO> records = iPage.getRecords().stream()
                 .map(this::toMemberVO)
