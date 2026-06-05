@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
@@ -24,9 +24,7 @@ const STATUS_TABS = [
   { value: undefined, label: '全部' },
   { value: 1, label: '筹备中' },
   { value: 2, label: '报名中' },
-  { value: 3, label: '进行中' },
-  { value: 4, label: '已结束' },
-  { value: 5, label: '已取消' },
+  { value: 3, label: '已结束' },
 ]
 
 export default function ActivityListPage() {
@@ -50,11 +48,19 @@ export default function ActivityListPage() {
   const deleteMutation = useMutation({
     mutationFn: deleteActivity,
     onSuccess: () => refetchActivities(),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg ?? '删除失败'
+      alert(msg)
+    },
   })
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: number }) => updateActivityStatus(id, status),
     onSuccess: () => refetchActivities(),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg ?? '状态变更失败'
+      alert(msg)
+    },
   })
 
   const checkinMutation = useMutation({
@@ -151,9 +157,13 @@ export default function ActivityListPage() {
                       </button>
                       <select
                         value={activity.status}
-                        onChange={(e) =>
-                          statusMutation.mutate({ id: activity.id, status: Number(e.target.value) })
-                        }
+                        onChange={(e) => {
+                          const newStatus = Number(e.target.value)
+                          const label = ACTIVITY_STATUS_MAP[newStatus]?.label ?? newStatus
+                          if (confirm(`确定将活动状态变更为「${label}」？`)) {
+                            statusMutation.mutate({ id: activity.id, status: newStatus })
+                          }
+                        }}
                         className="rounded border border-gray-200 px-1.5 py-0.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500"
                       >
                         {Object.entries(ACTIVITY_STATUS_MAP).map(([val, info]) => (
@@ -202,6 +212,7 @@ export default function ActivityListPage() {
           checkinMutation.mutate({ activityId: viewActivity!.id, signupId })
         }
         checkinPending={checkinMutation.isPending}
+        checkinTargetId={checkinMutation.variables?.signupId}
       />
     </div>
   )
@@ -222,6 +233,7 @@ function ActivityModal({ open, onClose, activity, onSuccess }: ActivityModalProp
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<CreateActivityRequest>({
     defaultValues: {
@@ -234,6 +246,20 @@ function ActivityModal({ open, onClose, activity, onSuccess }: ActivityModalProp
       status: activity?.status ?? 1,
     },
   })
+
+  useEffect(() => {
+    if (open) {
+      reset({
+        title: activity?.title ?? '',
+        location: activity?.location ?? '',
+        startTime: activity?.startTime ? activity.startTime.slice(0, 16) : '',
+        endTime: activity?.endTime ? activity.endTime.slice(0, 16) : '',
+        regDeadline: activity?.regDeadline ? activity.regDeadline.slice(0, 16) : '',
+        maxCapacity: activity?.maxCapacity ?? undefined,
+        status: activity?.status ?? 1,
+      })
+    }
+  }, [open, activity, reset])
 
   const mutation = useMutation({
     mutationFn: (data: CreateActivityRequest | UpdateActivityRequest) =>
@@ -326,9 +352,10 @@ interface SignupModalProps {
   signups: Signup[]
   onCheckin: (signupId: number) => void
   checkinPending: boolean
+  checkinTargetId?: number
 }
 
-function SignupModal({ open, onClose, activity, signups, onCheckin, checkinPending }: SignupModalProps) {
+function SignupModal({ open, onClose, activity, signups, onCheckin, checkinPending, checkinTargetId }: SignupModalProps) {
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -382,7 +409,7 @@ function SignupModal({ open, onClose, activity, signups, onCheckin, checkinPendi
                         <Button
                           variant="secondary"
                           size="sm"
-                          loading={checkinPending}
+                          loading={checkinPending && checkinTargetId === s.id}
                           onClick={() => onCheckin(s.id)}
                         >
                           签到
