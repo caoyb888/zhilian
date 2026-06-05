@@ -35,10 +35,14 @@ spring:
           uri: lb://gl-member
           predicates:
             - Path=/api/v1/members/**,/api/v1/accounts/**
+        - id: gl-member-rbac
+          uri: lb://gl-member
+          predicates:
+            - Path=/api/v1/rbac/**
         - id: gl-portal
           uri: lb://gl-portal
           predicates:
-            - Path=/api/v1/articles/**,/api/v1/categories/**,/api/v1/activities/**
+            - Path=/api/v1/portal/**,/api/v1/portal-categories/**
         - id: gl-supply
           uri: lb://gl-supply
           predicates:
@@ -80,9 +84,18 @@ jwt:
     - /api/v1/auth/captcha
     - /api/v1/auth/sms-code
     - /api/v1/members/register
-    - /api/v1/portal/**
+    - /api/v1/portal-categories
+    - /api/v1/portal-categories/**
+    - /api/v1/portal/articles
+    - /api/v1/portal/articles/**
+    - /api/v1/portal/activities
+    - /api/v1/portal/activities/**
+    - /api/v1/portal/banners
+    - /api/v1/portal/banners/**
     - /api/v1/tag-categories
+    - /api/v1/tag-categories/**
     - /api/v1/tags
+    - /api/v1/tags/**
     - /api/v1/tag-relations
     - /actuator/**
 
