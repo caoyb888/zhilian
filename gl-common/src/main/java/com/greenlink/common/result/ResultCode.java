@@ -41,10 +41,14 @@ public enum ResultCode {
     MATCH_NOT_FOUND(3010, "对接记录不存在"),
 
     // 门户模块 4000-4999
+    CATEGORY_NOT_FOUND(4000, "栏目不存在"),
     ARTICLE_NOT_FOUND(4001, "文章不存在"),
     ACTIVITY_NOT_FOUND(4002, "活动不存在"),
     ACTIVITY_FULL(4003, "活动报名已满"),
     ACTIVITY_CLOSED(4004, "活动报名已截止"),
+    ACTIVITY_STATUS_NOT_OPEN(4005, "活动当前不接受报名"),
+    SIGNUP_DUPLICATE(4006, "已报名该活动，请勿重复提交"),
+    BANNER_NOT_FOUND(4007, "轮播图不存在"),
 
     // 消息/通知模块 5000-5999
     MESSAGE_SEND_FAIL(5001, "消息发送失败"),

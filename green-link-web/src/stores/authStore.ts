@@ -6,7 +6,9 @@ interface AuthState {
   accessToken: string | null
   refreshToken: string | null
   accountInfo: AccountInfo | null
+  permissions: string[]
   setAuth: (data: LoginData) => void
+  setPermissions: (permissions: string[]) => void
   updateTokens: (accessToken: string, refreshToken: string) => void
   clearAuth: () => void
 }
@@ -17,6 +19,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       accountInfo: null,
+      permissions: [],
 
       setAuth: (data: LoginData) =>
         set({
@@ -25,11 +28,13 @@ export const useAuthStore = create<AuthState>()(
           accountInfo: data.accountInfo,
         }),
 
+      setPermissions: (permissions: string[]) => set({ permissions }),
+
       updateTokens: (accessToken: string, refreshToken: string) =>
         set({ accessToken, refreshToken }),
 
       clearAuth: () =>
-        set({ accessToken: null, refreshToken: null, accountInfo: null }),
+        set({ accessToken: null, refreshToken: null, accountInfo: null, permissions: [] }),
     }),
     {
       name: 'gl-auth',
@@ -37,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         accountInfo: state.accountInfo,
+        permissions: state.permissions,
       }),
     }
   )

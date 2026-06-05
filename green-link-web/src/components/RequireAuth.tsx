@@ -17,7 +17,7 @@ export function RequireAuth({ children, adminOnly = false }: RequireAuthProps) {
   }
 
   if (adminOnly && !accountInfo.roles.some((r) => ADMIN_ROLES.includes(r))) {
-    return <Navigate to="/supply" replace />
+    return <Navigate to="/403" replace />
   }
 
   return <>{children}</>
