@@ -83,6 +83,7 @@ jwt:
     - /api/v1/portal/**
     - /api/v1/tag-categories
     - /api/v1/tags
+    - /api/v1/tag-relations
     - /actuator/**
 
 management:

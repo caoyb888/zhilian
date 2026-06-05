@@ -12,7 +12,7 @@ import com.greenlink.glmember.repository.MemberUnitMapper;
 import com.greenlink.glmember.repository.RbacAccountRoleMapper;
 import com.greenlink.glmember.repository.RbacPermissionMapper;
 import com.greenlink.glmember.repository.RbacRoleMapper;
-import com.greenlink.glmember.repository.TagRelationMapper;
+import com.greenlink.glmember.client.TagRelationClient;
 import com.greenlink.glmember.domain.RbacAccountRole;
 import com.greenlink.glmember.service.impl.MemberServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ class MemberServiceTest {
     @Mock private RbacRoleMapper rbacRoleMapper;
     @Mock private RbacAccountRoleMapper rbacAccountRoleMapper;
     @Mock private RbacPermissionMapper rbacPermissionMapper;
-    @Mock private TagRelationMapper tagRelationMapper;
+    @Mock private TagRelationClient tagRelationClient;
     @Mock private StringRedisTemplate redisTemplate;
     @Mock private ValueOperations<String, String> valueOps;
 
