@@ -1,0 +1,38 @@
+package com.greenlink.gltag.controller;
+
+import com.greenlink.common.result.Result;
+import com.greenlink.gltag.dto.request.BatchSetTagRelationsRequest;
+import com.greenlink.gltag.dto.response.TagSimpleVO;
+import com.greenlink.gltag.service.TagRelationService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/tag-relations")
+@RequiredArgsConstructor
+public class TagRelationController {
+
+    private final TagRelationService tagRelationService;
+
+    @GetMapping
+    public Result<List<TagSimpleVO>> getByBiz(@RequestParam String bizType,
+                                               @RequestParam Long bizId) {
+        return Result.ok(tagRelationService.getTagsByBiz(bizType, bizId));
+    }
+
+    @PostMapping("/batch")
+    public Result<Void> batchSet(@Valid @RequestBody BatchSetTagRelationsRequest request) {
+        tagRelationService.batchSet(request);
+        return Result.ok();
+    }
+
+    @DeleteMapping
+    public Result<Void> deleteByBiz(@RequestParam String bizType,
+                                    @RequestParam Long bizId) {
+        tagRelationService.deleteByBiz(bizType, bizId);
+        return Result.ok();
+    }
+}

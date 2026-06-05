@@ -2,8 +2,12 @@ package com.greenlink.glmember.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
+import com.greenlink.common.result.Result;
 import com.greenlink.common.result.ResultCode;
 import com.greenlink.common.util.PageResult;
+import com.greenlink.glmember.client.TagRelationClient;
+import com.greenlink.glmember.client.dto.BatchSetTagRelationsRequest;
+import com.greenlink.glmember.client.dto.TagSimpleVO;
 import com.greenlink.glmember.domain.MemberAccount;
 import com.greenlink.glmember.domain.MemberUnit;
 import com.greenlink.glmember.domain.RbacAccountRole;
@@ -20,7 +24,6 @@ import com.greenlink.glmember.repository.MemberUnitMapper;
 import com.greenlink.glmember.repository.RbacAccountRoleMapper;
 import com.greenlink.glmember.repository.RbacPermissionMapper;
 import com.greenlink.glmember.repository.RbacRoleMapper;
-import com.greenlink.glmember.repository.TagRelationMapper;
 import com.greenlink.glmember.service.MemberService;
 import com.greenlink.glmember.util.MaskUtil;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +53,7 @@ public class MemberServiceImpl implements MemberService {
     private final RbacRoleMapper rbacRoleMapper;
     private final RbacAccountRoleMapper rbacAccountRoleMapper;
     private final RbacPermissionMapper rbacPermissionMapper;
-    private final TagRelationMapper tagRelationMapper;
+    private final TagRelationClient tagRelationClient;
     private final PasswordEncoder passwordEncoder;
     private final StringRedisTemplate redisTemplate;
 
@@ -78,8 +81,12 @@ public class MemberServiceImpl implements MemberService {
         }
 
         if (!CollectionUtils.isEmpty(request.getTagIds())) {
-            request.getTagIds().forEach(tagId ->
-                    tagRelationMapper.upsertTagRelation(BIZ_TYPE_MEMBER, unit.getId(), tagId));
+            try {
+                tagRelationClient.batchSet(
+                        new BatchSetTagRelationsRequest(BIZ_TYPE_MEMBER, unit.getId(), request.getTagIds()));
+            } catch (Exception e) {
+                log.warn("标签关联设置失败，注册流程继续 memberId={}", unit.getId(), e);
+            }
         }
 
         return RegisterResponse.builder()
@@ -143,9 +150,12 @@ public class MemberServiceImpl implements MemberService {
         memberUnitMapper.updateById(unit);
 
         if (request.getTagIds() != null) {
-            tagRelationMapper.deleteByBiz(BIZ_TYPE_MEMBER, memberId);
-            request.getTagIds().forEach(tagId ->
-                    tagRelationMapper.upsertTagRelation(BIZ_TYPE_MEMBER, memberId, tagId));
+            try {
+                tagRelationClient.batchSet(
+                        new BatchSetTagRelationsRequest(BIZ_TYPE_MEMBER, memberId, request.getTagIds()));
+            } catch (Exception e) {
+                log.warn("标签关联更新失败 memberId={}", memberId, e);
+            }
         }
     }
 
@@ -202,17 +212,12 @@ public class MemberServiceImpl implements MemberService {
         vo.setIsCertified(unit.getIsCertified() != null && unit.getIsCertified() == 1);
         vo.setStatus(unit.getStatus());
         vo.setCreatedAt(unit.getCreatedAt());
-
-        List<TagRelationMapper.TagVO> tags = tagRelationMapper.findTagsByBiz(BIZ_TYPE_MEMBER, unit.getId());
-        vo.setTags(tags.stream()
-                .map(t -> new MemberVO.TagItem(t.id(), t.name(), t.categoryCode()))
-                .collect(Collectors.toList()));
+        vo.setTags(fetchTags(unit.getId()));
         return vo;
     }
 
     private MemberDetailVO toMemberDetailVO(MemberUnit unit, boolean showContact) {
         MemberDetailVO vo = new MemberDetailVO();
-        // copy base fields
         vo.setId(unit.getId());
         vo.setName(unit.getName());
         vo.setShortName(unit.getShortName());
@@ -238,11 +243,22 @@ public class MemberServiceImpl implements MemberService {
             vo.setContactEmail(MaskUtil.maskEmail(unit.getContactEmail()));
         }
 
-        List<TagRelationMapper.TagVO> tags = tagRelationMapper.findTagsByBiz(BIZ_TYPE_MEMBER, unit.getId());
-        vo.setTags(tags.stream()
-                .map(t -> new MemberVO.TagItem(t.id(), t.name(), t.categoryCode()))
-                .collect(Collectors.toList()));
+        vo.setTags(fetchTags(unit.getId()));
         return vo;
+    }
+
+    private List<MemberVO.TagItem> fetchTags(Long memberId) {
+        try {
+            Result<List<TagSimpleVO>> result = tagRelationClient.getTagsByBiz(BIZ_TYPE_MEMBER, memberId);
+            if (result != null && result.getData() != null) {
+                return result.getData().stream()
+                        .map(t -> new MemberVO.TagItem(t.getId(), t.getName(), t.getCategoryCode()))
+                        .collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            log.warn("获取标签失败，返回空列表 memberId={}", memberId, e);
+        }
+        return List.of();
     }
 
     private MemberUnit buildMemberUnit(RegisterRequest request) {
