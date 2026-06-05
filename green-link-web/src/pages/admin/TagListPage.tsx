@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
@@ -51,11 +51,19 @@ export default function TagListPage() {
       refetchCategories()
       refetchTags()
     },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg ?? '删除失败'
+      alert(msg)
+    },
   })
 
   const deleteTagMutation = useMutation({
     mutationFn: deleteTag,
     onSuccess: () => refetchTags(),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg ?? '删除失败'
+      alert(msg)
+    },
   })
 
   function handleDeleteCategory(id: number) {
@@ -254,6 +262,7 @@ function CategoryModal({ open, onClose, category, onSuccess }: CategoryModalProp
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<CreateCategoryRequest>({
     defaultValues: {
@@ -262,6 +271,16 @@ function CategoryModal({ open, onClose, category, onSuccess }: CategoryModalProp
       sortOrder: category?.sortOrder ?? 0,
     },
   })
+
+  useEffect(() => {
+    if (open) {
+      reset({
+        code: category?.code ?? '',
+        name: category?.name ?? '',
+        sortOrder: category?.sortOrder ?? 0,
+      })
+    }
+  }, [open, category, reset])
 
   const mutation = useMutation({
     mutationFn: (data: CreateCategoryRequest | UpdateCategoryRequest) =>
@@ -289,6 +308,8 @@ function CategoryModal({ open, onClose, category, onSuccess }: CategoryModalProp
                 {...register('code', { required: '请输入编码' })}
                 placeholder="如 INDUSTRY"
                 error={!!errors.code}
+                disabled={isEdit}
+                inputClassName={isEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}
               />
               {errors.code && <p className="mt-1 text-xs text-red-500">{errors.code.message}</p>}
             </div>
@@ -343,6 +364,7 @@ function TagModal({ open, onClose, tag, categories, defaultCategoryId, onSuccess
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<CreateTagRequest>({
     defaultValues: {
@@ -352,6 +374,17 @@ function TagModal({ open, onClose, tag, categories, defaultCategoryId, onSuccess
       sortOrder: tag?.sortOrder ?? 0,
     },
   })
+
+  useEffect(() => {
+    if (open) {
+      reset({
+        categoryId: tag?.categoryId ?? defaultCategoryId ?? (categories[0]?.id || 0),
+        name: tag?.name ?? '',
+        alias: tag?.alias ?? '',
+        sortOrder: tag?.sortOrder ?? 0,
+      })
+    }
+  }, [open, tag, categories, defaultCategoryId, reset])
 
   const mutation = useMutation({
     mutationFn: (data: CreateTagRequest | UpdateTagRequest) =>
