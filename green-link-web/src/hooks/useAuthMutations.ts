@@ -11,20 +11,40 @@ import {
   type SmsLoginParams,
   type RegisterParams,
 } from '@/services/authService'
+import { fetchMyProfile } from '@/services/memberService'
+
+async function hydratePermissions(
+  setPermissions: (p: string[]) => void
+): Promise<void> {
+  try {
+    const profile = await fetchMyProfile()
+    setPermissions(profile.permissions ?? [])
+  } catch {
+    setPermissions([])
+  }
+}
 
 export function usePasswordLogin() {
   const setAuth = useAuthStore((s) => s.setAuth)
+  const setPermissions = useAuthStore((s) => s.setPermissions)
   return useMutation({
     mutationFn: (params: LoginParams) => loginByPassword(params),
-    onSuccess: (data) => setAuth(data),
+    onSuccess: async (data) => {
+      setAuth(data)
+      await hydratePermissions(setPermissions)
+    },
   })
 }
 
 export function useSmsLogin() {
   const setAuth = useAuthStore((s) => s.setAuth)
+  const setPermissions = useAuthStore((s) => s.setPermissions)
   return useMutation({
     mutationFn: (params: SmsLoginParams) => loginBySms(params),
-    onSuccess: (data) => setAuth(data),
+    onSuccess: async (data) => {
+      setAuth(data)
+      await hydratePermissions(setPermissions)
+    },
   })
 }
 

@@ -54,7 +54,9 @@
 | `/api/v1/supply/**` | `gl-supply` | 资源/需求发布 |
 | `/api/v1/match/**` | `gl-match` | 匹配对接 |
 | `/api/v1/portal/**` | `gl-portal` | 门户文章/活动 |
-| `/api/v1/tags/**` | `gl-common` | 标签体系 |
+| `/api/v1/tags/**` | `gl-tag` | 标签体系 |
+| `/api/v1/tag-categories/**` | `gl-tag` | 标签分类管理 |
+| `/api/v1/tag-relations/**` | `gl-tag` | 业务标签关联 |
 | `/api/v1/messages/**` | `gl-message` | 消息通知 |
 | `/api/v1/files/**` | `gl-file` | 文件上传 |
 | `/api/v1/admin/**` | `gl-admin` (BFF) | 管理端聚合接口 |
@@ -2085,7 +2087,7 @@ CreateArticleRequest:
 
 ---
 
-## 8. 标签模块（gl-common）
+## 8. 标签模块（gl-tag）
 
 ### 8.1 获取标签树（全量）
 
@@ -2127,18 +2129,19 @@ CreateArticleRequest:
 
 ---
 
-### 8.2 标签管理（管理端）
+### 8.2 标签分类与标签 CRUD（管理端）
 
 | 路径 | 方法 | 权限 | 说明 |
 |---|---|---|---|
-| `GET /api/v1/tags/categories` | GET | 🛡️ | 标签分类列表 |
-| `POST /api/v1/tags/categories` | POST | ⚡ | 创建标签分类 |
-| `PUT /api/v1/tags/categories/{id}` | PUT | ⚡ | 更新标签分类 |
-| `GET /api/v1/tags/items` | GET | 🛡️ | 标签列表（含停用） |
-| `POST /api/v1/tags/items` | POST | 🛡️ | 创建标签 |
-| `PUT /api/v1/tags/items/{id}` | PUT | 🛡️ | 更新标签 |
-| `PATCH /api/v1/tags/items/{id}/status` | PATCH | 🛡️ | 启用/停用标签 |
-| `DELETE /api/v1/tags/items/{id}` | DELETE | ⚡ | 删除标签 |
+| `GET /api/v1/tag-categories` | GET | 🔓 | 分类列表（含子标签） |
+| `POST /api/v1/tag-categories` | POST | ⚡ | 创建标签分类 |
+| `PUT /api/v1/tag-categories/{id}` | PUT | ⚡ | 更新标签分类 |
+| `DELETE /api/v1/tag-categories/{id}` | DELETE | ⚡ | 删除分类（需先清空子标签） |
+| `GET /api/v1/tags` | GET | 🔓 | 标签分页列表（支持 categoryId/keyword 过滤） |
+| `GET /api/v1/tags/{id}` | GET | 🔓 | 标签详情 |
+| `POST /api/v1/tags` | POST | ⚡ | 创建标签 |
+| `PUT /api/v1/tags/{id}` | PUT | ⚡ | 更新标签 |
+| `DELETE /api/v1/tags/{id}` | DELETE | ⚡ | 删除标签（软删除） |
 
 **创建标签请求：**
 
@@ -2148,6 +2151,30 @@ CreateArticleRequest:
   "name": "碳捕集",
   "alias": "CCUS,碳汇",
   "sortOrder": 10
+}
+```
+
+---
+
+### 8.3 业务标签关联（服务内部调用）
+
+> 由各业务服务通过 OpenFeign 调用，不经过 Gateway 鉴权。
+
+| 路径 | 方法 | 说明 |
+|---|---|---|
+| `GET /api/v1/tag-relations?bizType=&bizId=` | GET | 查询业务实体的标签列表 |
+| `POST /api/v1/tag-relations/batch` | POST | 批量设置（先清空再写入，事务内） |
+| `DELETE /api/v1/tag-relations?bizType=&bizId=` | DELETE | 清空业务实体的所有标签 |
+
+**bizType 枚举值：** `RESOURCE` / `DEMAND` / `MEMBER` / `ARTICLE` / `ACTIVITY`
+
+**批量设置请求（POST /batch）：**
+
+```json
+{
+  "bizType": "MEMBER",
+  "bizId": 100,
+  "tagIds": [101, 205, 307]
 }
 ```
 

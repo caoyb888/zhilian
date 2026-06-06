@@ -1,7 +1,10 @@
 package com.greenlink.glmember.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
+import com.greenlink.common.util.PageResult;
 import com.greenlink.glmember.domain.MemberAccount;
 import com.greenlink.glmember.domain.MemberUnit;
 import com.greenlink.glmember.dto.request.AuditMemberRequest;
@@ -12,7 +15,7 @@ import com.greenlink.glmember.repository.MemberUnitMapper;
 import com.greenlink.glmember.repository.RbacAccountRoleMapper;
 import com.greenlink.glmember.repository.RbacPermissionMapper;
 import com.greenlink.glmember.repository.RbacRoleMapper;
-import com.greenlink.glmember.repository.TagRelationMapper;
+import com.greenlink.glmember.client.TagRelationClient;
 import com.greenlink.glmember.domain.RbacAccountRole;
 import com.greenlink.glmember.service.impl.MemberServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +45,7 @@ class MemberServiceTest {
     @Mock private RbacRoleMapper rbacRoleMapper;
     @Mock private RbacAccountRoleMapper rbacAccountRoleMapper;
     @Mock private RbacPermissionMapper rbacPermissionMapper;
-    @Mock private TagRelationMapper tagRelationMapper;
+    @Mock private TagRelationClient tagRelationClient;
     @Mock private StringRedisTemplate redisTemplate;
     @Mock private ValueOperations<String, String> valueOps;
 
@@ -178,6 +181,38 @@ class MemberServiceTest {
 
         assertThatThrownBy(() -> memberService.auditMember(999L, req, 1L))
                 .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void listMembers_returnsCorrectTotalAndRecords() {
+        MemberUnit unit = buildPendingUnit();
+        unit.setName("山东绿能科技");
+        unit.setStatus(1);
+
+        Page<MemberUnit> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(List.of(unit));
+        mockPage.setTotal(1L);
+        when(memberUnitMapper.selectPage(any(Page.class), any(QueryWrapper.class)))
+                .thenReturn(mockPage);
+
+        PageResult<?> result = memberService.listMembers(1, 20, null, null, null, null, null);
+
+        assertThat(result.getTotal()).isEqualTo(1L);
+        assertThat(result.getRecords()).hasSize(1);
+    }
+
+    @Test
+    void listMembers_withStatusFilter_passesFilter() {
+        Page<MemberUnit> mockPage = new Page<>(1, 20);
+        mockPage.setRecords(List.of());
+        mockPage.setTotal(0L);
+        when(memberUnitMapper.selectPage(any(Page.class), any(QueryWrapper.class)))
+                .thenReturn(mockPage);
+
+        PageResult<?> result = memberService.listMembers(1, 20, null, null, null, null, 1);
+
+        assertThat(result.getTotal()).isEqualTo(0L);
+        verify(memberUnitMapper).selectPage(any(Page.class), any(QueryWrapper.class));
     }
 
     @Test

@@ -92,6 +92,7 @@
 | `gl-supply` | 资源/需求发布、审核、搜索 | `gl_supply` |
 | `gl-match` | 智能匹配引擎（召回 + 排序） | `gl_match` |
 | `gl-message` | 站内信、微信模板消息 | `gl_message` |
+| `gl-tag` | 标签体系：标签分类、标签、业务标签关联 | `gl_common` |
 | `gl-admin` | 协会管理端 BFF（聚合各服务） | — |
 | `gl-file` | 文件上传/下载（MinIO/OSS 封装） | `gl_file` |
 
@@ -543,11 +544,14 @@ com.greenlink.<service>/
 - Controller 层不允许出现业务逻辑，只做入参校验（`@Valid`）和响应封装。
 - Service 层必须写接口，`@Transactional` 注解只加在 Service 实现上。
 - 所有 API 响应统一使用 `Result<T>` 包装类，格式：`{code, msg, data, timestamp}`。
-- HTTP 状态码统一返回 200，业务错误通过 `code` 字段区分。
+- HTTP 状态码统一返回 200，业务错误通过 `code` 字段区分。**例外：Gateway JwtAuthFilter 对 token 缺失/过期/非法返回 HTTP 401**，使前端 axios 拦截器能触发自动刷新 token 流程；业务服务内部不得自行返回 4xx。
 - 全局异常通过 `@RestControllerAdvice` 统一处理，不允许在业务方法中直接返回 error 字符串。
 - 禁止在代码中硬编码敏感信息（数据库密码、AppSecret 等），统一通过 Nacos 配置中心或环境变量注入。
 - 日志使用 SLF4J + Logback，禁止使用 `System.out.println`；入参出参、异常必须打印日志，日志级别按规范使用。
 - 分页查询统一使用 MyBatis-Plus 的 `Page<T>`，禁止 `SELECT *` 全量查询。
+- **每个微服务必须在 `config/` 包下配置 `MybatisPlusConfig`，注册 `PaginationInnerInterceptor(DbType.MYSQL)`**。MyBatis-Plus 3.5+ 不再自动注册分页插件，缺失时 `selectPage` 的 `total` 始终为 0。
+- 分页列表查询统一使用 `QueryWrapper`（字符串列名）+ `selectPage`，禁止用 `@Select` 注解配合 `IPage<T>` 返回值——该组合的 COUNT 子查询由分页插件生成，实测不可靠。
+- `LambdaQueryWrapper` 可用于条件过滤，但不能在其上调用 `.select(字段引用…)`；指定查询列时改用 `QueryWrapper.select("col1", "col2", …)`，避免在无 Spring 上下文的单元测试中触发 lambda cache 查找失败。
 - 密码存储统一使用 BCrypt，禁止 MD5 / SHA1。
 
 ### 5.2 前端编码规范
