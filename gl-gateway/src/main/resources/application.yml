@@ -82,7 +82,7 @@ jwt:
     - /api/v1/portal/articles
     - /api/v1/portal/articles/**
     - /api/v1/portal/activities
-    - /api/v1/portal/activities/**
+    - /api/v1/portal/activities/*
     - /api/v1/portal/banners
     - /api/v1/portal/banners/**
     - /api/v1/tag-categories
