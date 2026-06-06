@@ -131,6 +131,66 @@ export function useUploadFile() {
   })
 }
 
+// ─── Sub-account Types & Hooks ────────────────────────────────────────────────
+
+export interface SubAccount {
+  id: number
+  memberId: number
+  parentId: number | null
+  username: string
+  realName: string | null
+  phone: string | null
+  avatarUrl: string | null
+  status: number
+  roles: string[]
+  lastLoginAt: string | null
+  createdAt: string
+}
+
+export interface CreateSubAccountBody {
+  username: string
+  password: string
+  realName?: string
+  phone?: string
+}
+
+export function useSubAccounts(memberId: number | null) {
+  return useQuery({
+    queryKey: ['member', 'sub-accounts', memberId],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<SubAccount[]>>(`/members/${memberId}/sub-accounts`)
+      return res.data.data
+    },
+    enabled: memberId !== null,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useCreateSubAccount(memberId: number | null) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: CreateSubAccountBody) => {
+      const res = await http.post<ApiResult<SubAccount>>(`/members/${memberId}/sub-accounts`, data)
+      return res.data.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['member', 'sub-accounts', memberId] })
+    },
+  })
+}
+
+export function useUpdateSubAccountStatus(memberId: number | null) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ accountId, status }: { accountId: number; status: number }) => {
+      await http.patch(`/members/${memberId}/sub-accounts/${accountId}`, { status })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['member', 'sub-accounts', memberId] })
+    },
+  })
+}
+
 // ─── Legacy (used by auth flow for permissions) ───────────────────────────────
 
 export async function fetchMyProfile(): Promise<MeProfile> {

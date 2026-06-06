@@ -15,6 +15,7 @@ const PortalActivityDetailPage = lazy(() => import('@/pages/portal/PortalActivit
 const SupplyListPage           = lazy(() => import('@/pages/supply/SupplyListPage'))
 const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
 const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
+const SubAccountPage           = lazy(() => import('@/pages/member/SubAccountPage'))
 const NotFoundPage             = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage            = lazy(() => import('@/pages/ForbiddenPage'))
 
@@ -80,6 +81,7 @@ export default function App() {
             >
               <Route index element={<Navigate to="/member/profile" replace />} />
               <Route path="profile" element={<MemberProfilePage />} />
+              <Route path="sub-accounts" element={<SubAccountPage />} />
             </Route>
 
             {/* 管理端（登录 + 管理员角色） */}
