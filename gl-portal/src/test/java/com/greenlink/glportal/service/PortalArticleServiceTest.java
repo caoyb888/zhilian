@@ -8,7 +8,9 @@ import com.greenlink.glportal.dto.request.CreateArticleRequest;
 import com.greenlink.glportal.dto.request.UpdateArticleRequest;
 import com.greenlink.glportal.dto.response.ArticleDetailVO;
 import com.greenlink.glportal.enums.PublishMode;
+import com.greenlink.glportal.es.ArticleEsSyncService;
 import com.greenlink.glportal.helper.ViewCountHelper;
+import com.greenlink.glportal.mq.ArticleEventProducer;
 import com.greenlink.glportal.repository.PortalArticleMapper;
 import com.greenlink.glportal.repository.PortalCategoryMapper;
 import com.greenlink.glportal.service.impl.PortalArticleServiceImpl;
@@ -32,6 +34,8 @@ class PortalArticleServiceTest {
     @Mock PortalArticleMapper articleMapper;
     @Mock PortalCategoryMapper categoryMapper;
     @Mock ViewCountHelper viewCountHelper;
+    @Mock ArticleEventProducer eventProducer;
+    @Mock ArticleEsSyncService esSyncService;
 
     @InjectMocks PortalArticleServiceImpl service;
 

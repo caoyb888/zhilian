@@ -19,4 +19,8 @@ public class ArticleVO {
     private Boolean isPublished;
     private LocalDateTime publishedAt;
     private LocalDateTime createdAt;
+
+    /** ES 搜索高亮 — 有关键词时才有值，否则为 null */
+    private String highlightTitle;
+    private String highlightSummary;
 }

@@ -41,6 +41,15 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
+elasticsearch:
+  uris: ${ES_URI:http://10.30.10.49:9200}
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESRV:10.30.10.49:9876}
+  producer:
+    group: gl-portal-producer-group
+    send-message-timeout: 3000
+
 management:
   endpoints:
     web:
