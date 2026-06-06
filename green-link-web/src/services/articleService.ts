@@ -17,6 +17,9 @@ export interface ArticleItem {
   isPublished: boolean
   publishedAt: string | null
   createdAt: string
+  /** ES 搜索高亮，有 keyword 时才有值 */
+  highlightTitle: string | null
+  highlightSummary: string | null
 }
 
 export interface ArticleDetail extends ArticleItem {
@@ -79,6 +82,31 @@ export interface UpdateArticleBody {
 }
 
 // ─── hooks ────────────────────────────────────────────────────────────────────
+
+/** 前台公开文章列表（published=true，ES 高亮支持） */
+export function usePublicArticleList(params: ArticleListParams) {
+  return useQuery({
+    queryKey: ['portal', 'articles', params],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<MbPage<ArticleItem>>>('/portal/articles', { params })
+      return res.data.data
+    },
+    staleTime: 2 * 60 * 1000,
+    placeholderData: (prev) => prev,
+  })
+}
+
+/** 前台公开文章详情（调用后后端自动累加 viewCount） */
+export function usePublicArticleDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['portal', 'article', id],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<ArticleDetail>>(`/portal/articles/${id}`)
+      return res.data.data
+    },
+    enabled: id !== null,
+  })
+}
 
 export function useArticleList(params: ArticleListParams) {
   return useQuery({
