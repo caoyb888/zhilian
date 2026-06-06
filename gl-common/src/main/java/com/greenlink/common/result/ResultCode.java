@@ -52,7 +52,13 @@ public enum ResultCode {
 
     // 消息/通知模块 5000-5999
     MESSAGE_SEND_FAIL(5001, "消息发送失败"),
-    WECHAT_PUSH_FAIL(5002, "微信推送失败");
+    WECHAT_PUSH_FAIL(5002, "微信推送失败"),
+
+    // 文件模块 6000-6999
+    FILE_TYPE_NOT_ALLOWED(6000, "不支持的文件类型"),
+    FILE_SIZE_EXCEEDED(6001, "文件大小超过限制（最大 20MB）"),
+    FILE_UPLOAD_FAIL(6002, "文件上传失败，请稍后重试"),
+    FILE_NOT_FOUND(6003, "文件不存在");
 
     private final int code;
     private final String msg;

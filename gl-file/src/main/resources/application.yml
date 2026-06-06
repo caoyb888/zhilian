@@ -33,6 +33,8 @@ minio:
   access-key: ${MINIO_ACCESS_KEY:greenlink}
   secret-key: ${MINIO_SECRET_KEY:GreenLink_MinIO@2026}
   bucket-name: ${MINIO_BUCKET:greenlink}
+  public-bucket-name: ${MINIO_PUBLIC_BUCKET:greenlink-public}
+  cdn-url: ${CDN_URL:}
 
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
