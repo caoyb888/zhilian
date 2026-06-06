@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
+import { Fragment } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -74,13 +76,15 @@ function Field({
 const INPUT_CLS =
   'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400 transition'
 
-// ─── Create Modal ─────────────────────────────────────────────────────────────
+// ─── Create Dialog (Headless UI) ──────────────────────────────────────────────
 
-function CreateModal({
+function CreateDialog({
   memberId,
+  open,
   onClose,
 }: {
   memberId: number
+  open: boolean
   onClose: () => void
 }) {
   const createAccount = useCreateSubAccount(memberId)
@@ -89,10 +93,17 @@ function CreateModal({
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<CreateFormValues>({
     resolver: zodResolver(createSchema),
   })
+
+  function handleClose() {
+    reset()
+    setServerError(null)
+    onClose()
+  }
 
   async function onSubmit(values: CreateFormValues) {
     setServerError(null)
@@ -103,7 +114,7 @@ function CreateModal({
         realName: values.realName || undefined,
         phone: values.phone || undefined,
       })
-      onClose()
+      handleClose()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
       setServerError(msg ?? '创建失败，请稍后重试')
@@ -111,84 +122,109 @@ function CreateModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">新建子账号</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="关闭"
+    <Transition appear show={open} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+        {/* Backdrop */}
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/40" />
+        </TransitionChild>
+
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
           >
-            ✕
-          </button>
+            <DialogPanel className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <DialogTitle className="text-base font-semibold text-gray-900">
+                  新建子账号
+                </DialogTitle>
+                <button
+                  onClick={handleClose}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="关闭"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
+                {serverError && (
+                  <div className="rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
+                    {serverError}
+                  </div>
+                )}
+
+                <Field label="用户名 *" error={errors.username?.message}>
+                  <input
+                    {...register('username')}
+                    placeholder="4-50位，字母/数字/下划线"
+                    autoComplete="off"
+                    className={INPUT_CLS}
+                  />
+                </Field>
+
+                <Field label="密码 *" error={errors.password?.message}>
+                  <input
+                    {...register('password')}
+                    type="password"
+                    placeholder="8-20位，须同时含字母和数字"
+                    autoComplete="new-password"
+                    className={INPUT_CLS}
+                  />
+                </Field>
+
+                <Field label="确认密码 *" error={errors.confirmPassword?.message}>
+                  <input
+                    {...register('confirmPassword')}
+                    type="password"
+                    placeholder="再次输入密码"
+                    autoComplete="new-password"
+                    className={INPUT_CLS}
+                  />
+                </Field>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="真实姓名" error={errors.realName?.message}>
+                    <input {...register('realName')} placeholder="选填" className={INPUT_CLS} />
+                  </Field>
+                  <Field label="手机号" error={errors.phone?.message}>
+                    <input {...register('phone')} placeholder="选填" className={INPUT_CLS} />
+                  </Field>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleClose}
+                    disabled={createAccount.isPending}
+                  >
+                    取消
+                  </Button>
+                  <Button type="submit" loading={createAccount.isPending}>
+                    创建账号
+                  </Button>
+                </div>
+              </form>
+            </DialogPanel>
+          </TransitionChild>
         </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
-          {serverError && (
-            <div className="rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
-              {serverError}
-            </div>
-          )}
-
-          <Field label="用户名 *" error={errors.username?.message}>
-            <input
-              {...register('username')}
-              placeholder="4-50位，字母/数字/下划线"
-              autoComplete="off"
-              className={INPUT_CLS}
-            />
-          </Field>
-
-          <Field label="密码 *" error={errors.password?.message}>
-            <input
-              {...register('password')}
-              type="password"
-              placeholder="8-20位，须同时含字母和数字"
-              autoComplete="new-password"
-              className={INPUT_CLS}
-            />
-          </Field>
-
-          <Field label="确认密码 *" error={errors.confirmPassword?.message}>
-            <input
-              {...register('confirmPassword')}
-              type="password"
-              placeholder="再次输入密码"
-              autoComplete="new-password"
-              className={INPUT_CLS}
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="真实姓名" error={errors.realName?.message}>
-              <input
-                {...register('realName')}
-                placeholder="选填"
-                className={INPUT_CLS}
-              />
-            </Field>
-            <Field label="手机号" error={errors.phone?.message}>
-              <input
-                {...register('phone')}
-                placeholder="选填"
-                className={INPUT_CLS}
-              />
-            </Field>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={createAccount.isPending}>
-              取消
-            </Button>
-            <Button type="submit" loading={createAccount.isPending}>
-              创建账号
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </Dialog>
+    </Transition>
   )
 }
 
@@ -202,6 +238,7 @@ export default function SubAccountPage() {
 
   const [showCreate, setShowCreate] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const [toggleError, setToggleError] = useState<string | null>(null)
 
   const isMain = me?.isMainAccount ?? false
 
@@ -210,8 +247,12 @@ export default function SubAccountPage() {
     const label = nextStatus === 0 ? '禁用' : '启用'
     if (!window.confirm(`确认${label}此子账号？`)) return
     setTogglingId(accountId)
+    setToggleError(null)
     try {
       await updateStatus.mutateAsync({ accountId, status: nextStatus })
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
+      setToggleError(msg ?? `${label}失败，请稍后重试`)
     } finally {
       setTogglingId(null)
     }
@@ -227,8 +268,12 @@ export default function SubAccountPage() {
 
   return (
     <div className="space-y-5">
-      {showCreate && memberId !== null && (
-        <CreateModal memberId={memberId} onClose={() => setShowCreate(false)} />
+      {memberId !== null && (
+        <CreateDialog
+          memberId={memberId}
+          open={showCreate}
+          onClose={() => setShowCreate(false)}
+        />
       )}
 
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
@@ -252,6 +297,19 @@ export default function SubAccountPage() {
           </div>
         )}
 
+        {/* Toggle error */}
+        {toggleError && (
+          <div className="mx-6 mt-4 rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600 flex items-center justify-between">
+            <span>{toggleError}</span>
+            <button
+              onClick={() => setToggleError(null)}
+              className="text-red-400 hover:text-red-600 ml-4"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* List */}
         <div className="px-6 py-4">
           {listLoading ? (
@@ -261,11 +319,7 @@ export default function SubAccountPage() {
           ) : !accounts || accounts.length === 0 ? (
             <div className="py-12 text-center text-sm text-gray-400">
               暂无子账号
-              {isMain && (
-                <p className="mt-1">
-                  点击右上角「新建子账号」开始添加
-                </p>
-              )}
+              {isMain && <p className="mt-1">点击右上角「新建子账号」开始添加</p>}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -340,11 +394,8 @@ export default function SubAccountPage() {
           )}
         </div>
 
-        {/* Footer hint */}
         {accounts && accounts.length > 0 && (
-          <div className="px-6 pb-4 text-xs text-gray-400">
-            共 {accounts.length} 个子账号
-          </div>
+          <div className="px-6 pb-4 text-xs text-gray-400">共 {accounts.length} 个子账号</div>
         )}
       </section>
     </div>
