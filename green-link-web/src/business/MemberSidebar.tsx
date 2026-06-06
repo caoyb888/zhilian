@@ -1,8 +1,9 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { User, Users, LogOut } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Badge } from '@/components/Badge'
 import { useAuthStore } from '@/stores/authStore'
+import { useLogout } from '@/hooks/useAuthMutations'
 
 const NAV_ITEMS = [
   { label: '个人信息', path: '/member/profile', icon: User },
@@ -17,6 +18,8 @@ const MEMBER_LEVEL_MAP: Record<number, { label: string; variant: 'default' | 'vi
 
 export function MemberSidebar() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
+  const navigate = useNavigate()
+  const logoutMutation = useLogout()
   const levelMeta = accountInfo
     ? (MEMBER_LEVEL_MAP[accountInfo.memberLevel] ?? MEMBER_LEVEL_MAP[1])
     : null
@@ -66,7 +69,10 @@ export function MemberSidebar() {
 
       {/* Logout */}
       <div className="mt-4 rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
-        <button className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors">
+        <button
+          onClick={() => logoutMutation.mutate(undefined, { onSettled: () => navigate('/login') })}
+          className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors"
+        >
           <Icon icon={LogOut} size={18} />
           退出登录
         </button>

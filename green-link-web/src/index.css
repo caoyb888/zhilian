@@ -104,10 +104,8 @@
   .article-content td {
     @apply border border-gray-200 px-3 py-2 text-gray-700;
   }
-  /* ES highlight tags */
-  .article-content em {
-    @apply italic;
-  }
+  /* ES highlight tags — <em> inside article body or explicit .highlight wrapper */
+  .article-content em,
   .highlight em {
     @apply not-italic font-semibold text-yellow-800 bg-yellow-100 rounded px-0.5;
   }
