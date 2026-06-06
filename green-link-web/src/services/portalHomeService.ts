@@ -40,7 +40,7 @@ export function usePortalLatestActivities(size = 4) {
   return useQuery({
     queryKey: ['portal', 'home', 'activities', size],
     queryFn: async () => {
-      const res = await http.get<ApiResult<{ records: Activity[] }>>('/portal/activities', {
+      const res = await http.get<ApiResult<{ records: Activity[] }>>('/portal/public/activities', {
         params: { page: 1, size },
       })
       return res.data.data?.records ?? []
