@@ -1,14 +1,18 @@
 package com.greenlink.glportal.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
 import com.greenlink.glportal.domain.PortalActivity;
 import com.greenlink.glportal.domain.PortalActivitySignup;
+import com.greenlink.glportal.dto.request.ActivityPublicPageRequest;
 import com.greenlink.glportal.dto.request.ActivitySignupRequest;
 import com.greenlink.glportal.dto.request.CreateActivityRequest;
 import com.greenlink.glportal.dto.request.UpdateActivityRequest;
 import com.greenlink.glportal.dto.response.ActivityDetailVO;
+import com.greenlink.glportal.dto.response.ActivitySignupStatusVO;
+import com.greenlink.glportal.dto.response.ActivityVO;
 import com.greenlink.glportal.dto.response.SignupVO;
 import com.greenlink.glportal.helper.SignupLockHelper;
 import com.greenlink.glportal.repository.PortalActivityMapper;
@@ -260,5 +264,132 @@ class PortalActivityServiceTest {
         assertThatThrownBy(() -> service.checkin(1L, 5L))
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("报名记录不存在");
+    }
+
+    // ─── 前台：公开列表 ───────────────────────────────────────────────────────────
+
+    @Test
+    void publicPageList_defaultFilter_queriesStatuses2And3() {
+        Page<PortalActivity> dbPage = new Page<>(1, 20, 2);
+        PortalActivity a1 = new PortalActivity();
+        a1.setId(1L); a1.setTitle("报名中活动"); a1.setStatus(2);
+        PortalActivity a2 = new PortalActivity();
+        a2.setId(2L); a2.setTitle("已结束活动"); a2.setStatus(3);
+        dbPage.setRecords(java.util.List.of(a1, a2));
+
+        when(activityMapper.selectPage(any(Page.class), any())).thenReturn(dbPage);
+
+        ActivityPublicPageRequest req = new ActivityPublicPageRequest();
+        Page<ActivityVO> result = service.publicPageList(req);
+
+        assertThat(result.getTotal()).isEqualTo(2);
+        assertThat(result.getRecords()).hasSize(2);
+    }
+
+    @Test
+    void publicPageList_statusFilter2_returnsSingleStatus() {
+        Page<PortalActivity> dbPage = new Page<>(1, 20, 1);
+        PortalActivity a = new PortalActivity();
+        a.setId(1L); a.setTitle("报名中"); a.setStatus(2);
+        dbPage.setRecords(java.util.List.of(a));
+
+        when(activityMapper.selectPage(any(Page.class), any())).thenReturn(dbPage);
+
+        ActivityPublicPageRequest req = new ActivityPublicPageRequest();
+        req.setStatus(2);
+        Page<ActivityVO> result = service.publicPageList(req);
+
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getStatus()).isEqualTo(2);
+    }
+
+    // ─── 前台：公开详情 ───────────────────────────────────────────────────────────
+
+    @Test
+    void publicGetById_statusOpen_returnsDetail() {
+        when(activityMapper.selectById(1L)).thenReturn(openActivity);  // status=2
+
+        ActivityDetailVO result = service.publicGetById(1L);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getStatus()).isEqualTo(2);
+    }
+
+    @Test
+    void publicGetById_statusPreparation_throwsNotFound() {
+        openActivity.setStatus(1);  // 筹备中，前台不可见
+        when(activityMapper.selectById(1L)).thenReturn(openActivity);
+
+        assertThatThrownBy(() -> service.publicGetById(1L))
+                .isInstanceOf(BizException.class)
+                .extracting(e -> ((BizException) e).getCode())
+                .isEqualTo(ResultCode.ACTIVITY_NOT_FOUND.getCode());
+    }
+
+    @Test
+    void publicGetById_notFound_throwsNotFound() {
+        when(activityMapper.selectById(999L)).thenReturn(null);
+
+        assertThatThrownBy(() -> service.publicGetById(999L))
+                .isInstanceOf(BizException.class)
+                .extracting(e -> ((BizException) e).getCode())
+                .isEqualTo(ResultCode.ACTIVITY_NOT_FOUND.getCode());
+    }
+
+    // ─── 前台：报名状态查询 ───────────────────────────────────────────────────────
+
+    @Test
+    void getSignupStatus_signedUp_returnsSigned() {
+        PortalActivitySignup signup = new PortalActivitySignup();
+        signup.setId(10L); signup.setStatus(1);
+        when(signupMapper.findByActivityAndAccount(1L, 100L)).thenReturn(signup);
+
+        ActivitySignupStatusVO vo = service.getSignupStatus(1L, 100L);
+
+        assertThat(vo.isSigned()).isTrue();
+        assertThat(vo.getSignupId()).isEqualTo(10L);
+        assertThat(vo.getSignupStatus()).isEqualTo(1);
+    }
+
+    @Test
+    void getSignupStatus_checkedIn_returnsCheckedIn() {
+        PortalActivitySignup signup = new PortalActivitySignup();
+        signup.setId(11L); signup.setStatus(2);
+        when(signupMapper.findByActivityAndAccount(1L, 100L)).thenReturn(signup);
+
+        ActivitySignupStatusVO vo = service.getSignupStatus(1L, 100L);
+
+        assertThat(vo.isSigned()).isTrue();
+        assertThat(vo.getSignupStatus()).isEqualTo(2);
+    }
+
+    @Test
+    void getSignupStatus_cancelled_returnsNotSigned() {
+        PortalActivitySignup signup = new PortalActivitySignup();
+        signup.setId(12L); signup.setStatus(3);  // 已取消
+        when(signupMapper.findByActivityAndAccount(1L, 100L)).thenReturn(signup);
+
+        ActivitySignupStatusVO vo = service.getSignupStatus(1L, 100L);
+
+        assertThat(vo.isSigned()).isFalse();
+        assertThat(vo.getSignupId()).isNull();
+    }
+
+    @Test
+    void getSignupStatus_noRecord_returnsNotSigned() {
+        when(signupMapper.findByActivityAndAccount(1L, 100L)).thenReturn(null);
+
+        ActivitySignupStatusVO vo = service.getSignupStatus(1L, 100L);
+
+        assertThat(vo.isSigned()).isFalse();
+        assertThat(vo.getSignupId()).isNull();
+    }
+
+    @Test
+    void getSignupStatus_notLoggedIn_returnsNotSigned() {
+        ActivitySignupStatusVO vo = service.getSignupStatus(1L, null);
+
+        assertThat(vo.isSigned()).isFalse();
+        verifyNoInteractions(signupMapper);
     }
 }
