@@ -15,7 +15,7 @@ interface UploadItem {
 }
 
 export interface FileUploaderProps {
-  /** MIME type filter passed to <input accept> and shown in hints.
+  /** MIME/extension filter — passed to <input accept> and used for drag-drop validation.
    *  Example: "image/*,application/pdf,.doc,.docx" */
   accept?: string
   /** Max simultaneous files. 1 = single-file mode (new drop replaces). Default 1. */
@@ -27,6 +27,8 @@ export interface FileUploaderProps {
   /** Custom hint text. If omitted, auto-generated from accept + maxSizeMB. */
   hint?: string
   disabled?: boolean
+  /** Pre-populate with already-uploaded files (uncontrolled initial value). */
+  defaultValue?: FileUploadResult[]
   /** Called with the current list of successfully uploaded files after any change. */
   onChange?: (results: FileUploadResult[]) => void
 }
@@ -45,10 +47,8 @@ function extBadge(name: string, mime = ''): { label: string; cls: string } {
     return { label: 'IMG', cls: 'bg-emerald-100 text-emerald-700' }
   if (mime === 'application/pdf' || ext === 'pdf')
     return { label: 'PDF', cls: 'bg-red-100 text-red-700' }
-  if (['doc', 'docx'].includes(ext))
-    return { label: 'DOC', cls: 'bg-blue-100 text-blue-700' }
-  if (['xls', 'xlsx'].includes(ext))
-    return { label: 'XLS', cls: 'bg-green-100 text-green-700' }
+  if (['doc', 'docx'].includes(ext)) return { label: 'DOC', cls: 'bg-blue-100 text-blue-700' }
+  if (['xls', 'xlsx'].includes(ext)) return { label: 'XLS', cls: 'bg-green-100 text-green-700' }
   return { label: ext.toUpperCase().slice(0, 4) || 'FILE', cls: 'bg-gray-100 text-gray-600' }
 }
 
@@ -62,13 +62,37 @@ function buildHint(accept: string, maxSizeMB: number): string {
   return `支持${typeStr}，单个 ≤ ${maxSizeMB}MB`
 }
 
-function uid(): string {
+function makeUid(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-// ─── Upload icon SVG ──────────────────────────────────────────────────────────
+/** Client-side file type check against an `accept` string (MIME types + extensions). */
+function isTypeAllowed(file: File, accept: string): boolean {
+  const tokens = accept.split(',').map((t) => t.trim().toLowerCase())
+  const mime = file.type.toLowerCase()
+  const ext = '.' + (file.name.split('.').pop()?.toLowerCase() ?? '')
+  return tokens.some((token) => {
+    if (token === '*/*') return true
+    if (token.endsWith('/*')) return mime.startsWith(token.slice(0, -1))
+    if (token.startsWith('.')) return ext === token
+    return mime === token
+  })
+}
+
+function itemsFromDefault(defaults: FileUploadResult[]): UploadItem[] {
+  return defaults.map((r) => ({
+    uid: String(r.fileId),
+    name: r.fileName,
+    size: r.fileSize,
+    status: 'done' as const,
+    progress: 100,
+    result: r,
+  }))
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 function UploadIcon({ className }: { className?: string }) {
   return (
@@ -109,20 +133,42 @@ export function FileUploader({
   bizId,
   hint,
   disabled = false,
+  defaultValue,
   onChange,
 }: FileUploaderProps) {
-  const [items, setItems] = useState<UploadItem[]>([])
+  const [items, setItems] = useState<UploadItem[]>(() =>
+    defaultValue?.length ? itemsFromDefault(defaultValue) : []
+  )
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  // Keep stable refs so callbacks don't go stale
   const fileRegistry = useRef(new Map<string, File>())
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
-  const notifyChange = useCallback((updatedItems: UploadItem[]) => {
-    const results = updatedItems.filter((i) => i.status === 'done').map((i) => i.result!)
-    onChangeRef.current?.(results)
+  // ─── Notify parent when done-set changes (no side-effects in updaters) ───
+  const prevDoneKey = useRef('')
+  useEffect(() => {
+    const doneItems = items.filter((i) => i.status === 'done')
+    const key = doneItems.map((i) => i.uid).join(',')
+    if (key === prevDoneKey.current) return
+    prevDoneKey.current = key
+    onChangeRef.current?.(doneItems.map((i) => i.result!))
+  }, [items])
+
+  // ─── Revoke all remaining object URLs on unmount ─────────────────────────
+  const itemsRef = useRef(items)
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
+  useEffect(() => {
+    return () => {
+      itemsRef.current.forEach((it) => {
+        if (it.previewUrl) URL.revokeObjectURL(it.previewUrl)
+      })
+    }
   }, [])
+
+  // ─── Upload logic ─────────────────────────────────────────────────────────
 
   const startUpload = useCallback(
     async (itemUid: string, file: File) => {
@@ -136,38 +182,29 @@ export function FileUploader({
             )
           },
         })
-        setItems((prev) => {
-          const next = prev.map((it) =>
-            it.uid === itemUid
-              ? { ...it, status: 'done' as const, progress: 100, result }
-              : it
+        setItems((prev) =>
+          prev.map((it) =>
+            it.uid === itemUid ? { ...it, status: 'done', progress: 100, result } : it
           )
-          notifyChange(next)
-          return next
-        })
+        )
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg ??
           '上传失败，请重试'
-        setItems((prev) => {
-          const next = prev.map((it) =>
-            it.uid === itemUid ? { ...it, status: 'error' as const, error: msg } : it
-          )
-          notifyChange(next)
-          return next
-        })
+        setItems((prev) =>
+          prev.map((it) => (it.uid === itemUid ? { ...it, status: 'error', error: msg } : it))
+        )
       } finally {
         fileRegistry.current.delete(itemUid)
       }
     },
-    [bizType, bizId, notifyChange]
+    [bizType, bizId]
   )
 
-  // Pick up newly-added pending items and start their uploads
+  // Pick up pending items and kick off uploads
   useEffect(() => {
     const pending = items.filter((i) => i.status === 'pending')
     if (pending.length === 0) return
-
     setItems((prev) =>
       prev.map((it) => (it.status === 'pending' ? { ...it, status: 'uploading' } : it))
     )
@@ -177,6 +214,8 @@ export function FileUploader({
     })
   }, [items, startUpload])
 
+  // ─── Add files ────────────────────────────────────────────────────────────
+
   const addFiles = useCallback(
     (incoming: FileList | File[]) => {
       if (disabled) return
@@ -184,8 +223,7 @@ export function FileUploader({
       const arr = Array.from(incoming)
 
       setItems((prev) => {
-        const activeCount =
-          maxFiles === 1 ? 0 : prev.filter((i) => i.status !== 'error').length
+        const activeCount = maxFiles === 1 ? 0 : prev.filter((i) => i.status !== 'error').length
         const slots = maxFiles - activeCount
         if (slots <= 0) return prev
 
@@ -193,34 +231,32 @@ export function FileUploader({
         const newItems: UploadItem[] = []
 
         for (const file of toAdd) {
-          const id = uid()
-          if (file.size > maxSizeBytes) {
+          const id = makeUid()
+
+          if (!isTypeAllowed(file, accept)) {
             newItems.push({
-              uid: id,
-              name: file.name,
-              size: file.size,
-              status: 'error',
-              progress: 0,
-              error: `超过 ${maxSizeMB}MB 大小限制`,
+              uid: id, name: file.name, size: file.size,
+              status: 'error', progress: 0, error: '文件类型不支持',
             })
             continue
           }
+
+          if (file.size > maxSizeBytes) {
+            newItems.push({
+              uid: id, name: file.name, size: file.size,
+              status: 'error', progress: 0, error: `超过 ${maxSizeMB}MB 大小限制`,
+            })
+            continue
+          }
+
           const previewUrl = file.type.startsWith('image/')
             ? URL.createObjectURL(file)
             : undefined
           fileRegistry.current.set(id, file)
-          newItems.push({
-            uid: id,
-            name: file.name,
-            size: file.size,
-            previewUrl,
-            status: 'pending',
-            progress: 0,
-          })
+          newItems.push({ uid: id, name: file.name, size: file.size, previewUrl, status: 'pending', progress: 0 })
         }
 
         if (maxFiles === 1) {
-          // Revoke old object URLs and clear registry
           prev.forEach((it) => {
             if (it.previewUrl) URL.revokeObjectURL(it.previewUrl)
             fileRegistry.current.delete(it.uid)
@@ -230,24 +266,21 @@ export function FileUploader({
         return [...prev, ...newItems]
       })
     },
-    [disabled, maxFiles, maxSizeMB]
+    [disabled, accept, maxFiles, maxSizeMB]
   )
 
-  const removeItem = useCallback(
-    (itemUid: string) => {
-      setItems((prev) => {
-        const target = prev.find((i) => i.uid === itemUid)
-        if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
-        fileRegistry.current.delete(itemUid)
-        const next = prev.filter((i) => i.uid !== itemUid)
-        notifyChange(next)
-        return next
-      })
-    },
-    [notifyChange]
-  )
+  // ─── Remove ───────────────────────────────────────────────────────────────
 
-  // ─── Drag handlers ──────────────────────────────────────────────────────────
+  const removeItem = useCallback((itemUid: string) => {
+    setItems((prev) => {
+      const target = prev.find((i) => i.uid === itemUid)
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+      fileRegistry.current.delete(itemUid)
+      return prev.filter((i) => i.uid !== itemUid)
+    })
+  }, [])
+
+  // ─── Drag handlers ────────────────────────────────────────────────────────
 
   function onDragOver(e: React.DragEvent) {
     e.preventDefault()
@@ -255,39 +288,33 @@ export function FileUploader({
   }
 
   function onDragLeave(e: React.DragEvent) {
-    // Only clear if leaving the zone entirely (not a child element)
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragging(false)
-    }
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false)
   }
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault()
     setIsDragging(false)
-    if (disabled) return
-    addFiles(e.dataTransfer.files)
+    if (!disabled) addFiles(e.dataTransfer.files)
   }
 
   function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files) {
       addFiles(e.target.files)
-      // Reset so same file can be re-selected
       e.target.value = ''
     }
   }
 
-  // ─── Derived state ──────────────────────────────────────────────────────────
+  // ─── Derived state ────────────────────────────────────────────────────────
 
   const activeCount = items.filter((i) => i.status !== 'error').length
   const isFull = activeCount >= maxFiles
   const hintText = hint ?? buildHint(accept, maxSizeMB)
   const maxLabel = maxFiles > 1 ? `，最多 ${maxFiles} 个` : ''
 
-  // ─── Render ─────────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-3">
-      {/* Drop zone */}
       {!isFull && (
         <div
           role="button"
@@ -307,20 +334,14 @@ export function FileUploader({
               : 'border-gray-200 bg-gray-50 cursor-pointer hover:border-brand-300 hover:bg-gray-100',
           ].join(' ')}
         >
-          <UploadIcon
-            className={`h-10 w-10 ${isDragging ? 'text-brand-500' : 'text-gray-300'}`}
-          />
+          <UploadIcon className={`h-10 w-10 ${isDragging ? 'text-brand-500' : 'text-gray-300'}`} />
           <p className="text-sm font-medium text-gray-600">
             {isDragging ? '松手即可上传' : '点击选择文件或拖拽至此处'}
           </p>
-          <p className="text-xs text-gray-400">
-            {hintText}
-            {maxLabel}
-          </p>
+          <p className="text-xs text-gray-400">{hintText}{maxLabel}</p>
         </div>
       )}
 
-      {/* Hidden file input */}
       <input
         ref={inputRef}
         type="file"
@@ -331,17 +352,12 @@ export function FileUploader({
         disabled={disabled}
       />
 
-      {/* File list */}
       {items.length > 0 && (
         <ul className="space-y-2">
           {items.map((item) => {
-            const badge = extBadge(item.name)
+            const badge = extBadge(item.name, item.result?.mimeType)
             return (
-              <li
-                key={item.uid}
-                className="flex items-start gap-3 rounded-lg border border-gray-100 bg-white p-3"
-              >
-                {/* Thumbnail or extension badge */}
+              <li key={item.uid} className="flex items-start gap-3 rounded-lg border border-gray-100 bg-white p-3">
                 <div className="flex-shrink-0">
                   {item.previewUrl ? (
                     <img
@@ -350,24 +366,18 @@ export function FileUploader({
                       className="h-10 w-10 rounded object-cover border border-gray-100"
                     />
                   ) : (
-                    <span
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded text-xs font-bold ${badge.cls}`}
-                    >
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded text-xs font-bold ${badge.cls}`}>
                       {badge.label}
                     </span>
                   )}
                 </div>
 
-                {/* Info + progress */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm text-gray-800 truncate">{item.name}</p>
-                    <span className="flex-shrink-0 text-xs text-gray-400">
-                      {formatSize(item.size)}
-                    </span>
+                    <span className="flex-shrink-0 text-xs text-gray-400">{formatSize(item.size)}</span>
                   </div>
 
-                  {/* Progress bar */}
                   {item.status === 'uploading' && (
                     <div className="mt-1.5">
                       <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
@@ -380,7 +390,6 @@ export function FileUploader({
                     </div>
                   )}
 
-                  {/* Done */}
                   {item.status === 'done' && (
                     <div className="mt-1 flex items-center gap-1">
                       <CheckIcon />
@@ -388,13 +397,11 @@ export function FileUploader({
                     </div>
                   )}
 
-                  {/* Error */}
                   {item.status === 'error' && (
                     <p className="mt-1 text-xs text-red-500">{item.error}</p>
                   )}
                 </div>
 
-                {/* Remove button — disabled during upload */}
                 <button
                   type="button"
                   onClick={() => removeItem(item.uid)}
@@ -403,11 +410,7 @@ export function FileUploader({
                   className="flex-shrink-0 rounded p-1 text-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </button>
               </li>
@@ -416,7 +419,6 @@ export function FileUploader({
         </ul>
       )}
 
-      {/* Capacity indicator for multi-file mode */}
       {maxFiles > 1 && items.length > 0 && (
         <p className="text-xs text-gray-400 text-right">
           已上传 {items.filter((i) => i.status === 'done').length} / {maxFiles} 个
