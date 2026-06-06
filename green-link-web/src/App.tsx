@@ -10,6 +10,8 @@ const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
 const PortalHomePage           = lazy(() => import('@/pages/portal/PortalHomePage'))
 const PortalArticleListPage    = lazy(() => import('@/pages/portal/PortalArticleListPage'))
 const PortalArticleDetailPage  = lazy(() => import('@/pages/portal/PortalArticleDetailPage'))
+const PortalActivityListPage   = lazy(() => import('@/pages/portal/PortalActivityListPage'))
+const PortalActivityDetailPage = lazy(() => import('@/pages/portal/PortalActivityDetailPage'))
 const SupplyListPage           = lazy(() => import('@/pages/supply/SupplyListPage'))
 const NotFoundPage             = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage            = lazy(() => import('@/pages/ForbiddenPage'))
@@ -51,6 +53,8 @@ export default function App() {
             <Route path="/portal" element={<PortalHomePage />} />
             <Route path="/portal/articles" element={<PortalArticleListPage />} />
             <Route path="/portal/articles/:id" element={<PortalArticleDetailPage />} />
+            <Route path="/portal/activities" element={<PortalActivityListPage />} />
+            <Route path="/portal/activities/:id" element={<PortalActivityDetailPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
             {/* 会员端（登录必需） */}

@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import http from './http'
 import type { ApiResult, PageData } from '@/types/api'
 
@@ -13,6 +14,25 @@ export interface Activity {
   regCount: number
   status: number
   createdAt: string
+}
+
+export interface ActivityDetail extends Activity {
+  content: string | null
+}
+
+export interface SignupStatus {
+  signed: boolean
+  signupId: number | null
+  signupStatus: number | null  // 1已报名 2已签到，未报名时为 null
+}
+
+// MyBatis-Plus Page（public 接口返回此格式）
+interface MbPage<T> {
+  records: T[]
+  total: number
+  size: number
+  current: number
+  pages: number
 }
 
 export interface Signup {
@@ -102,4 +122,76 @@ export async function fetchSignups(activityId: number, params?: { page?: number;
 
 export async function checkinSignup(activityId: number, signupId: number): Promise<void> {
   await http.patch<ApiResult<null>>(`/portal/activities/${activityId}/signups/${signupId}/checkin`)
+}
+
+// ─── 前台公开 hooks（S3-08）────────────────────────────────────────────────────
+
+export function usePublicActivityList(params: { status?: number; page?: number; size?: number }) {
+  return useQuery({
+    queryKey: ['portal', 'activities', params],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<MbPage<Activity>>>('/portal/public/activities', {
+        params,
+      })
+      return res.data.data
+    },
+    staleTime: 2 * 60 * 1000,
+    placeholderData: (prev) => prev,
+  })
+}
+
+export function usePublicActivityDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['portal', 'activity', id],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<ActivityDetail>>(`/portal/public/activities/${id}`)
+      return res.data.data
+    },
+    enabled: id !== null,
+  })
+}
+
+export function useMySignupStatus(activityId: number | null) {
+  return useQuery({
+    queryKey: ['portal', 'activity', activityId, 'signup-status'],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<SignupStatus>>(
+        `/portal/public/activities/${activityId}/my-signup`,
+      )
+      return res.data.data
+    },
+    enabled: activityId !== null,
+    staleTime: 0,
+  })
+}
+
+export function useSignupActivity() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ activityId, remark }: { activityId: number; remark?: string }) => {
+      const res = await http.post<ApiResult<Signup>>(`/portal/activities/${activityId}/signup`, {
+        remark,
+      })
+      return res.data.data
+    },
+    onSuccess: (_data, { activityId }) => {
+      qc.invalidateQueries({ queryKey: ['portal', 'activity', activityId] })
+      qc.invalidateQueries({ queryKey: ['portal', 'activity', activityId, 'signup-status'] })
+      qc.invalidateQueries({ queryKey: ['portal', 'activities'] })
+    },
+  })
+}
+
+export function useCancelSignup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (activityId: number) => {
+      await http.delete(`/portal/activities/${activityId}/signup`)
+    },
+    onSuccess: (_data, activityId) => {
+      qc.invalidateQueries({ queryKey: ['portal', 'activity', activityId] })
+      qc.invalidateQueries({ queryKey: ['portal', 'activity', activityId, 'signup-status'] })
+      qc.invalidateQueries({ queryKey: ['portal', 'activities'] })
+    },
+  })
 }
