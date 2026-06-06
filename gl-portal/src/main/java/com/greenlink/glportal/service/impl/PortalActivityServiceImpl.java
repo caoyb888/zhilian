@@ -2,6 +2,7 @@ package com.greenlink.glportal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
@@ -173,17 +174,29 @@ public class PortalActivityServiceImpl implements PortalActivityService {
                 throw new BizException(ResultCode.ACTIVITY_FULL);
             }
 
-            // 插入报名记录
-            PortalActivitySignup signup = new PortalActivitySignup();
-            signup.setActivityId(activityId);
-            signup.setAccountId(accountId);
-            signup.setMemberId(memberId != null ? memberId : 0L);
-            signup.setRemark(request != null ? request.getRemark() : null);
-            signup.setStatus(1);
-            try {
-                signupMapper.insert(signup);
-            } catch (DuplicateKeyException e) {
-                throw new BizException(ResultCode.SIGNUP_DUPLICATE);
+            // 报名记录：有已取消记录则复用，否则新插
+            PortalActivitySignup existing = signupMapper.findByActivityAndAccount(activityId, accountId);
+            PortalActivitySignup signup;
+            if (existing != null && existing.getStatus() == 3) {
+                UpdateWrapper<PortalActivitySignup> uw = new UpdateWrapper<>();
+                uw.eq("id", existing.getId())
+                  .set("status", 1)
+                  .set("remark", request != null ? request.getRemark() : null);
+                signupMapper.update(null, uw);
+                existing.setStatus(1);
+                signup = existing;
+            } else {
+                signup = new PortalActivitySignup();
+                signup.setActivityId(activityId);
+                signup.setAccountId(accountId);
+                signup.setMemberId(memberId != null ? memberId : 0L);
+                signup.setRemark(request != null ? request.getRemark() : null);
+                signup.setStatus(1);
+                try {
+                    signupMapper.insert(signup);
+                } catch (DuplicateKeyException e) {
+                    throw new BizException(ResultCode.SIGNUP_DUPLICATE);
+                }
             }
 
             // 原子递增 reg_count（DB 级最终防线）
