@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { clsx } from 'clsx'
-import { Spinner } from '@/components/Spinner'
+import {
+  X,
+  Search,
+  Filter,
+  Download,
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  ArrowLeft,
+} from 'lucide-react'
+import { Icon } from '@/components/Icon'
+import { SkeletonList } from '@/components/states/SkeletonList'
+import { EmptyState } from '@/components/states/EmptyState'
 import { Button } from '@/components/Button'
+import { Badge } from '@/components/Badge'
 import { Pagination } from '@/components/Pagination'
 import { RichEditor } from '@/components/RichEditor'
 import {
@@ -87,31 +100,38 @@ function ListView({ onEdit, onNew }: ListViewProps) {
       {/* header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">文章管理</h1>
-          <p className="mt-0.5 text-sm text-gray-400">门户新闻、通知、政策文章 CMS</p>
+          <h1 className="text-xl font-semibold text-theme-text-main">文章管理</h1>
+          <p className="mt-0.5 text-sm text-theme-text-muted">门户新闻、通知、政策文章 CMS</p>
         </div>
         <Button size="sm" onClick={onNew}>+ 新建文章</Button>
       </div>
 
       {/* filter bar */}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-100 bg-white p-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-stone-100 bg-white p-4 shadow-card">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">关键词</label>
-          <input
-            type="text"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="标题 / 摘要"
-            className="w-44 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          <label className="text-xs text-stone-500">关键词</label>
+          <div className="relative">
+            <Icon
+              icon={Search}
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+            />
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="标题 / 摘要"
+              className="w-44 rounded-lg border border-stone-200 bg-theme-surface py-1.5 pl-9 pr-3 text-sm text-theme-text-main transition-all duration-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">栏目</label>
+          <label className="text-xs text-stone-500">栏目</label>
           <select
             value={filterCategoryId ?? ''}
             onChange={(e) => setFilterCategoryId(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
           >
             <option value="">全部栏目</option>
             {flatCats.map((c) => (
@@ -120,95 +140,133 @@ function ListView({ onEdit, onNew }: ListViewProps) {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">状态</label>
+          <label className="text-xs text-stone-500">状态</label>
           <select
             value={filterPublished === undefined ? '' : String(filterPublished)}
             onChange={(e) =>
               setFilterPublished(e.target.value === '' ? undefined : e.target.value === 'true')
             }
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
           >
             <option value="">全部</option>
             <option value="true">已发布</option>
             <option value="false">草稿</option>
           </select>
         </div>
-        <Button size="sm" onClick={handleSearch}>搜索</Button>
-        <Button variant="ghost" size="sm" onClick={handleReset}>重置</Button>
+        <Button size="sm" onClick={handleSearch}>
+          <Icon icon={Filter} size={14} />
+          搜索
+        </Button>
+        <Button variant="ghost" size="sm" onClick={handleReset}>
+          重置
+        </Button>
+        <Button variant="secondary" size="sm" className="ml-auto">
+          <Icon icon={Download} size={14} />
+          导出
+        </Button>
       </div>
 
       {/* table */}
-      <div className="rounded-xl border border-gray-100 bg-white">
+      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
         {isLoading ? (
-          <div className="flex justify-center py-16"><Spinner /></div>
+          <div className="p-4">
+            <SkeletonList count={5} />
+          </div>
         ) : records.length === 0 ? (
-          <div className="py-16 text-center text-sm text-gray-400">暂无文章</div>
+          <EmptyState
+            icon={Search}
+            title="暂无文章"
+            description="当前没有符合条件的文章"
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs text-gray-500">
+              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-stone-600">
                 <tr>
-                  <th className="px-4 py-3 font-medium">标题</th>
-                  <th className="px-4 py-3 font-medium">栏目</th>
-                  <th className="px-4 py-3 font-medium">作者</th>
-                  <th className="px-4 py-3 font-medium">阅读</th>
-                  <th className="px-4 py-3 font-medium">置顶</th>
-                  <th className="px-4 py-3 font-medium">状态</th>
-                  <th className="px-4 py-3 font-medium">发布时间</th>
-                  <th className="px-4 py-3 font-medium">操作</th>
+                  <th className="px-4 py-3">标题</th>
+                  <th className="px-4 py-3">栏目</th>
+                  <th className="px-4 py-3">作者</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      阅读
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3">置顶</th>
+                  <th className="px-4 py-3">状态</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      发布时间
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3 text-right">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {records.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50/60">
+                  <tr
+                    key={a.id}
+                    className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                  >
                     <td className="max-w-xs px-4 py-3">
-                      <p className="truncate font-medium text-gray-800">{a.title}</p>
+                      <p className="truncate font-medium text-stone-800">{a.title}</p>
                       {a.summary && (
-                        <p className="mt-0.5 truncate text-xs text-gray-400">{a.summary}</p>
+                        <p className="mt-0.5 truncate text-xs text-stone-400">{a.summary}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{a.categoryName}</td>
-                    <td className="px-4 py-3 text-gray-500">{a.author ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-400">{a.viewCount}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{a.categoryName}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{a.author ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{a.viewCount}</td>
                     <td className="px-4 py-3">
                       {a.isTop ? (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">置顶</span>
+                        <Badge variant="warning">置顶</Badge>
                       ) : (
-                        <span className="text-xs text-gray-300">—</span>
+                        <span className="text-xs text-stone-300">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {a.isPublished ? (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">已发布</span>
+                        <Badge variant="success">已发布</Badge>
                       ) : (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">草稿</span>
+                        <Badge variant="default">草稿</Badge>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-400">
+                    <td className="px-4 py-3 text-sm text-stone-500">
                       {a.publishedAt ? a.publishedAt.slice(0, 10) : '—'}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button className="text-xs text-brand-600 hover:underline" onClick={() => onEdit(a)}>
-                          编辑
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-1 rounded-lg border border-stone-200 p-0.5">
+                        <button
+                          className="rounded p-1.5 text-stone-500 transition-all duration-200 hover:bg-stone-100 hover:text-theme-accent"
+                          onClick={() => onEdit(a)}
+                          title="编辑"
+                        >
+                          <Icon icon={Pencil} size={14} />
                         </button>
                         {a.isPublished ? (
                           <button
-                            className="text-xs text-amber-600 hover:underline"
+                            className="rounded p-1.5 text-amber-600 transition-all duration-200 hover:bg-amber-50 hover:text-amber-700"
                             onClick={() => unpublishMutation.mutate(a.id)}
+                            title="下架"
                           >
-                            下架
+                            <Icon icon={X} size={14} />
                           </button>
                         ) : (
                           <button
-                            className="text-xs text-emerald-600 hover:underline"
+                            className="rounded p-1.5 text-emerald-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700"
                             onClick={() => publishMutation.mutate(a.id)}
+                            title="发布"
                           >
-                            发布
+                            <Icon icon={Search} size={14} />
                           </button>
                         )}
-                        <button className="text-xs text-red-500 hover:underline" onClick={() => handleDelete(a)}>
-                          删除
+                        <button
+                          className="rounded p-1.5 text-red-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => handleDelete(a)}
+                          title="删除"
+                        >
+                          <Icon icon={Trash2} size={14} />
                         </button>
                       </div>
                     </td>
@@ -219,7 +277,7 @@ function ListView({ onEdit, onNew }: ListViewProps) {
           </div>
         )}
         {total > 0 && (
-          <div className="px-4 pb-4">
+          <div className="border-t border-stone-100 px-4 py-4">
             <Pagination page={page} total={total} size={20} onChange={setPage} />
           </div>
         )}
@@ -351,7 +409,7 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
   if (!isNew && detailLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Spinner />
+        <SkeletonList count={3} />
       </div>
     )
   }
@@ -361,10 +419,11 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
       {/* top bar */}
       <div className="flex items-center justify-between">
         <button
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+          className="flex items-center gap-1 text-sm text-stone-500 transition-colors hover:text-stone-800"
           onClick={onBack}
         >
-          ← 返回列表
+          <Icon icon={ArrowLeft} size={16} />
+          返回列表
         </button>
         <div className="flex items-center gap-2">
           {savedMsg && (
@@ -385,7 +444,7 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
         </div>
       </div>
 
-      <div className="flex gap-5">
+      <div className="flex flex-col gap-5 lg:flex-row">
         {/* ── main editor area ── */}
         <div className="min-w-0 flex-1 space-y-3">
           {/* title */}
@@ -394,17 +453,17 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
               type="text"
               placeholder="请输入文章标题…"
               className={clsx(
-                'w-full rounded-xl border px-4 py-3 text-xl font-semibold text-gray-800',
-                'placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500',
-                errors.title ? 'border-red-400' : 'border-gray-200'
+                'w-full rounded-xl border px-4 py-3 text-xl font-semibold text-theme-text-main bg-theme-surface',
+                'placeholder-stone-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20',
+                errors.title ? 'border-red-300 focus:border-red-400' : 'border-stone-200 hover:border-stone-300 focus:border-theme-accent'
               )}
               {...register('title', { required: '标题不能为空' })}
             />
             {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
           </div>
 
-          {/* rich text editor — key forces remount when switching articles */}
-          <div>
+          {/* rich text editor */}
+          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
             <RichEditor
               key={isNew ? 'new' : String(editingId)}
               defaultValue={isNew ? '' : (detail?.content ?? '')}
@@ -415,19 +474,20 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
         </div>
 
         {/* ── sidebar metadata ── */}
-        <aside className="w-72 shrink-0 space-y-4">
+        <aside className="w-full shrink-0 space-y-4 lg:w-72">
           {/* category */}
-          <div className="rounded-xl border border-gray-100 bg-white p-4">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">文章设置</h3>
+          <div className="rounded-xl border border-stone-100 bg-white p-4 shadow-card">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">文章设置</h3>
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-500">发布栏目 *</label>
+                <label className="mb-1 block text-xs text-stone-500">发布栏目 *</label>
                 <select
                   {...register('categoryId', { required: true, valueAsNumber: true })}
                   className={clsx(
-                    'w-full rounded-lg border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500',
-                    errors.categoryId ? 'border-red-400' : 'border-gray-200'
+                    'w-full rounded-lg border bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200',
+                    'focus:outline-none focus:ring-2 focus:ring-theme-accent/20',
+                    errors.categoryId ? 'border-red-300 focus:border-red-400' : 'border-stone-200 hover:border-stone-300 focus:border-theme-accent'
                   )}
                 >
                   {flatCats.map((c) => (
@@ -437,11 +497,11 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-gray-500">作者 / 来源</label>
+                <label className="mb-1 block text-xs text-stone-500">作者 / 来源</label>
                 <input
                   type="text"
                   placeholder="如 绿色协会秘书处"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
                   {...register('author')}
                 />
               </div>
@@ -450,25 +510,25 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
                 <input
                   type="checkbox"
                   id="isTop"
-                  className="accent-brand-500"
+                  className="accent-theme-accent"
                   {...register('isTop')}
                 />
-                <label htmlFor="isTop" className="text-sm text-gray-600">置顶文章</label>
+                <label htmlFor="isTop" className="text-sm text-stone-600">置顶文章</label>
               </div>
             </div>
           </div>
 
           {/* publish mode */}
-          <div className="rounded-xl border border-gray-100 bg-white p-4">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">发布设置</h3>
+          <div className="rounded-xl border border-stone-100 bg-white p-4 shadow-card">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">发布设置</h3>
 
             <div className="space-y-2">
               {(['DRAFT', 'NOW', 'SCHEDULED'] as PublishMode[]).map((mode) => (
-                <label key={mode} className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                <label key={mode} className="flex cursor-pointer items-center gap-2 text-sm text-stone-700 transition-colors hover:text-stone-900">
                   <input
                     type="radio"
                     value={mode}
-                    className="accent-brand-500"
+                    className="accent-theme-accent"
                     {...register('publishMode')}
                   />
                   {mode === 'DRAFT' && '草稿（不发布）'}
@@ -481,7 +541,7 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
                 <div className="pt-1">
                   <input
                     type="datetime-local"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
                     {...register('scheduledAt', {
                       validate: (v) =>
                         publishMode === 'SCHEDULED' && !v ? '请选择定时发布时间' : true,
@@ -496,12 +556,12 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
           </div>
 
           {/* summary */}
-          <div className="rounded-xl border border-gray-100 bg-white p-4">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">摘要</h3>
+          <div className="rounded-xl border border-stone-100 bg-white p-4 shadow-card">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">摘要</h3>
             <textarea
               rows={3}
               placeholder="文章摘要（不填将自动截取正文前 100 字）"
-              className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full resize-none rounded-lg border border-stone-200 bg-theme-surface px-3 py-2 text-sm text-theme-text-main placeholder:text-stone-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
               {...register('summary', { maxLength: { value: 500, message: '摘要最多 500 字' } })}
             />
             {errors.summary && (
@@ -510,24 +570,33 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
           </div>
 
           {/* cover + source */}
-          <div className="rounded-xl border border-gray-100 bg-white p-4">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">封面 &amp; 来源</h3>
+          <div className="rounded-xl border border-stone-100 bg-white p-4 shadow-card">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">封面 &amp; 来源</h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-500">封面图 URL</label>
+                <label className="mb-1 block text-xs text-stone-500">封面图 URL</label>
                 <input
                   type="url"
                   placeholder="https://..."
-                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
                   {...register('coverUrl')}
                 />
+                {/* cover preview */}
+                {watch('coverUrl') && (
+                  <img
+                    src={watch('coverUrl')}
+                    alt="封面预览"
+                    className="mt-2 aspect-[16/10] w-full rounded-lg object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                )}
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-500">原文链接</label>
+                <label className="mb-1 block text-xs text-stone-500">原文链接</label>
                 <input
                   type="url"
                   placeholder="https://..."
-                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
                   {...register('sourceUrl')}
                 />
               </div>

@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild, Switch } from '@headlessui/react'
 import { Fragment } from 'react'
+import { clsx } from 'clsx'
+import { X, Users, Plus } from 'lucide-react'
+import { Icon } from '@/components/Icon'
+import { Button } from '@/components/Button'
+import { FormField } from '@/components/FormField'
+import { Input } from '@/components/Input'
+import { EmptyState } from '@/components/states/EmptyState'
+import { Spinner } from '@/components/Spinner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button } from '@/components/Button'
-import { Spinner } from '@/components/Spinner'
 import {
   useMemberMe,
   useSubAccounts,
@@ -43,38 +49,27 @@ type CreateFormValues = z.infer<typeof createSchema>
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: number }) {
-  return status === 1 ? (
-    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-0.5">
-      正常
-    </span>
-  ) : (
-    <span className="inline-flex items-center rounded-full bg-red-50 text-red-600 text-xs font-medium px-2.5 py-0.5">
-      已禁用
-    </span>
-  )
-}
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: React.ReactNode
-}) {
+function StatusDot({ status }: { status: number }) {
+  const isActive = status === 1
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+    <div className="flex items-center gap-2">
+      <span
+        className={clsx(
+          'h-2 w-2 rounded-full',
+          isActive ? 'bg-emerald-500' : 'bg-red-500'
+        )}
+      />
+      <span
+        className={clsx(
+          'text-sm',
+          isActive ? 'text-emerald-700' : 'text-red-600'
+        )}
+      >
+        {isActive ? '正常' : '已禁用'}
+      </span>
     </div>
   )
 }
-
-const INPUT_CLS =
-  'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400 transition'
 
 // ─── Create Dialog (Headless UI) ──────────────────────────────────────────────
 
@@ -147,17 +142,17 @@ function CreateDialog({
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <DialogPanel className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <DialogTitle className="text-base font-semibold text-gray-900">
+            <DialogPanel className="w-full max-w-md rounded-2xl bg-white shadow-nordic">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+                <DialogTitle className="text-base font-semibold text-theme-text-main">
                   新建子账号
                 </DialogTitle>
                 <button
                   onClick={handleClose}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-stone-400 hover:text-stone-600 transition-colors rounded-lg p-1 hover:bg-stone-50"
                   aria-label="关闭"
                 >
-                  ✕
+                  <Icon icon={X} size={18} />
                 </button>
               </div>
 
@@ -168,42 +163,45 @@ function CreateDialog({
                   </div>
                 )}
 
-                <Field label="用户名 *" error={errors.username?.message}>
-                  <input
-                    {...register('username')}
+                <FormField label="用户名" error={errors.username?.message} htmlFor="sub-username" required>
+                  <Input
+                    id="sub-username"
                     placeholder="4-50位，字母/数字/下划线"
                     autoComplete="off"
-                    className={INPUT_CLS}
+                    error={!!errors.username}
+                    {...register('username')}
                   />
-                </Field>
+                </FormField>
 
-                <Field label="密码 *" error={errors.password?.message}>
-                  <input
-                    {...register('password')}
+                <FormField label="密码" error={errors.password?.message} htmlFor="sub-password" required>
+                  <Input
+                    id="sub-password"
                     type="password"
                     placeholder="8-20位，须同时含字母和数字"
                     autoComplete="new-password"
-                    className={INPUT_CLS}
+                    error={!!errors.password}
+                    {...register('password')}
                   />
-                </Field>
+                </FormField>
 
-                <Field label="确认密码 *" error={errors.confirmPassword?.message}>
-                  <input
-                    {...register('confirmPassword')}
+                <FormField label="确认密码" error={errors.confirmPassword?.message} htmlFor="sub-confirm" required>
+                  <Input
+                    id="sub-confirm"
                     type="password"
                     placeholder="再次输入密码"
                     autoComplete="new-password"
-                    className={INPUT_CLS}
+                    error={!!errors.confirmPassword}
+                    {...register('confirmPassword')}
                   />
-                </Field>
+                </FormField>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="真实姓名" error={errors.realName?.message}>
-                    <input {...register('realName')} placeholder="选填" className={INPUT_CLS} />
-                  </Field>
-                  <Field label="手机号" error={errors.phone?.message}>
-                    <input {...register('phone')} placeholder="选填" className={INPUT_CLS} />
-                  </Field>
+                  <FormField label="真实姓名" error={errors.realName?.message} htmlFor="sub-realName">
+                    <Input id="sub-realName" placeholder="选填" error={!!errors.realName} {...register('realName')} />
+                  </FormField>
+                  <FormField label="手机号" error={errors.phone?.message} htmlFor="sub-phone">
+                    <Input id="sub-phone" placeholder="选填" error={!!errors.phone} {...register('phone')} />
+                  </FormField>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
@@ -252,7 +250,9 @@ export default function SubAccountPage() {
       await updateStatus.mutateAsync({ accountId, status: nextStatus })
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { msg?: string } } })?.response?.data?.msg
-      setToggleError(msg ?? `${label}失败，请稍后重试`)
+      const displayMsg = msg ?? `${label}失败，请稍后重试`
+      setToggleError(displayMsg)
+      alert(displayMsg)
     } finally {
       setTogglingId(null)
     }
@@ -261,7 +261,7 @@ export default function SubAccountPage() {
   if (meLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner size="lg" className="text-brand-500" />
+        <Spinner size="lg" className="text-theme-accent" />
       </div>
     )
   }
@@ -276,23 +276,24 @@ export default function SubAccountPage() {
         />
       )}
 
-      <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
+      <section className="rounded-xl border border-stone-100 bg-white shadow-card">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">子账号管理</h2>
-            <p className="text-xs text-gray-400 mt-0.5">管理本单位下的操作账号</p>
+            <h2 className="text-base font-semibold text-theme-text-main">子账号管理</h2>
+            <p className="text-xs text-theme-text-muted mt-0.5">管理本单位下的操作账号</p>
           </div>
           {isMain && (
             <Button size="sm" onClick={() => setShowCreate(true)}>
-              + 新建子账号
+              <Icon icon={Plus} size={16} />
+              新建子账号
             </Button>
           )}
         </div>
 
         {/* Info banner for sub-accounts */}
         {!isMain && (
-          <div className="mx-6 mt-4 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
+          <div className="mx-6 mt-4 rounded-lg bg-sky-50 border border-sky-100 px-4 py-3 text-sm text-sky-700">
             仅主账号可创建或禁用子账号，您可查看本单位账号列表。
           </div>
         )}
@@ -303,9 +304,10 @@ export default function SubAccountPage() {
             <span>{toggleError}</span>
             <button
               onClick={() => setToggleError(null)}
-              className="text-red-400 hover:text-red-600 ml-4"
+              className="text-red-400 hover:text-red-600 ml-4 rounded-lg p-1 hover:bg-red-100 transition-colors"
+              aria-label="关闭错误提示"
             >
-              ✕
+              <Icon icon={X} size={18} />
             </button>
           </div>
         )}
@@ -314,76 +316,88 @@ export default function SubAccountPage() {
         <div className="px-6 py-4">
           {listLoading ? (
             <div className="flex justify-center py-12">
-              <Spinner size="md" className="text-brand-500" />
+              <Spinner size="md" className="text-theme-accent" />
             </div>
           ) : !accounts || accounts.length === 0 ? (
-            <div className="py-12 text-center text-sm text-gray-400">
-              暂无子账号
-              {isMain && <p className="mt-1">点击右上角「新建子账号」开始添加</p>}
-            </div>
+            <EmptyState
+              icon={Users}
+              title="暂无子账号"
+              description={isMain ? '点击右上角「新建子账号」开始添加' : '当前列表为空'}
+              action={
+                isMain ? (
+                  <Button size="sm" onClick={() => setShowCreate(true)}>
+                    <Icon icon={Plus} size={16} />
+                    新建子账号
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 text-left text-xs text-gray-400 font-medium">
-                    <th className="pb-3 pr-4 font-medium">用户名</th>
-                    <th className="pb-3 pr-4 font-medium">姓名</th>
-                    <th className="pb-3 pr-4 font-medium">手机号</th>
-                    <th className="pb-3 pr-4 font-medium">角色</th>
-                    <th className="pb-3 pr-4 font-medium">状态</th>
-                    <th className="pb-3 pr-4 font-medium">最近登录</th>
-                    {isMain && <th className="pb-3 font-medium">操作</th>}
+                  <tr className="bg-stone-50 text-left text-xs text-stone-600 font-semibold uppercase tracking-wider">
+                    <th className="px-4 py-3 rounded-tl-lg">用户名</th>
+                    <th className="px-4 py-3">姓名</th>
+                    <th className="px-4 py-3">手机号</th>
+                    <th className="px-4 py-3">角色</th>
+                    <th className="px-4 py-3">状态</th>
+                    <th className="px-4 py-3">最近登录</th>
+                    {isMain && <th className="px-4 py-3 rounded-tr-lg">操作</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-stone-100">
                   {accounts.map((acc) => (
-                    <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3 pr-4 font-mono text-gray-800">{acc.username}</td>
-                      <td className="py-3 pr-4 text-gray-700">
-                        {acc.realName || <span className="text-gray-300">—</span>}
+                    <tr key={acc.id} className="hover:bg-stone-50/80 transition-colors">
+                      <td className="px-4 py-3 font-mono text-stone-800">{acc.username}</td>
+                      <td className="px-4 py-3 text-stone-700">
+                        {acc.realName || <span className="text-stone-300">—</span>}
                       </td>
-                      <td className="py-3 pr-4 text-gray-600">
-                        {acc.phone || <span className="text-gray-300">—</span>}
+                      <td className="px-4 py-3 text-stone-600">
+                        {acc.phone || <span className="text-stone-300">—</span>}
                       </td>
-                      <td className="py-3 pr-4">
+                      <td className="px-4 py-3">
                         {acc.roles.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {acc.roles.map((r) => (
                               <span
                                 key={r}
-                                className="rounded bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 font-mono"
+                                className="rounded bg-stone-100 text-stone-600 text-xs px-1.5 py-0.5 font-mono"
                               >
                                 {r}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-gray-300 text-xs">无</span>
+                          <span className="text-stone-300 text-xs">无</span>
                         )}
                       </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge status={acc.status} />
+                      <td className="px-4 py-3">
+                        <StatusDot status={acc.status} />
                       </td>
-                      <td className="py-3 pr-4 text-gray-500 text-xs">
+                      <td className="px-4 py-3 text-stone-500 text-xs">
                         {acc.lastLoginAt
                           ? acc.lastLoginAt.slice(0, 16).replace('T', ' ')
                           : '—'}
                       </td>
                       {isMain && (
-                        <td className="py-3">
-                          <Button
-                            variant={acc.status === 1 ? 'ghost' : 'secondary'}
-                            size="sm"
-                            loading={togglingId === acc.id}
-                            onClick={() => handleToggleStatus(acc.id, acc.status)}
-                            className={
-                              acc.status === 1
-                                ? 'text-red-500 hover:bg-red-50'
-                                : 'text-emerald-600 border-emerald-300 hover:bg-emerald-50'
-                            }
+                        <td className="px-4 py-3">
+                          <Switch
+                            checked={acc.status === 1}
+                            onChange={() => handleToggleStatus(acc.id, acc.status)}
+                            disabled={togglingId === acc.id || updateStatus.isPending}
+                            className={clsx(
+                              'relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 disabled:opacity-50',
+                              acc.status === 1 ? 'bg-emerald-500' : 'bg-stone-300'
+                            )}
                           >
-                            {acc.status === 1 ? '禁用' : '启用'}
-                          </Button>
+                            <span
+                              className={clsx(
+                                'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-all duration-200',
+                                acc.status === 1 ? 'translate-x-6' : 'translate-x-1'
+                              )}
+                            />
+                          </Switch>
                         </td>
                       )}
                     </tr>
@@ -395,7 +409,7 @@ export default function SubAccountPage() {
         </div>
 
         {accounts && accounts.length > 0 && (
-          <div className="px-6 pb-4 text-xs text-gray-400">共 {accounts.length} 个子账号</div>
+          <div className="px-6 pb-4 text-xs text-stone-400">共 {accounts.length} 个子账号</div>
         )}
       </section>
     </div>

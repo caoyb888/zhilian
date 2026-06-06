@@ -2,7 +2,20 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
+import { clsx } from 'clsx'
+import {
+  X,
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  Users,
+  Search,
+} from 'lucide-react'
+import { Icon } from '@/components/Icon'
+import { SkeletonList } from '@/components/states/SkeletonList'
+import { EmptyState } from '@/components/states/EmptyState'
 import { Button } from '@/components/Button'
+import { Badge } from '@/components/Badge'
 import { Input } from '@/components/Input'
 import {
   fetchActivities,
@@ -26,6 +39,20 @@ const STATUS_TABS = [
   { value: 2, label: '报名中' },
   { value: 3, label: '已结束' },
 ]
+
+function ActivityStatusBadge({ status }: { status: number }) {
+  const info = ACTIVITY_STATUS_MAP[status]
+  if (!info) return <Badge variant="default">未知</Badge>
+  if (status === 1) return <Badge variant="default">{info.label}</Badge>
+  if (status === 2) return <Badge variant="success">{info.label}</Badge>
+  return <Badge variant="error">{info.label}</Badge>
+}
+
+function SignupStatusBadge({ status }: { status: number }) {
+  if (status === 2) return <Badge variant="success">{SIGNUP_STATUS_MAP[status]}</Badge>
+  if (status === 3) return <Badge variant="error">{SIGNUP_STATUS_MAP[status]}</Badge>
+  return <Badge variant="default">{SIGNUP_STATUS_MAP[status] ?? '未知'}</Badge>
+}
 
 export default function ActivityListPage() {
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined)
@@ -91,104 +118,140 @@ export default function ActivityListPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   }
 
+  const records = activityPage?.records ?? []
+
   return (
-    <div className="space-y-4">
-      {/* 顶部筛选与操作 */}
+    <div className="flex flex-col gap-4">
+      {/* header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-1">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.label}
-              onClick={() => setStatusFilter(tab.value)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                statusFilter === tab.value
-                  ? 'bg-brand-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div>
+          <h1 className="text-xl font-semibold text-theme-text-main">活动管理</h1>
+          <p className="mt-0.5 text-sm text-theme-text-muted">协会活动发布与报名管理</p>
         </div>
         <Button size="sm" onClick={() => openActivityModal()}>
           新建活动
         </Button>
       </div>
 
-      {/* 活动列表 */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 text-gray-500">
-              <th className="px-4 py-3 font-medium">活动标题</th>
-              <th className="px-4 py-3 font-medium">地点</th>
-              <th className="px-4 py-3 font-medium">开始时间</th>
-              <th className="px-4 py-3 font-medium">报名截止</th>
-              <th className="px-4 py-3 font-medium">状态</th>
-              <th className="px-4 py-3 font-medium">报名/容量</th>
-              <th className="px-4 py-3 font-medium text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {activityPage?.records.map((activity) => {
-              const statusInfo = ACTIVITY_STATUS_MAP[activity.status] ?? { label: '未知', color: 'bg-gray-100 text-gray-500' }
-              return (
-                <tr key={activity.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-800">{activity.title}</td>
-                  <td className="px-4 py-3 text-gray-500">{activity.location ?? '-'}</td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateTime(activity.startTime)}</td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateTime(activity.regDeadline)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo.color}`}>
-                      {statusInfo.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {activity.regCount}
-                    {activity.maxCapacity ? ` / ${activity.maxCapacity}` : ' / 不限'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => openSignupModal(activity)} className="text-xs text-brand-600 hover:underline">
-                        报名列表
-                      </button>
-                      <button onClick={() => openActivityModal(activity)} className="text-xs text-brand-600 hover:underline">
-                        编辑
-                      </button>
-                      <select
-                        value={activity.status}
-                        onChange={(e) => {
-                          const newStatus = Number(e.target.value)
-                          const label = ACTIVITY_STATUS_MAP[newStatus]?.label ?? newStatus
-                          if (confirm(`确定将活动状态变更为「${label}」？`)) {
-                            statusMutation.mutate({ id: activity.id, status: newStatus })
-                          }
-                        }}
-                        className="rounded border border-gray-200 px-1.5 py-0.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                      >
-                        {Object.entries(ACTIVITY_STATUS_MAP).map(([val, info]) => (
-                          <option key={val} value={val}>
-                            {info.label}
-                          </option>
-                        ))}
-                      </select>
-                      <button onClick={() => handleDelete(activity.id)} className="text-xs text-red-500 hover:underline">
-                        删除
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-            {(!activityPage?.records || activityPage.records.length === 0) && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">
-                  暂无活动数据
-                </td>
-              </tr>
+      {/* status tabs */}
+      <div className="flex flex-wrap gap-1">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setStatusFilter(tab.value)}
+            className={clsx(
+              'rounded-full px-3 py-1 text-xs font-medium transition-all duration-200',
+              statusFilter === tab.value
+                ? 'bg-theme-accent text-white'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             )}
-          </tbody>
-        </table>
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* table */}
+      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+        {!activityPage ? (
+          <div className="p-4">
+            <SkeletonList count={5} />
+          </div>
+        ) : records.length === 0 ? (
+          <EmptyState
+            icon={Search}
+            title="暂无活动数据"
+            description="当前没有符合条件的活动"
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wider text-stone-600">
+                <tr>
+                  <th className="px-4 py-3">活动标题</th>
+                  <th className="px-4 py-3">地点</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      开始时间
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3">报名截止</th>
+                  <th className="px-4 py-3">状态</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      报名/容量
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3 text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.map((activity) => (
+                  <tr
+                    key={activity.id}
+                    className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                  >
+                    <td className="px-4 py-3 font-medium text-stone-800">{activity.title}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{activity.location ?? '-'}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-stone-500">{formatDateTime(activity.startTime)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-stone-500">{formatDateTime(activity.regDeadline)}</td>
+                    <td className="px-4 py-3">
+                      <ActivityStatusBadge status={activity.status} />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-stone-500">
+                      {activity.regCount}
+                      {activity.maxCapacity ? ` / ${activity.maxCapacity}` : ' / 不限'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-1 rounded-lg border border-stone-200 p-0.5">
+                        <button
+                          className="rounded p-1.5 text-stone-500 transition-all duration-200 hover:bg-stone-100 hover:text-theme-accent"
+                          onClick={() => openSignupModal(activity)}
+                          title="报名列表"
+                        >
+                          <Icon icon={Users} size={14} />
+                        </button>
+                        <button
+                          className="rounded p-1.5 text-stone-500 transition-all duration-200 hover:bg-stone-100 hover:text-theme-accent"
+                          onClick={() => openActivityModal(activity)}
+                          title="编辑"
+                        >
+                          <Icon icon={Pencil} size={14} />
+                        </button>
+                        <select
+                          value={activity.status}
+                          onChange={(e) => {
+                            const newStatus = Number(e.target.value)
+                            const label = ACTIVITY_STATUS_MAP[newStatus]?.label ?? newStatus
+                            if (confirm(`确定将活动状态变更为「${label}」？`)) {
+                              statusMutation.mutate({ id: activity.id, status: newStatus })
+                            }
+                          }}
+                          className="rounded border border-stone-200 bg-white px-1.5 py-0.5 text-xs text-stone-600 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-theme-accent"
+                        >
+                          {Object.entries(ACTIVITY_STATUS_MAP).map(([val, info]) => (
+                            <option key={val} value={val}>
+                              {info.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          className="rounded p-1.5 text-red-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => handleDelete(activity.id)}
+                          title="删除"
+                        >
+                          <Icon icon={Trash2} size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* 活动弹窗 */}
@@ -217,7 +280,6 @@ export default function ActivityListPage() {
     </div>
   )
 }
-
 
 /* ───────── 活动弹窗组件 ───────── */
 
@@ -275,60 +337,71 @@ function ActivityModal({ open, onClose, activity, onSuccess }: ActivityModalProp
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
-          <DialogTitle className="text-base font-semibold text-gray-800">
-            {isEdit ? '编辑活动' : '新建活动'}
-          </DialogTitle>
+        <DialogPanel className="w-full max-w-lg overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-stone-800">
+              {isEdit ? '编辑活动' : '新建活动'}
+            </DialogTitle>
+            <button
+              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              onClick={onClose}
+              aria-label="关闭"
+            >
+              <Icon icon={X} size={18} />
+            </button>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">活动标题</label>
-              <Input {...register('title', { required: '请输入标题' })} placeholder="活动名称" error={!!errors.title} />
-              {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">活动地点</label>
-              <Input {...register('location')} placeholder="如 济南市国际会展中心" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5">
+            <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">开始时间</label>
-                <Input type="datetime-local" {...register('startTime')} />
+                <label className="mb-1 block text-sm font-medium text-stone-700">活动标题</label>
+                <Input {...register('title', { required: '请输入标题' })} placeholder="活动名称" error={!!errors.title} />
+                {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
               </div>
+
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">结束时间</label>
-                <Input type="datetime-local" {...register('endTime')} />
+                <label className="mb-1 block text-sm font-medium text-stone-700">活动地点</label>
+                <Input {...register('location')} placeholder="如 济南市国际会展中心" />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-stone-700">开始时间</label>
+                  <Input type="datetime-local" {...register('startTime')} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-stone-700">结束时间</label>
+                  <Input type="datetime-local" {...register('endTime')} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-stone-700">报名截止</label>
+                  <Input type="datetime-local" {...register('regDeadline')} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-stone-700">最大容量</label>
+                  <Input type="number" {...register('maxCapacity', { valueAsNumber: true })} placeholder="不限则留空" />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">状态</label>
+                <select
+                  {...register('status', { valueAsNumber: true })}
+                  className="w-full rounded-lg border border-stone-200 bg-theme-surface px-3 py-2 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+                >
+                  {Object.entries(ACTIVITY_STATUS_MAP).map(([val, info]) => (
+                    <option key={val} value={val}>
+                      {info.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">报名截止</label>
-                <Input type="datetime-local" {...register('regDeadline')} />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">最大容量</label>
-                <Input type="number" {...register('maxCapacity', { valueAsNumber: true })} placeholder="不限则留空" />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">状态</label>
-              <select
-                {...register('status', { valueAsNumber: true })}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              >
-                {Object.entries(ACTIVITY_STATUS_MAP).map(([val, info]) => (
-                  <option key={val} value={val}>
-                    {info.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="mt-5 flex justify-end gap-2 border-t border-stone-100 pt-4">
               <Button variant="ghost" type="button" onClick={onClose}>
                 取消
               </Button>
@@ -360,76 +433,85 @@ function SignupModal({ open, onClose, activity, signups, onCheckin, checkinPendi
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg">
-          <DialogTitle className="text-base font-semibold text-gray-800">
-            {activity?.title ?? '活动'} — 报名列表
-          </DialogTitle>
-
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 text-gray-500">
-                  <th className="pb-2 font-medium">报名人ID</th>
-                  <th className="pb-2 font-medium">会员ID</th>
-                  <th className="pb-2 font-medium">备注</th>
-                  <th className="pb-2 font-medium">状态</th>
-                  <th className="pb-2 font-medium">报名时间</th>
-                  <th className="pb-2 font-medium text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {signups.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="py-2.5 text-gray-800">{s.accountId}</td>
-                    <td className="py-2.5 text-gray-500">{s.memberId}</td>
-                    <td className="py-2.5 text-gray-500">{s.remark ?? '-'}</td>
-                    <td className="py-2.5">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                          s.status === 2
-                            ? 'bg-brand-100 text-brand-700'
-                            : s.status === 3
-                              ? 'bg-gray-100 text-gray-500 line-through'
-                              : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        {SIGNUP_STATUS_MAP[s.status] ?? '未知'}
-                      </span>
-                    </td>
-                    <td className="py-2.5 text-gray-500 whitespace-nowrap">
-                      {new Date(s.createdAt).toLocaleString('zh-CN', {
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="py-2.5 text-right">
-                      {s.status === 1 && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          loading={checkinPending && checkinTargetId === s.id}
-                          onClick={() => onCheckin(s.id)}
-                        >
-                          签到
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {signups.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-sm text-gray-400">
-                      暂无报名记录
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <DialogPanel className="w-full max-w-2xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-stone-800">
+              {activity?.title ?? '活动'} — 报名列表
+            </DialogTitle>
+            <button
+              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              onClick={onClose}
+              aria-label="关闭"
+            >
+              <Icon icon={X} size={18} />
+            </button>
           </div>
 
-          <div className="mt-4 flex justify-end">
+          <div className="px-6 py-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wider text-stone-600">
+                  <tr>
+                    <th className="px-4 py-3">报名人ID</th>
+                    <th className="px-4 py-3">会员ID</th>
+                    <th className="px-4 py-3">备注</th>
+                    <th className="px-4 py-3">状态</th>
+                    <th className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1">
+                        报名时间
+                        <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                      </span>
+                    </th>
+                    <th className="px-4 py-3 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {signups.map((s) => (
+                    <tr
+                      key={s.id}
+                      className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                    >
+                      <td className="px-4 py-3 text-sm text-stone-800">{s.accountId}</td>
+                      <td className="px-4 py-3 text-sm text-stone-500">{s.memberId}</td>
+                      <td className="px-4 py-3 text-sm text-stone-500">{s.remark ?? '-'}</td>
+                      <td className="px-4 py-3">
+                        <SignupStatusBadge status={s.status} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-stone-500">
+                        {new Date(s.createdAt).toLocaleString('zh-CN', {
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {s.status === 1 && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            loading={checkinPending && checkinTargetId === s.id}
+                            onClick={() => onCheckin(s.id)}
+                          >
+                            签到
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {signups.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-stone-400">
+                        暂无报名记录
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
             <Button variant="ghost" onClick={onClose}>
               关闭
             </Button>

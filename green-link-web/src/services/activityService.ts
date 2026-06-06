@@ -76,8 +76,8 @@ export interface ActivityPageParams {
 }
 
 export const ACTIVITY_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '筹备中', color: 'bg-gray-100 text-gray-600' },
-  2: { label: '报名中', color: 'bg-brand-100 text-brand-700' },
+  1: { label: '筹备中', color: 'bg-stone-100 text-stone-600' },
+  2: { label: '报名中', color: 'bg-emerald-50 text-emerald-700' },
   3: { label: '已结束', color: 'bg-gray-100 text-gray-500' },
 }
 

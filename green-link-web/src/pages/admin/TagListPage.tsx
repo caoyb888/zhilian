@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
+import {
+  X,
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  Search,
+  Tag as TagIcon,
+} from 'lucide-react'
+import { Icon } from '@/components/Icon'
+import { SkeletonList } from '@/components/states/SkeletonList'
+import { EmptyState } from '@/components/states/EmptyState'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import {
@@ -93,9 +104,9 @@ export default function TagListPage() {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:gap-6">
       {/* 左侧分类面板 */}
-      <aside className="w-full shrink-0 rounded-xl border border-gray-200 bg-white p-4 md:w-64">
+      <aside className="w-full shrink-0 rounded-xl border border-stone-200 bg-white p-4 shadow-card md:w-64">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-800">标签分类</h2>
+          <h2 className="text-sm font-semibold text-stone-800">标签分类</h2>
           <Button variant="secondary" size="sm" onClick={() => openCategoryModal()}>
             新建
           </Button>
@@ -104,14 +115,15 @@ export default function TagListPage() {
           <li>
             <button
               onClick={() => setSelectedCategoryId('all')}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
-                selectedCategoryId === 'all'
-                  ? 'bg-brand-50 text-brand-700 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={
+                'flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-200 ' +
+                (selectedCategoryId === 'all'
+                  ? 'bg-emerald-50 font-medium text-emerald-700'
+                  : 'text-stone-600 hover:bg-stone-50')
+              }
             >
               <span>全部标签</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-stone-400">
                 {categories?.reduce((sum, c) => sum + (c.tags?.length ?? 0), 0) ?? 0}
               </span>
             </button>
@@ -120,28 +132,29 @@ export default function TagListPage() {
             <li key={cat.id}>
               <button
                 onClick={() => setSelectedCategoryId(cat.id)}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
-                  selectedCategoryId === cat.id
-                    ? 'bg-brand-50 text-brand-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                className={
+                  'flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-200 ' +
+                  (selectedCategoryId === cat.id
+                    ? 'bg-emerald-50 font-medium text-emerald-700'
+                    : 'text-stone-600 hover:bg-stone-50')
+                }
               >
                 <span>{cat.name}</span>
-                <span className="text-xs text-gray-400">{cat.tags?.length ?? 0}</span>
+                <span className="text-xs text-stone-400">{cat.tags?.length ?? 0}</span>
               </button>
               {selectedCategoryId === cat.id && (
                 <div className="mt-1 flex gap-2 px-3">
                   <button
                     onClick={() => openCategoryModal(cat)}
-                    className="text-xs text-brand-600 hover:underline"
+                    className="rounded p-1 text-xs text-stone-500 transition-colors hover:bg-stone-100 hover:text-theme-accent"
                   >
-                    编辑
+                    <Icon icon={Pencil} size={12} />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(cat.id)}
-                    className="text-xs text-red-500 hover:underline"
+                    className="rounded p-1 text-xs text-red-500 transition-colors hover:bg-red-50 hover:text-red-600"
                   >
-                    删除
+                    <Icon icon={Trash2} size={12} />
                   </button>
                 </div>
               )}
@@ -151,18 +164,25 @@ export default function TagListPage() {
       </aside>
 
       {/* 右侧标签列表 */}
-      <section className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white p-4">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-semibold text-gray-800">
+      <section className="min-w-0 flex-1 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-card">
+        <div className="flex flex-col gap-3 border-b border-stone-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-sm font-semibold text-stone-800">
             {selectedCategoryId === 'all' ? '全部标签' : selectedCategory?.name ?? '标签列表'}
           </h2>
           <div className="flex items-center gap-2">
-            <Input
-              placeholder="搜索标签名称"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              inputClassName="w-48"
-            />
+            <div className="relative">
+              <Icon
+                icon={Search}
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+              />
+              <Input
+                placeholder="搜索标签名称"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                inputClassName="w-48 pl-9"
+              />
+            </div>
             <Button size="sm" onClick={() => openTagModal()}>
               新建标签
             </Button>
@@ -170,52 +190,67 @@ export default function TagListPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-gray-500">
-                <th className="pb-2 font-medium">名称</th>
-                <th className="pb-2 font-medium">别名</th>
-                <th className="pb-2 font-medium">所属分类</th>
-                <th className="pb-2 font-medium">排序</th>
-                <th className="pb-2 font-medium text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {tagPage?.records.map((tag) => (
-                <tr key={tag.id} className="hover:bg-gray-50">
-                  <td className="py-2.5 font-medium text-gray-800">{tag.name}</td>
-                  <td className="py-2.5 text-gray-500">{tag.alias ?? '-'}</td>
-                  <td className="py-2.5 text-gray-500">
-                    {categories?.find((c) => c.id === tag.categoryId)?.name ?? tag.categoryId}
-                  </td>
-                  <td className="py-2.5 text-gray-500">{tag.sortOrder}</td>
-                  <td className="py-2.5 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openTagModal(tag)}
-                        className="text-xs text-brand-600 hover:underline"
-                      >
-                        编辑
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTag(tag.id)}
-                        className="text-xs text-red-500 hover:underline"
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {(!tagPage?.records || tagPage.records.length === 0) && (
+          {!tagPage ? (
+            <div className="p-4">
+              <SkeletonList count={5} />
+            </div>
+          ) : tagPage.records.length === 0 ? (
+            <EmptyState
+              icon={TagIcon}
+              title="暂无标签数据"
+              description="当前分类下没有标签"
+            />
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wider text-stone-600">
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-sm text-gray-400">
-                    暂无标签数据
-                  </td>
+                  <th className="px-4 py-3">名称</th>
+                  <th className="px-4 py-3">别名</th>
+                  <th className="px-4 py-3">所属分类</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      排序
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3 text-right">操作</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tagPage.records.map((tag) => (
+                  <tr
+                    key={tag.id}
+                    className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                  >
+                    <td className="px-4 py-3 font-medium text-stone-800">{tag.name}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{tag.alias ?? '-'}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">
+                      {categories?.find((c) => c.id === tag.categoryId)?.name ?? tag.categoryId}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{tag.sortOrder}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-1 rounded-lg border border-stone-200 p-0.5">
+                        <button
+                          onClick={() => openTagModal(tag)}
+                          className="rounded p-1.5 text-stone-500 transition-all duration-200 hover:bg-stone-100 hover:text-theme-accent"
+                          title="编辑"
+                        >
+                          <Icon icon={Pencil} size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTag(tag.id)}
+                          className="rounded p-1.5 text-red-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600"
+                          title="删除"
+                        >
+                          <Icon icon={Trash2} size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </section>
 
@@ -246,7 +281,6 @@ export default function TagListPage() {
     </div>
   )
 }
-
 
 /* ───────── 分类弹窗组件 ───────── */
 
@@ -296,44 +330,55 @@ function CategoryModal({ open, onClose, category, onSuccess }: CategoryModalProp
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-          <DialogTitle className="text-base font-semibold text-gray-800">
-            {isEdit ? '编辑分类' : '新建分类'}
-          </DialogTitle>
+        <DialogPanel className="w-full max-w-md overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-stone-800">
+              {isEdit ? '编辑分类' : '新建分类'}
+            </DialogTitle>
+            <button
+              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              onClick={onClose}
+              aria-label="关闭"
+            >
+              <Icon icon={X} size={18} />
+            </button>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">分类编码</label>
-              <Input
-                {...register('code', { required: '请输入编码' })}
-                placeholder="如 INDUSTRY"
-                error={!!errors.code}
-                disabled={isEdit}
-                inputClassName={isEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}
-              />
-              {errors.code && <p className="mt-1 text-xs text-red-500">{errors.code.message}</p>}
+          <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">分类编码</label>
+                <Input
+                  {...register('code', { required: '请输入编码' })}
+                  placeholder="如 INDUSTRY"
+                  error={!!errors.code}
+                  disabled={isEdit}
+                  inputClassName={isEdit ? 'bg-stone-100 text-stone-500 cursor-not-allowed' : ''}
+                />
+                {errors.code && <p className="mt-1 text-xs text-red-500">{errors.code.message}</p>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">分类名称</label>
+                <Input
+                  {...register('name', { required: '请输入名称' })}
+                  placeholder="如 行业分类"
+                  error={!!errors.name}
+                />
+                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">排序</label>
+                <Input
+                  type="number"
+                  {...register('sortOrder', { valueAsNumber: true })}
+                  placeholder="0"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">分类名称</label>
-              <Input
-                {...register('name', { required: '请输入名称' })}
-                placeholder="如 行业分类"
-                error={!!errors.name}
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">排序</label>
-              <Input
-                type="number"
-                {...register('sortOrder', { valueAsNumber: true })}
-                placeholder="0"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="mt-5 flex justify-end gap-2 border-t border-stone-100 pt-4">
               <Button variant="ghost" type="button" onClick={onClose}>
                 取消
               </Button>
@@ -400,54 +445,65 @@ function TagModal({ open, onClose, tag, categories, defaultCategoryId, onSuccess
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-          <DialogTitle className="text-base font-semibold text-gray-800">
-            {isEdit ? '编辑标签' : '新建标签'}
-          </DialogTitle>
+        <DialogPanel className="w-full max-w-md overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-stone-800">
+              {isEdit ? '编辑标签' : '新建标签'}
+            </DialogTitle>
+            <button
+              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              onClick={onClose}
+              aria-label="关闭"
+            >
+              <Icon icon={X} size={18} />
+            </button>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">所属分类</label>
-              <select
-                {...register('categoryId', { valueAsNumber: true })}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+          <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">所属分类</label>
+                <select
+                  {...register('categoryId', { valueAsNumber: true })}
+                  className="w-full rounded-lg border border-stone-200 bg-theme-surface px-3 py-2 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">标签名称</label>
+                <Input
+                  {...register('name', { required: '请输入标签名称' })}
+                  placeholder="如 新能源"
+                  error={!!errors.name}
+                />
+                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">别名（同义词，逗号分隔）</label>
+                <Input
+                  {...register('alias')}
+                  placeholder="如 可再生能源,清洁能源"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-stone-700">排序</label>
+                <Input
+                  type="number"
+                  {...register('sortOrder', { valueAsNumber: true })}
+                  placeholder="0"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">标签名称</label>
-              <Input
-                {...register('name', { required: '请输入标签名称' })}
-                placeholder="如 新能源"
-                error={!!errors.name}
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">别名（同义词，逗号分隔）</label>
-              <Input
-                {...register('alias')}
-                placeholder="如 可再生能源,清洁能源"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">排序</label>
-              <Input
-                type="number"
-                {...register('sortOrder', { valueAsNumber: true })}
-                placeholder="0"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="mt-5 flex justify-end gap-2 border-t border-stone-100 pt-4">
               <Button variant="ghost" type="button" onClick={onClose}>
                 取消
               </Button>

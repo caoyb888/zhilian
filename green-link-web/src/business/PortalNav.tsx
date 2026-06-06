@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Leaf, Menu, X } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 
 const NAV_LINKS = [
@@ -11,29 +14,35 @@ const NAV_LINKS = [
 export function PortalNav() {
   const { pathname } = useLocation()
   const accountInfo = useAuthStore((s) => s.accountInfo)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const isActive = (path: string) =>
+    pathname === path || (path !== '/portal' && pathname.startsWith(path))
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-100 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
           <Link to="/portal" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-brand-500 flex items-center justify-center">
-              <span className="text-white text-sm font-bold">绿</span>
+              <Icon icon={Leaf} size={18} className="text-white" />
             </div>
-            <span className="font-bold text-gray-900 text-lg hidden sm:block">绿产智链</span>
-            <span className="text-gray-400 text-xs hidden sm:block">山东绿色低碳产业智慧平台</span>
+            <span className="font-bold text-stone-900 text-lg hidden sm:block">绿产智链</span>
+            <span className="text-stone-400 text-xs hidden sm:block">山东绿色低碳产业智慧平台</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map(({ label, path }) => (
               <Link
                 key={path}
                 to={path}
                 className={[
-                  'text-sm font-medium transition-colors',
-                  pathname === path || (path !== '/portal' && pathname.startsWith(path))
-                    ? 'text-brand-600 border-b-2 border-brand-500 pb-0.5'
-                    : 'text-gray-600 hover:text-brand-600',
+                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive(path)
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50',
                 ].join(' ')}
               >
                 {label}
@@ -41,11 +50,12 @@ export function PortalNav() {
             ))}
           </nav>
 
+          {/* User / Auth */}
           <div className="flex items-center gap-3">
             {accountInfo ? (
               <Link
                 to="/member/profile"
-                className="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+                className="text-sm font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
               >
                 {accountInfo.realName ?? accountInfo.username} · 会员中心
               </Link>
@@ -53,7 +63,7 @@ export function PortalNav() {
               <>
                 <Link
                   to="/login"
-                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-sm text-stone-600 hover:text-stone-900 transition-colors hidden sm:block"
                 >
                   登录
                 </Link>
@@ -65,9 +75,54 @@ export function PortalNav() {
                 </Link>
               </>
             )}
+
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden rounded-lg p-2 text-stone-500 hover:bg-stone-100"
+              onClick={() => setMobileOpen(true)}
+              aria-label="打开菜单"
+            >
+              <Icon icon={Menu} size={20} />
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile menu overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-64 bg-white shadow-xl p-4 flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <span className="font-bold text-stone-900">菜单</span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg p-2 text-stone-500 hover:bg-stone-100"
+                aria-label="关闭菜单"
+              >
+                <Icon icon={X} size={20} />
+              </button>
+            </div>
+            <nav className="flex flex-col gap-1">
+              {NAV_LINKS.map(({ label, path }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  onClick={() => setMobileOpen(false)}
+                  className={[
+                    'px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    isActive(path)
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:bg-stone-50',
+                  ].join(' ')}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

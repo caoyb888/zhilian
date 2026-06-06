@@ -7,15 +7,27 @@ interface ThemeState {
   setTheme: (theme: ThemeKey) => void
 }
 
+function applyThemeToDOM(theme: ThemeKey) {
+  document.documentElement.setAttribute('data-theme', theme)
+}
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       currentTheme: 'nordic',
-      setTheme: (theme: ThemeKey) => set({ currentTheme: theme }),
+      setTheme: (theme: ThemeKey) => {
+        applyThemeToDOM(theme)
+        set({ currentTheme: theme })
+      },
     }),
     {
       name: 'gl-theme',
       partialize: (state) => ({ currentTheme: state.currentTheme }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          applyThemeToDOM(state.currentTheme)
+        }
+      },
     }
   )
 )

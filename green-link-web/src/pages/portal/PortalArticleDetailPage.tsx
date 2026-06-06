@@ -3,7 +3,20 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import { PortalNav } from '@/business/PortalNav'
 import { Spinner } from '@/components/Spinner'
+import { ErrorState } from '@/components/states/ErrorState'
 import { usePublicArticleDetail } from '@/services/articleService'
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function safeLinkUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
 
 // ─── Reading Progress Bar ─────────────────────────────────────────────────────
 
@@ -25,7 +38,7 @@ function ReadingProgressBar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-1 pointer-events-none">
       <div
-        className="h-full bg-brand-500 transition-[width] duration-75 ease-linear"
+        className="h-full bg-emerald-500 transition-[width] duration-75 ease-linear"
         style={{ width: `${progress}%` }}
       />
     </div>
@@ -56,89 +69,94 @@ export default function PortalArticleDetailPage() {
 
   if (isError) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-theme-bg">
         <PortalNav />
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-gray-500">
-          <p className="text-lg">文章不存在或已下架</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="text-sm text-brand-600 underline hover:text-brand-700"
-          >
-            返回上一页
-          </button>
+        <div className="flex flex-1 items-center justify-center">
+          <ErrorState
+            title="文章不存在或已下架"
+            description="您访问的文章可能已被删除或暂时无法查看"
+            action={
+              <button
+                onClick={() => navigate(-1)}
+                className="rounded-lg bg-theme-accent px-4 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+              >
+                返回上一页
+              </button>
+            }
+          />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-theme-bg">
       <ReadingProgressBar />
       <PortalNav />
 
       {isLoading || !article ? (
         <div className="flex flex-1 items-center justify-center">
-          <Spinner size="lg" className="text-brand-500" />
+          <Spinner size="lg" className="text-theme-accent" />
         </div>
       ) : (
         <main className="flex-1">
           {/* Hero / Title area */}
-          <div className="bg-white border-b border-gray-100">
+          <div className="bg-theme-surface border-b border-theme-border">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
               {/* Breadcrumb */}
-              <nav className="flex items-center gap-2 text-xs text-gray-400 mb-4">
-                <Link to="/portal" className="hover:text-brand-600 transition-colors">
+              <nav className="flex items-center gap-2 text-xs text-stone-400 mb-4">
+                <Link to="/portal" className="hover:text-theme-accent transition-colors duration-200">
                   首页
                 </Link>
                 <span>›</span>
-                <Link to="/portal/articles" className="hover:text-brand-600 transition-colors">
+                <Link to="/portal/articles" className="hover:text-theme-accent transition-colors duration-200">
                   资讯中心
                 </Link>
                 <span>›</span>
-                <span className="text-gray-600">{article.categoryName}</span>
+                <span className="text-stone-600">{article.categoryName}</span>
               </nav>
 
               {/* Category badge */}
               <div className="mb-3">
-                <span className="inline-block rounded-md bg-brand-50 text-brand-600 text-xs font-medium px-2.5 py-1">
+                <span className="inline-block rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-1 border border-emerald-200">
                   {article.categoryName}
                 </span>
                 {article.isTop && (
-                  <span className="ml-2 inline-block rounded-md bg-red-50 text-red-600 text-xs font-medium px-2.5 py-1">
+                  <span className="ml-2 inline-block rounded-md bg-red-50 text-red-600 text-xs font-medium px-2.5 py-1 border border-red-200">
                     置顶
                   </span>
                 )}
               </div>
 
               {/* Title */}
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">
+              <h1 className="text-2xl sm:text-3xl font-bold text-theme-text-main leading-snug">
                 {article.title}
               </h1>
 
               {/* Meta */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-gray-500">
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-stone-500">
                 {article.author && (
                   <span className="flex items-center gap-1">
-                    <span className="text-gray-400">作者</span>
-                    <span className="font-medium text-gray-700">{article.author}</span>
+                    <span className="text-stone-400">作者</span>
+                    <span className="font-medium text-stone-700">{article.author}</span>
                   </span>
                 )}
                 {article.publishedAt && (
                   <span className="flex items-center gap-1">
-                    <span className="text-gray-400">发布时间</span>
+                    <span className="text-stone-400">发布时间</span>
                     <span>{formatDateTime(article.publishedAt)}</span>
                   </span>
                 )}
                 <span className="flex items-center gap-1">
-                  <span className="text-gray-400">阅读</span>
+                  <span className="text-stone-400">阅读</span>
                   <span>{article.viewCount}</span>
                 </span>
-                {article.sourceUrl && (
+                {safeLinkUrl(article.sourceUrl) && (
                   <a
-                    href={article.sourceUrl}
+                    href={safeLinkUrl(article.sourceUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-brand-600 hover:text-brand-700 transition-colors"
+                    className="flex items-center gap-1 text-theme-accent hover:text-theme-accent-hover transition-colors duration-200"
                   >
                     <span>查看原文 →</span>
                   </a>
@@ -147,7 +165,7 @@ export default function PortalArticleDetailPage() {
 
               {/* Summary */}
               {article.summary && (
-                <p className="mt-4 rounded-lg bg-gray-50 border-l-4 border-brand-400 px-4 py-3 text-sm text-gray-600 leading-relaxed">
+                <p className="mt-4 rounded-lg bg-stone-50 border-l-4 border-emerald-400 px-4 py-3 text-sm text-stone-600 leading-relaxed">
                   {article.summary}
                 </p>
               )}
@@ -173,20 +191,20 @@ export default function PortalArticleDetailPage() {
                 dangerouslySetInnerHTML={{ __html: sanitizedContent }}
               />
             ) : (
-              <p className="text-gray-400 text-sm">暂无正文内容</p>
+              <p className="text-stone-400 text-sm">暂无正文内容</p>
             )}
 
             {/* Back / Footer actions */}
-            <div className="mt-12 flex items-center justify-between border-t border-gray-100 pt-6">
+            <div className="mt-12 flex items-center justify-between border-t border-theme-border pt-6">
               <Link
                 to="/portal/articles"
-                className="flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 transition-colors font-medium"
+                className="flex items-center gap-1 text-sm text-theme-accent hover:text-theme-accent-hover transition-colors duration-200 font-medium"
               >
                 ← 返回资讯列表
               </Link>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-xs text-stone-400 hover:text-stone-600 transition-colors duration-200"
               >
                 回到顶部 ↑
               </button>
@@ -195,7 +213,7 @@ export default function PortalArticleDetailPage() {
         </main>
       )}
 
-      <footer className="bg-gray-900 text-gray-400 py-6">
+      <footer className="bg-stone-900 text-stone-400 py-6">
         <div className="mx-auto max-w-7xl px-4 text-center text-xs">
           © 2024 山东省绿色低碳产业协会 · 绿产智链平台
         </div>
