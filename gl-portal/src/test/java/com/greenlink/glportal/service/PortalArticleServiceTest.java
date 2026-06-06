@@ -8,7 +8,9 @@ import com.greenlink.glportal.dto.request.CreateArticleRequest;
 import com.greenlink.glportal.dto.request.UpdateArticleRequest;
 import com.greenlink.glportal.dto.response.ArticleDetailVO;
 import com.greenlink.glportal.enums.PublishMode;
+import com.greenlink.glportal.es.ArticleEsSyncService;
 import com.greenlink.glportal.helper.ViewCountHelper;
+import com.greenlink.glportal.mq.ArticleEventProducer;
 import com.greenlink.glportal.repository.PortalArticleMapper;
 import com.greenlink.glportal.repository.PortalCategoryMapper;
 import com.greenlink.glportal.service.impl.PortalArticleServiceImpl;
@@ -32,6 +34,8 @@ class PortalArticleServiceTest {
     @Mock PortalArticleMapper articleMapper;
     @Mock PortalCategoryMapper categoryMapper;
     @Mock ViewCountHelper viewCountHelper;
+    @Mock ArticleEventProducer eventProducer;
+    @Mock ArticleEsSyncService esSyncService;
 
     @InjectMocks PortalArticleServiceImpl service;
 
@@ -51,7 +55,7 @@ class PortalArticleServiceTest {
         existingArticle.setTitle("测试文章");
         existingArticle.setContent("<p>正文内容</p>");
         existingArticle.setIsTop(0);
-        existingArticle.setIsPublished(0);
+        existingArticle.setIsPublished(1);
         existingArticle.setViewCount(100);
     }
 
@@ -175,8 +179,18 @@ class PortalArticleServiceTest {
     }
 
     @Test
-    void getById_success_incrementsViewCount() {
+    void getById_unpublished_throwsBizException() {
+        existingArticle.setIsPublished(0);
         when(articleMapper.selectById(10L)).thenReturn(existingArticle);
+
+        assertThatThrownBy(() -> service.getById(10L))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("文章不存在");
+    }
+
+    @Test
+    void getById_success_incrementsViewCount() {
+        when(articleMapper.selectById(10L)).thenReturn(existingArticle);  // isPublished=1
 
         service.getById(10L);
 

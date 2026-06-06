@@ -1,6 +1,7 @@
 package com.greenlink.glportal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
@@ -8,13 +9,18 @@ import org.springframework.dao.DuplicateKeyException;
 import com.greenlink.glportal.domain.PortalActivity;
 import com.greenlink.glportal.domain.PortalActivitySignup;
 import com.greenlink.glportal.dto.request.ActivityPageRequest;
+import com.greenlink.glportal.dto.request.ActivityPublicPageRequest;
 import com.greenlink.glportal.dto.request.ActivitySignupRequest;
 import com.greenlink.glportal.dto.request.CreateActivityRequest;
 import com.greenlink.glportal.dto.request.SignupPageRequest;
 import com.greenlink.glportal.dto.request.UpdateActivityRequest;
 import com.greenlink.glportal.dto.response.ActivityDetailVO;
+import com.greenlink.glportal.dto.response.ActivitySignupStatusVO;
 import com.greenlink.glportal.dto.response.ActivityVO;
 import com.greenlink.glportal.dto.response.SignupVO;
+
+import java.util.List;
+import java.util.Set;
 import com.greenlink.glportal.helper.SignupLockHelper;
 import com.greenlink.glportal.repository.PortalActivityMapper;
 import com.greenlink.glportal.repository.PortalActivitySignupMapper;
@@ -30,6 +36,9 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class PortalActivityServiceImpl implements PortalActivityService {
+
+    /** 前台可见的活动状态：2=报名中，3=已结束（与 publicPageList 保持一致） */
+    private static final Set<Integer> PUBLIC_VISIBLE_STATUSES = Set.of(2, 3);
 
     private final PortalActivityMapper activityMapper;
     private final PortalActivitySignupMapper signupMapper;
@@ -240,6 +249,50 @@ public class PortalActivityServiceImpl implements PortalActivityService {
         signup.setStatus(2);
         signupMapper.updateById(signup);
         log.info("签到成功 signupId={} activityId={}", signupId, activityId);
+    }
+
+    // ─── 前台公开接口 ─────────────────────────────────────────────────────────────
+
+    @Override
+    public Page<ActivityVO> publicPageList(ActivityPublicPageRequest request) {
+        List<Integer> statuses = (request.getStatus() != null && (request.getStatus() == 2 || request.getStatus() == 3))
+                ? List.of(request.getStatus())
+                : List.of(2, 3);
+        QueryWrapper<PortalActivity> wrapper = new QueryWrapper<PortalActivity>()
+                .select("id", "title", "cover_url", "location", "start_time", "end_time",
+                        "reg_deadline", "max_capacity", "reg_count", "status", "created_at")
+                .in("status", statuses)
+                .orderByAsc("start_time");
+        Page<PortalActivity> dbPage = activityMapper.selectPage(
+                new Page<>(request.getPage(), request.getSize()), wrapper);
+        Page<ActivityVO> voPage = new Page<>(dbPage.getCurrent(), dbPage.getSize(), dbPage.getTotal());
+        voPage.setRecords(dbPage.getRecords().stream().map(this::toVO).toList());
+        return voPage;
+    }
+
+    @Override
+    public ActivityDetailVO publicGetById(Long id) {
+        PortalActivity activity = activityMapper.selectById(id);
+        if (activity == null || !PUBLIC_VISIBLE_STATUSES.contains(activity.getStatus())) {
+            throw new BizException(ResultCode.ACTIVITY_NOT_FOUND);
+        }
+        return toDetailVO(activity);
+    }
+
+    @Override
+    public ActivitySignupStatusVO getSignupStatus(Long activityId, Long accountId) {
+        ActivitySignupStatusVO vo = new ActivitySignupStatusVO();
+        if (accountId == null) {
+            return vo;
+        }
+        PortalActivitySignup signup = signupMapper.findByActivityAndAccount(activityId, accountId);
+        if (signup == null || signup.getStatus() == 3) {
+            return vo;
+        }
+        vo.setSigned(true);
+        vo.setSignupId(signup.getId());
+        vo.setSignupStatus(signup.getStatus());
+        return vo;
     }
 
     // ─── 转换 ─────────────────────────────────────────────────────────────────
