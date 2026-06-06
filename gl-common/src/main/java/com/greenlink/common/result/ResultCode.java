@@ -38,6 +38,7 @@ public enum ResultCode {
     RESOURCE_NOT_FOUND(3001, "资源不存在"),
     DEMAND_NOT_FOUND(3002, "需求不存在"),
     RESOURCE_AUDIT_PENDING(3003, "资源审核中"),
+    RESOURCE_AUDIT_INVALID_STATUS(3004, "当前资源状态不允许此审核操作"),
     MATCH_NOT_FOUND(3010, "对接记录不存在"),
 
     // 门户模块 4000-4999

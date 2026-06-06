@@ -1,0 +1,34 @@
+package com.greenlink.glsupply.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.greenlink.glsupply.dto.request.AdminResourcePageRequest;
+import com.greenlink.glsupply.dto.request.CreateResourceRequest;
+import com.greenlink.glsupply.dto.request.ResourcePageRequest;
+import com.greenlink.glsupply.dto.request.UpdateResourceRequest;
+import com.greenlink.glsupply.dto.response.AdminResourceVO;
+import com.greenlink.glsupply.dto.response.ResourceDetailVO;
+import com.greenlink.glsupply.dto.response.ResourceVO;
+
+public interface SupplyResourceService {
+
+    ResourceDetailVO create(CreateResourceRequest request, Long memberId, Long accountId);
+
+    Page<ResourceVO> pageList(ResourcePageRequest request);
+
+    ResourceDetailVO getById(Long id, Long accountId);
+
+    ResourceDetailVO update(Long id, UpdateResourceRequest request, Long accountId);
+
+    void delete(Long id, Long accountId);
+
+    void withdraw(Long id, Long accountId);
+
+    // 管理端审核相关
+    Page<AdminResourceVO> adminPageList(AdminResourcePageRequest request);
+
+    void approve(Long id, Long auditorId);
+
+    void reject(Long id, Long auditorId, String remark);
+
+    void adminOffline(Long id, Long auditorId);
+}
