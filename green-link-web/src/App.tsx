@@ -5,12 +5,19 @@ import { Spinner } from '@/components/Spinner'
 import { RequireAuth } from '@/components/RequireAuth'
 import { PrivateRoute } from '@/components/PrivateRoute'
 
-const LoginPage         = lazy(() => import('@/pages/auth/LoginPage'))
-const RegisterPage      = lazy(() => import('@/pages/auth/RegisterPage'))
-const PortalHomePage    = lazy(() => import('@/pages/portal/PortalHomePage'))
-const SupplyListPage    = lazy(() => import('@/pages/supply/SupplyListPage'))
-const NotFoundPage      = lazy(() => import('@/pages/NotFoundPage'))
-const ForbiddenPage     = lazy(() => import('@/pages/ForbiddenPage'))
+const LoginPage                = lazy(() => import('@/pages/auth/LoginPage'))
+const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
+const PortalHomePage           = lazy(() => import('@/pages/portal/PortalHomePage'))
+const PortalArticleListPage    = lazy(() => import('@/pages/portal/PortalArticleListPage'))
+const PortalArticleDetailPage  = lazy(() => import('@/pages/portal/PortalArticleDetailPage'))
+const PortalActivityListPage   = lazy(() => import('@/pages/portal/PortalActivityListPage'))
+const PortalActivityDetailPage = lazy(() => import('@/pages/portal/PortalActivityDetailPage'))
+const SupplyListPage           = lazy(() => import('@/pages/supply/SupplyListPage'))
+const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
+const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
+const SubAccountPage           = lazy(() => import('@/pages/member/SubAccountPage'))
+const NotFoundPage             = lazy(() => import('@/pages/NotFoundPage'))
+const ForbiddenPage            = lazy(() => import('@/pages/ForbiddenPage'))
 
 // 管理端布局与页面
 const AdminLayout          = lazy(() => import('@/pages/admin/AdminLayout'))
@@ -47,6 +54,10 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/portal" element={<PortalHomePage />} />
+            <Route path="/portal/articles" element={<PortalArticleListPage />} />
+            <Route path="/portal/articles/:id" element={<PortalArticleDetailPage />} />
+            <Route path="/portal/activities" element={<PortalActivityListPage />} />
+            <Route path="/portal/activities/:id" element={<PortalActivityDetailPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
             {/* 会员端（登录必需） */}
@@ -58,6 +69,20 @@ export default function App() {
                 </RequireAuth>
               }
             />
+
+            {/* 会员中心（登录必需） */}
+            <Route
+              path="/member"
+              element={
+                <RequireAuth>
+                  <MemberLayout />
+                </RequireAuth>
+              }
+            >
+              <Route index element={<Navigate to="/member/profile" replace />} />
+              <Route path="profile" element={<MemberProfilePage />} />
+              <Route path="sub-accounts" element={<SubAccountPage />} />
+            </Route>
 
             {/* 管理端（登录 + 管理员角色） */}
             <Route

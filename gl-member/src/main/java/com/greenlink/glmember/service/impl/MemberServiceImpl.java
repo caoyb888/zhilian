@@ -157,6 +157,7 @@ public class MemberServiceImpl implements MemberService {
         if (StringUtils.hasText(request.getContactName())) unit.setContactName(request.getContactName());
         if (StringUtils.hasText(request.getContactPhone())) unit.setContactPhone(request.getContactPhone());
         if (StringUtils.hasText(request.getContactEmail())) unit.setContactEmail(request.getContactEmail());
+        if (StringUtils.hasText(request.getLogoUrl())) unit.setLogoUrl(request.getLogoUrl());
         unit.setUpdatedAt(LocalDateTime.now());
         memberUnitMapper.updateById(unit);
 
