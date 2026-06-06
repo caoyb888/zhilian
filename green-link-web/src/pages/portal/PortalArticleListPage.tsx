@@ -33,9 +33,9 @@ function formatDate(s: string | null) {
   return s ? s.slice(0, 10) : ''
 }
 
-function ArticleCard({ article }: { article: ArticleItem }) {
+function ArticleCard({ article, categoryCode }: { article: ArticleItem; categoryCode?: string }) {
   const badgeColor =
-    CATEGORY_COLORS[article.categoryName?.toUpperCase?.()] ?? 'bg-gray-100 text-gray-600'
+    CATEGORY_COLORS[categoryCode ?? ''] ?? 'bg-gray-100 text-gray-600'
 
   return (
     <Link
@@ -175,7 +175,10 @@ export default function PortalArticleListPage() {
   const { data: categoryTree } = usePortalCategories()
   const topCategories = categoryTree ? flatTopLevel(categoryTree) : []
 
-  const { data, isLoading, isFetching } = usePublicArticleList({
+  // Build categoryId → code map for badge coloring
+  const catCodeById = new Map(topCategories.map((c) => [c.id, c.code]))
+
+  const { data, isLoading, isFetching, isError } = usePublicArticleList({
     page,
     size: PAGE_SIZE,
     categoryId,
@@ -277,8 +280,18 @@ export default function PortalArticleListPage() {
         >
           {isLoading ? (
             <SkeletonGrid count={PAGE_SIZE} />
+          ) : isError ? (
+            <div className="col-span-3 py-24 text-center text-red-400 text-sm">
+              加载失败，请刷新页面重试
+            </div>
           ) : articles.length > 0 ? (
-            articles.map((a) => <ArticleCard key={a.id} article={a} />)
+            articles.map((a) => (
+              <ArticleCard
+                key={a.id}
+                article={a}
+                categoryCode={catCodeById.get(a.categoryId)}
+              />
+            ))
           ) : (
             <div className="col-span-3 py-24 text-center text-gray-400 text-sm">
               {keyword ? '未找到相关文章，请换个关键词试试' : '暂无资讯'}

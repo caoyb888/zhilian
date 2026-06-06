@@ -11,6 +11,18 @@ import type { ArticleItem } from '@/services/articleService'
 import type { Activity } from '@/services/activityService'
 import { ACTIVITY_STATUS_MAP } from '@/services/activityService'
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function safeLinkUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
+
 // ─── Banner Carousel ──────────────────────────────────────────────────────────
 
 const PLACEHOLDER_BANNERS: BannerItem[] = [
@@ -79,9 +91,11 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
           {item.title}
         </h1>
         <div className="mt-8 flex gap-4">
-          {item.linkUrl ? (
+          {safeLinkUrl(item.linkUrl) ? (
             <a
-              href={item.linkUrl}
+              href={safeLinkUrl(item.linkUrl)}
+              rel="noopener noreferrer"
+              target="_blank"
               className="rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-brand-400 transition-colors"
             >
               了解详情
