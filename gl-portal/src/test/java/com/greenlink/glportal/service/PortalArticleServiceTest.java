@@ -55,7 +55,7 @@ class PortalArticleServiceTest {
         existingArticle.setTitle("测试文章");
         existingArticle.setContent("<p>正文内容</p>");
         existingArticle.setIsTop(0);
-        existingArticle.setIsPublished(0);
+        existingArticle.setIsPublished(1);
         existingArticle.setViewCount(100);
     }
 
@@ -179,8 +179,18 @@ class PortalArticleServiceTest {
     }
 
     @Test
-    void getById_success_incrementsViewCount() {
+    void getById_unpublished_throwsBizException() {
+        existingArticle.setIsPublished(0);
         when(articleMapper.selectById(10L)).thenReturn(existingArticle);
+
+        assertThatThrownBy(() -> service.getById(10L))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("文章不存在");
+    }
+
+    @Test
+    void getById_success_incrementsViewCount() {
+        when(articleMapper.selectById(10L)).thenReturn(existingArticle);  // isPublished=1
 
         service.getById(10L);
 

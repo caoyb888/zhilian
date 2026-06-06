@@ -26,7 +26,8 @@ public class ArticleEventConsumer implements RocketMQListener<ArticleEventMessag
         log.debug("收到文章事件 type={} id={}", message.getEventType(), message.getArticleId());
         if (ArticleEventMessage.EVENT_SAVE.equals(message.getEventType())) {
             PortalArticle article = articleMapper.selectById(message.getArticleId());
-            if (article != null) {
+            // null: 已被软删除（全局逻辑删除过滤）或物理不存在；isDeleted 二次保险防止 MQ 乱序
+            if (article != null && article.getIsDeleted() == 0) {
                 esSyncService.syncSave(article);
             }
         } else if (ArticleEventMessage.EVENT_DELETE.equals(message.getEventType())) {

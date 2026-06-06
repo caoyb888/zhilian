@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -81,7 +82,7 @@ class ArticleEsSyncServiceTest {
         when(elasticsearchOperations.search(any(Query.class), eq(ArticleEsDoc.class)))
                 .thenReturn(mockHits);
 
-        EsPageResult result = service.searchByKeyword("无结果关键词", null, 1, 20);
+        EsPageResult result = service.searchByKeyword("无结果关键词", null, null, 1, 20);
 
         assertThat(result.total()).isEqualTo(0L);
         assertThat(result.orderedIds()).isEmpty();
@@ -103,7 +104,7 @@ class ArticleEsSyncServiceTest {
         when(elasticsearchOperations.search(any(Query.class), eq(ArticleEsDoc.class)))
                 .thenReturn(mockHits);
 
-        EsPageResult result = service.searchByKeyword("绿色能源", null, 1, 20);
+        EsPageResult result = service.searchByKeyword("绿色能源", null, null, 1, 20);
 
         assertThat(result.total()).isEqualTo(1L);
         assertThat(result.orderedIds()).containsExactly(10L);
@@ -112,12 +113,22 @@ class ArticleEsSyncServiceTest {
     }
 
     @Test
-    void syncSave_esException_shouldNotThrow() {
+    void syncSave_esException_shouldPropagate() {
         doThrow(new RuntimeException("ES 连接失败")).when(elasticsearchOperations).save(any(ArticleEsDoc.class));
 
         PortalArticle article = buildArticle(1L, "标题", "摘要");
-        // 不应抛出异常
-        service.syncSave(article);
+        // 异常向上传播，使 RocketMQ 触发重试而非永久丢失消息
+        assertThatThrownBy(() -> service.syncSave(article))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("ES 连接失败");
+    }
+
+    @Test
+    void syncAll_esException_shouldNotPropagate() {
+        doThrow(new RuntimeException("ES 连接失败")).when(elasticsearchOperations).save(any(Iterable.class));
+
+        // syncAll 是管理员一次性操作，内部 catch 保证接口不报 500
+        service.syncAll(List.of(buildArticle(1L, "标题", "摘要")));
     }
 
     private PortalArticle buildArticle(Long id, String title, String summary) {

@@ -1,6 +1,7 @@
 package com.greenlink.glportal.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
@@ -62,7 +63,7 @@ public class PortalArticleServiceImpl implements PortalArticleService {
     @Override
     public ArticleDetailVO getById(Long id) {
         PortalArticle article = articleMapper.selectById(id);
-        if (article == null) {
+        if (article == null || article.getIsPublished() == 0) {
             throw new BizException(ResultCode.ARTICLE_NOT_FOUND);
         }
         viewCountHelper.increment(id);
@@ -184,15 +185,21 @@ public class PortalArticleServiceImpl implements PortalArticleService {
     private Page<ArticleVO> searchByEs(ArticlePageRequest request) {
         EsPageResult esResult = esSyncService.searchByKeyword(
                 request.getKeyword(), request.getCategoryId(),
+                request.getPublished(),
                 request.getPage(), request.getSize());
 
         if (esResult.orderedIds().isEmpty()) {
             return new Page<>(request.getPage(), request.getSize(), 0);
         }
 
+        // 明确列名避免 SELECT *，并补 is_published/is_deleted 防止 ES 脏索引漏出
         List<PortalArticle> articles = articleMapper.selectList(
-                new LambdaQueryWrapper<PortalArticle>()
-                        .in(PortalArticle::getId, esResult.orderedIds()));
+                new QueryWrapper<PortalArticle>()
+                        .select("id", "category_id", "title", "summary", "cover_url", "author",
+                                "view_count", "is_top", "is_published", "published_at", "created_at")
+                        .in("id", esResult.orderedIds())
+                        .eq("is_published", 1)
+                        .eq("is_deleted", 0));
 
         List<Long> catIds = articles.stream().map(PortalArticle::getCategoryId).distinct().toList();
         Map<Long, String> catNames = catIds.isEmpty() ? Map.of() :
@@ -224,15 +231,17 @@ public class PortalArticleServiceImpl implements PortalArticleService {
     }
 
     private Page<ArticleVO> searchByDb(ArticlePageRequest request) {
-        LambdaQueryWrapper<PortalArticle> wrapper = new LambdaQueryWrapper<PortalArticle>()
-                .eq(request.getCategoryId() != null, PortalArticle::getCategoryId, request.getCategoryId())
-                .eq(request.getIsTop() != null, PortalArticle::getIsTop, Boolean.TRUE.equals(request.getIsTop()) ? 1 : 0)
-                .eq(request.getPublished() != null, PortalArticle::getIsPublished, Boolean.TRUE.equals(request.getPublished()) ? 1 : 0)
+        QueryWrapper<PortalArticle> wrapper = new QueryWrapper<PortalArticle>()
+                .select("id", "category_id", "title", "summary", "cover_url", "author",
+                        "view_count", "is_top", "is_published", "published_at", "created_at")
+                .eq(request.getCategoryId() != null, "category_id", request.getCategoryId())
+                .eq(request.getIsTop() != null, "is_top", Boolean.TRUE.equals(request.getIsTop()) ? 1 : 0)
+                .eq(request.getPublished() != null, "is_published", Boolean.TRUE.equals(request.getPublished()) ? 1 : 0)
                 .and(StringUtils.hasText(request.getKeyword()), q -> q
-                        .like(PortalArticle::getTitle, request.getKeyword())
-                        .or().like(PortalArticle::getSummary, request.getKeyword()))
-                .orderByDesc(PortalArticle::getIsTop)
-                .orderByDesc(PortalArticle::getPublishedAt);
+                        .like("title", request.getKeyword())
+                        .or().like("summary", request.getKeyword()))
+                .orderByDesc("is_top")
+                .orderByDesc("published_at");
 
         Page<PortalArticle> dbPage = articleMapper.selectPage(
                 new Page<>(request.getPage(), request.getSize()), wrapper);

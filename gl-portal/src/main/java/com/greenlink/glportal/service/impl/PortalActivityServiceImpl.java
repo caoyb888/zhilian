@@ -20,6 +20,7 @@ import com.greenlink.glportal.dto.response.ActivityVO;
 import com.greenlink.glportal.dto.response.SignupVO;
 
 import java.util.List;
+import java.util.Set;
 import com.greenlink.glportal.helper.SignupLockHelper;
 import com.greenlink.glportal.repository.PortalActivityMapper;
 import com.greenlink.glportal.repository.PortalActivitySignupMapper;
@@ -35,6 +36,9 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class PortalActivityServiceImpl implements PortalActivityService {
+
+    /** 前台可见的活动状态：2=报名中，3=已结束（与 publicPageList 保持一致） */
+    private static final Set<Integer> PUBLIC_VISIBLE_STATUSES = Set.of(2, 3);
 
     private final PortalActivityMapper activityMapper;
     private final PortalActivitySignupMapper signupMapper;
@@ -269,7 +273,7 @@ public class PortalActivityServiceImpl implements PortalActivityService {
     @Override
     public ActivityDetailVO publicGetById(Long id) {
         PortalActivity activity = activityMapper.selectById(id);
-        if (activity == null || activity.getStatus() == 1) {
+        if (activity == null || !PUBLIC_VISIBLE_STATUSES.contains(activity.getStatus())) {
             throw new BizException(ResultCode.ACTIVITY_NOT_FOUND);
         }
         return toDetailVO(activity);

@@ -15,7 +15,7 @@ public interface PortalActivitySignupMapper extends BaseMapper<PortalActivitySig
                                    @Param("accountId") Long accountId);
 
     @Select("SELECT id FROM portal_activity_signup " +
-            "WHERE activity_id = #{activityId} AND account_id = #{accountId} LIMIT 1")
+            "WHERE activity_id = #{activityId} AND account_id = #{accountId} AND status != 3 LIMIT 1")
     Long findIdByActivityAndAccount(@Param("activityId") Long activityId,
                                     @Param("accountId") Long accountId);
 

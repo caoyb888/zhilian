@@ -29,21 +29,13 @@ public class ArticleEsSyncService {
     private final ElasticsearchOperations elasticsearchOperations;
 
     public void syncSave(PortalArticle article) {
-        try {
-            elasticsearchOperations.save(toDoc(article));
-            log.debug("ES 同步文章 id={}", article.getId());
-        } catch (Exception e) {
-            log.error("ES 同步文章失败 id={}", article.getId(), e);
-        }
+        elasticsearchOperations.save(toDoc(article));
+        log.debug("ES 同步文章 id={}", article.getId());
     }
 
     public void syncDelete(Long id) {
-        try {
-            elasticsearchOperations.delete(String.valueOf(id), ArticleEsDoc.class);
-            log.debug("ES 删除文章 id={}", id);
-        } catch (Exception e) {
-            log.error("ES 删除文章失败 id={}", id, e);
-        }
+        elasticsearchOperations.delete(String.valueOf(id), ArticleEsDoc.class);
+        log.debug("ES 删除文章 id={}", id);
     }
 
     public void syncAll(List<PortalArticle> articles) {
@@ -62,13 +54,18 @@ public class ArticleEsSyncService {
      * <p>
      * ES 默认高亮标签即为 {@code <em>...</em>}，无需额外配置。
      */
-    public EsPageResult searchByKeyword(String keyword, Long categoryId, int page, int size) {
+    /**
+     * @param published null=不过滤（管理员），true=仅已发布，false=仅草稿
+     */
+    public EsPageResult searchByKeyword(String keyword, Long categoryId, Boolean published, int page, int size) {
         List<Query> filterQueries = new ArrayList<>();
-        filterQueries.add(TermQuery.of(t -> t.field("isPublished").value(1))._toQuery());
+        if (published != null) {
+            int pubVal = Boolean.TRUE.equals(published) ? 1 : 0;
+            filterQueries.add(TermQuery.of(t -> t.field("isPublished").value(pubVal))._toQuery());
+        }
         filterQueries.add(TermQuery.of(t -> t.field("isDeleted").value(0))._toQuery());
         if (categoryId != null) {
-            final Long catId = categoryId;
-            filterQueries.add(TermQuery.of(t -> t.field("categoryId").value(catId))._toQuery());
+            filterQueries.add(TermQuery.of(t -> t.field("categoryId").value(categoryId))._toQuery());
         }
 
         Query esQuery = BoolQuery.of(b -> b

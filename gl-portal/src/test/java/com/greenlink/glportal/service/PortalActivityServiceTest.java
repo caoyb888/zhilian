@@ -327,6 +327,17 @@ class PortalActivityServiceTest {
     }
 
     @Test
+    void publicGetById_unknownStatus_throwsNotFound() {
+        openActivity.setStatus(4);  // 未来可能新增的状态，allowlist 兜底
+        when(activityMapper.selectById(1L)).thenReturn(openActivity);
+
+        assertThatThrownBy(() -> service.publicGetById(1L))
+                .isInstanceOf(BizException.class)
+                .extracting(e -> ((BizException) e).getCode())
+                .isEqualTo(ResultCode.ACTIVITY_NOT_FOUND.getCode());
+    }
+
+    @Test
     void publicGetById_notFound_throwsNotFound() {
         when(activityMapper.selectById(999L)).thenReturn(null);
 
