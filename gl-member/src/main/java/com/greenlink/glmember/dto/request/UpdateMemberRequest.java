@@ -29,5 +29,7 @@ public class UpdateMemberRequest {
     private String contactEmail;
 
     private Long logoFileId;
+    /** 文件上传后直接传 URL，优先于 logoFileId */
+    private String logoUrl;
     private List<Long> tagIds;
 }

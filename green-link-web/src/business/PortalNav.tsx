@@ -44,7 +44,7 @@ export function PortalNav() {
           <div className="flex items-center gap-3">
             {accountInfo ? (
               <Link
-                to="/supply"
+                to="/member/profile"
                 className="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
               >
                 {accountInfo.realName ?? accountInfo.username} · 会员中心

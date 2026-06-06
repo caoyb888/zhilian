@@ -13,6 +13,8 @@ const PortalArticleDetailPage  = lazy(() => import('@/pages/portal/PortalArticle
 const PortalActivityListPage   = lazy(() => import('@/pages/portal/PortalActivityListPage'))
 const PortalActivityDetailPage = lazy(() => import('@/pages/portal/PortalActivityDetailPage'))
 const SupplyListPage           = lazy(() => import('@/pages/supply/SupplyListPage'))
+const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
+const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
 const NotFoundPage             = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage            = lazy(() => import('@/pages/ForbiddenPage'))
 
@@ -66,6 +68,19 @@ export default function App() {
                 </RequireAuth>
               }
             />
+
+            {/* 会员中心（登录必需） */}
+            <Route
+              path="/member"
+              element={
+                <RequireAuth>
+                  <MemberLayout />
+                </RequireAuth>
+              }
+            >
+              <Route index element={<Navigate to="/member/profile" replace />} />
+              <Route path="profile" element={<MemberProfilePage />} />
+            </Route>
 
             {/* 管理端（登录 + 管理员角色） */}
             <Route
