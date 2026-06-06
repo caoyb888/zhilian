@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { MapPin, Calendar, CalendarDays, ChevronLeft, ChevronRight, Monitor, Sun, Moon } from 'lucide-react'
+import { Icon } from '@/components/Icon'
+import { Badge, type BadgeVariant } from '@/components/Badge'
+import { EmptyState } from '@/components/states/EmptyState'
 import { PortalNav } from '@/business/PortalNav'
+import { useThemeStore } from '@/stores/themeStore'
+import type { ThemeKey } from '@/styles/themeSchema'
 import {
   usePortalBanners,
   usePortalLatestArticles,
@@ -21,6 +27,13 @@ function safeLinkUrl(url: string | null | undefined): string | undefined {
   } catch {
     return undefined
   }
+}
+
+const CATEGORY_VARIANT_MAP: Record<string, BadgeVariant> = {
+  '新闻': 'news',
+  '通知': 'notice',
+  '政策': 'policy',
+  '活动': 'activity',
 }
 
 // ─── Banner Carousel ──────────────────────────────────────────────────────────
@@ -70,12 +83,18 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
 
   return (
     <section className="relative h-[420px] sm:h-[500px] overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-emerald-500">
+      {/* Grid texture */}
+      <div
+        className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none"
+        aria-hidden="true"
+      />
+
       {/* Background image */}
       {item.imageUrl && (
         <img
           src={item.imageUrl}
           alt={item.title}
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
           key={item.id}
         />
       )}
@@ -84,7 +103,7 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
 
       {/* Content */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
-        <div className="inline-flex items-center rounded-full bg-brand-400/20 backdrop-blur-sm border border-white/20 px-4 py-1.5 text-xs text-white/90 mb-4">
+        <div className="inline-flex items-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-1.5 text-xs text-white/90 mb-4 transition-all duration-200">
           山东省绿色低碳产业协会官方平台
         </div>
         <h1 className="max-w-3xl text-2xl sm:text-4xl font-bold text-white leading-snug drop-shadow-md">
@@ -96,21 +115,21 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
               href={safeLinkUrl(item.linkUrl)}
               rel="noopener noreferrer"
               target="_blank"
-              className="rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-brand-400 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] px-6 py-3 text-base bg-white text-brand-700 hover:bg-brand-50 shadow-lg"
             >
               了解详情
             </a>
           ) : (
             <Link
               to="/portal/articles"
-              className="rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-brand-400 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] px-6 py-3 text-base bg-white text-brand-700 hover:bg-brand-50 shadow-lg"
             >
               浏览资讯
             </Link>
           )}
           <Link
             to="/supply"
-            className="rounded-xl bg-white/15 backdrop-blur-sm border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/25 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] px-6 py-3 text-base border border-white/30 text-white hover:bg-white/10 hover:text-white"
           >
             供需对接
           </Link>
@@ -123,16 +142,16 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
           <button
             onClick={prev}
             aria-label="上一张"
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-all duration-200"
           >
-            ‹
+            <Icon icon={ChevronLeft} size={20} />
           </button>
           <button
             onClick={next}
             aria-label="下一张"
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm hover:bg-black/50 transition-all duration-200"
           >
-            ›
+            <Icon icon={ChevronRight} size={20} />
           </button>
         </>
       )}
@@ -147,7 +166,7 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
               aria-label={`第${i + 1}张`}
               className={[
                 'h-2 rounded-full transition-all duration-300',
-                i === current ? 'w-6 bg-white' : 'w-2 bg-white/50',
+                i === current ? 'w-6 bg-white' : 'w-2 bg-white/50 hover:bg-white/70',
               ].join(' ')}
             />
           ))}
@@ -168,10 +187,10 @@ const STATS = [
 
 function StatBar() {
   return (
-    <div className="bg-brand-600 text-white">
+    <div className="bg-brand-600 text-white shadow-card">
       <div className="mx-auto max-w-7xl px-4 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
         {STATS.map(({ label, value }) => (
-          <div key={label} className="text-center">
+          <div key={label} className="text-center transition-all duration-200 hover:scale-[1.02]">
             <div className="text-2xl font-bold">{value}</div>
             <div className="text-xs text-brand-200 mt-0.5">{label}</div>
           </div>
@@ -183,25 +202,18 @@ function StatBar() {
 
 // ─── Article Card ─────────────────────────────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, string> = {
-  NEWS: 'bg-blue-100 text-blue-700',
-  NOTICE: 'bg-amber-100 text-amber-700',
-  POLICY: 'bg-purple-100 text-purple-700',
-  ACTIVITY: 'bg-brand-100 text-brand-700',
-}
-
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return ''
   return dateStr.slice(0, 10)
 }
 
 function ArticleCard({ article }: { article: ArticleItem }) {
-  const badgeColor = CATEGORY_COLORS[article.categoryName?.toUpperCase?.()] ?? 'bg-gray-100 text-gray-600'
+  const variant = CATEGORY_VARIANT_MAP[article.categoryName ?? ''] ?? 'default'
 
   return (
     <Link
       to={`/portal/articles/${article.id}`}
-      className="group flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-brand-200 transition-all duration-200 overflow-hidden"
+      className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
     >
       {/* Cover */}
       <div className="h-40 bg-gradient-to-br from-brand-50 to-emerald-100 overflow-hidden">
@@ -220,21 +232,21 @@ function ArticleCard({ article }: { article: ArticleItem }) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           {article.isTop && (
-            <span className="rounded text-xs font-medium bg-red-100 text-red-600 px-1.5 py-0.5">置顶</span>
+            <Badge variant="error" className="text-[10px]">置顶</Badge>
           )}
-          <span className={`rounded text-xs font-medium px-1.5 py-0.5 ${badgeColor}`}>
+          <Badge variant={variant} className="text-[10px]">
             {article.categoryName}
-          </span>
+          </Badge>
         </div>
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-brand-600 transition-colors">
+        <h3 className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200">
           {article.title}
         </h3>
         {article.summary && (
-          <p className="mt-1.5 text-xs text-gray-500 line-clamp-2 flex-1">{article.summary}</p>
+          <p className="mt-1.5 text-xs text-stone-500 line-clamp-2 flex-1">{article.summary}</p>
         )}
-        <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+        <div className="mt-3 flex items-center justify-between text-xs text-stone-400">
           <span>{article.author ?? '协会编辑'}</span>
           <span>{formatDate(article.publishedAt)}</span>
         </div>
@@ -251,7 +263,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
   return (
     <Link
       to={`/portal/activities/${activity.id}`}
-      className="group flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-brand-200 transition-all duration-200 overflow-hidden"
+      className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
     >
       {/* Cover */}
       <div className="h-36 bg-gradient-to-br from-emerald-50 to-teal-100 overflow-hidden">
@@ -262,8 +274,8 @@ function ActivityCard({ activity }: { activity: Activity }) {
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-teal-300 text-3xl select-none">
-            ♻
+          <div className="flex h-full items-center justify-center text-teal-300 select-none">
+            <Icon icon={CalendarDays} size={32} />
           </div>
         )}
       </div>
@@ -273,32 +285,32 @@ function ActivityCard({ activity }: { activity: Activity }) {
         <span className={`self-start rounded text-xs font-medium px-2 py-0.5 mb-2 ${statusMeta.color}`}>
           {statusMeta.label}
         </span>
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-brand-600 transition-colors">
+        <h3 className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200">
           {activity.title}
         </h3>
-        <div className="mt-2 space-y-1 text-xs text-gray-500">
+        <div className="mt-2 space-y-1 text-xs text-stone-500">
           {activity.location && (
             <div className="flex items-center gap-1">
-              <span>📍</span>
+              <Icon icon={MapPin} size={14} className="text-stone-400" />
               <span className="truncate">{activity.location}</span>
             </div>
           )}
           {activity.startTime && (
             <div className="flex items-center gap-1">
-              <span>🗓</span>
+              <Icon icon={Calendar} size={14} className="text-stone-400" />
               <span>{formatDate(activity.startTime)}</span>
             </div>
           )}
         </div>
         {activity.maxCapacity && (
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <div className="flex justify-between text-xs text-stone-400 mb-1">
               <span>报名人数</span>
               <span>{activity.regCount} / {activity.maxCapacity}</span>
             </div>
-            <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-brand-500 transition-all"
+                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                 style={{ width: `${Math.min(100, (activity.regCount / activity.maxCapacity) * 100)}%` }}
               />
             </div>
@@ -315,12 +327,12 @@ function CardSkeleton({ count }: { count: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-gray-100 bg-white overflow-hidden animate-pulse">
-          <div className="h-40 bg-gray-100" />
+        <div key={i} className="rounded-xl border border-stone-100 bg-white overflow-hidden animate-pulse shadow-card">
+          <div className="h-40 bg-stone-100" />
           <div className="p-4 space-y-2">
-            <div className="h-3 w-16 bg-gray-100 rounded" />
-            <div className="h-4 w-full bg-gray-100 rounded" />
-            <div className="h-3 w-3/4 bg-gray-100 rounded" />
+            <div className="h-3 w-16 bg-stone-100 rounded" />
+            <div className="h-4 w-full bg-stone-100 rounded" />
+            <div className="h-3 w-3/4 bg-stone-100 rounded" />
           </div>
         </div>
       ))}
@@ -334,16 +346,16 @@ function LatestNewsSection() {
   const { data: articles, isLoading } = usePortalLatestArticles(6)
 
   return (
-    <section className="py-14 bg-gray-50">
+    <section className="py-14 bg-theme-bg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">最新资讯</h2>
-            <p className="text-sm text-gray-500 mt-1">绿色低碳行业动态、政策解读与协会通知</p>
+            <h2 className="text-2xl font-bold text-theme-text-main">最新资讯</h2>
+            <p className="text-sm text-theme-text-muted mt-1">绿色低碳行业动态、政策解读与协会通知</p>
           </div>
           <Link
             to="/portal/articles"
-            className="text-sm font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-colors"
+            className="text-sm font-medium text-theme-accent hover:text-theme-accent-hover flex items-center gap-1 transition-all duration-200"
           >
             查看全部 →
           </Link>
@@ -355,8 +367,8 @@ function LatestNewsSection() {
           ) : articles && articles.length > 0 ? (
             articles.map((a) => <ArticleCard key={a.id} article={a} />)
           ) : (
-            <div className="col-span-3 py-16 text-center text-gray-400 text-sm">
-              暂无发布资讯
+            <div className="col-span-full">
+              <EmptyState icon={CalendarDays} title="暂无发布资讯" description="敬请关注后续更新" />
             </div>
           )}
         </div>
@@ -371,16 +383,16 @@ function ActivitiesSection() {
   const { data: activities, isLoading } = usePortalLatestActivities(4)
 
   return (
-    <section className="py-14 bg-white">
+    <section className="py-14 bg-theme-surface">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">近期活动</h2>
-            <p className="text-sm text-gray-500 mt-1">绿色产业交流会议、对接展览与培训活动</p>
+            <h2 className="text-2xl font-bold text-theme-text-main">近期活动</h2>
+            <p className="text-sm text-theme-text-muted mt-1">绿色产业交流会议、对接展览与培训活动</p>
           </div>
           <Link
             to="/portal/activities"
-            className="text-sm font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-colors"
+            className="text-sm font-medium text-theme-accent hover:text-theme-accent-hover flex items-center gap-1 transition-all duration-200"
           >
             查看全部 →
           </Link>
@@ -392,8 +404,8 @@ function ActivitiesSection() {
           ) : activities && activities.length > 0 ? (
             activities.map((a) => <ActivityCard key={a.id} activity={a} />)
           ) : (
-            <div className="col-span-4 py-16 text-center text-gray-400 text-sm">
-              暂无近期活动
+            <div className="col-span-full">
+              <EmptyState icon={CalendarDays} title="暂无近期活动" description="敬请关注后续更新" />
             </div>
           )}
         </div>
@@ -417,13 +429,13 @@ function SupplyCtaSection() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to="/register"
-            className="rounded-xl bg-white text-brand-600 font-semibold px-8 py-3 text-sm hover:bg-brand-50 transition-colors shadow"
+            className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] px-6 py-3 text-base bg-white text-brand-600 hover:bg-brand-50 shadow"
           >
             免费注册会员
           </Link>
           <Link
             to="/supply"
-            className="rounded-xl border border-white/50 text-white font-semibold px-8 py-3 text-sm hover:bg-white/10 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] px-6 py-3 text-base border border-white/50 text-white hover:bg-white/10 hover:text-white"
           >
             浏览供需信息
           </Link>
@@ -435,9 +447,47 @@ function SupplyCtaSection() {
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
+function ThemeDemoBar() {
+  const { currentTheme, setTheme } = useThemeStore()
+  const themes: { id: ThemeKey; label: string; icon: typeof Monitor }[] = [
+    { id: 'nordic', label: '北欧绿', icon: Sun },
+    { id: 'office', label: '蔚蓝商务', icon: Monitor },
+    { id: 'tech', label: '极客暗色', icon: Moon },
+  ]
+
+  return (
+    <section className="border-t border-stone-200 bg-stone-50 py-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-stone-500">
+            🎨 主题风格体验（演示）— 实时切换三种设计令牌
+          </p>
+          <div className="flex items-center gap-2">
+            {themes.map(({ id, label, icon }) => (
+              <button
+                key={id}
+                onClick={() => setTheme(id)}
+                className={[
+                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200',
+                  currentTheme === id
+                    ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300'
+                    : 'bg-white text-stone-600 border border-stone-200 hover:border-stone-300 hover:bg-stone-50',
+                ].join(' ')}
+              >
+                <Icon icon={icon} size={14} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function PortalFooter() {
   return (
-    <footer className="bg-gray-900 text-gray-400 py-10">
+    <footer className="bg-stone-900 text-stone-400 py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -450,9 +500,9 @@ function PortalFooter() {
             © 2024 山东省绿色低碳产业协会 · 绿产智链平台 · 鲁ICP备XXXXXXXX号
           </p>
           <div className="flex gap-4 text-xs">
-            <a href="#" className="hover:text-white transition-colors">关于我们</a>
-            <a href="#" className="hover:text-white transition-colors">联系方式</a>
-            <a href="#" className="hover:text-white transition-colors">隐私政策</a>
+            <a href="#" className="hover:text-white transition-colors duration-200">关于我们</a>
+            <a href="#" className="hover:text-white transition-colors duration-200">联系方式</a>
+            <a href="#" className="hover:text-white transition-colors duration-200">隐私政策</a>
           </div>
         </div>
       </div>
@@ -466,7 +516,7 @@ export default function PortalHomePage() {
   const { data: banners } = usePortalBanners()
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
       <main className="flex-1">
         <BannerCarousel banners={banners ?? []} />
@@ -475,6 +525,7 @@ export default function PortalHomePage() {
         <ActivitiesSection />
         <SupplyCtaSection />
       </main>
+      <ThemeDemoBar />
       <PortalFooter />
     </div>
   )

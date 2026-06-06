@@ -1,3 +1,5 @@
+import { Building2, Sprout } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { useTheme } from '@/hooks/useTheme'
 
 export interface GridItem {
@@ -63,7 +65,7 @@ export function SupplyDemandResponsiveGrid({
 
               {/* 发布单位 */}
               <p className={`mb-3 truncate ${theme.textMuted}`}>
-                🏢 {data.company}
+                <span className="inline-flex items-center gap-1"><Icon icon={Building2} size={14} />{data.company}</span>
               </p>
 
               {/* 绿色低碳资质标签 */}
@@ -74,7 +76,7 @@ export function SupplyDemandResponsiveGrid({
                       key={badgeText}
                       className="text-[9px] bg-emerald-500/5 text-emerald-600 border border-emerald-500/15 px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5"
                     >
-                      🌱 {badgeText}
+                      <span className="inline-flex items-center gap-0.5"><Icon icon={Sprout} size={12} />{badgeText}</span>
                     </span>
                   ))}
                 </div>

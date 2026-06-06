@@ -11,13 +11,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantMap = {
   primary:
-    'bg-brand-500 text-white hover:bg-brand-600 focus-visible:ring-brand-500 disabled:bg-brand-300',
+    'bg-theme-accent text-white hover:bg-theme-accent-hover focus-visible:ring-theme-accent disabled:opacity-50 disabled:cursor-not-allowed',
   secondary:
-    'bg-white text-brand-600 border border-brand-500 hover:bg-brand-50 focus-visible:ring-brand-500 disabled:opacity-50',
+    'border border-theme-border bg-theme-surface text-theme-text-main hover:bg-stone-50 focus-visible:ring-stone-400 disabled:opacity-50 disabled:cursor-not-allowed',
   ghost:
-    'text-gray-600 hover:bg-gray-100 focus-visible:ring-gray-400 disabled:opacity-50',
+    'text-theme-accent hover:bg-theme-accent/5 focus-visible:ring-theme-accent disabled:opacity-50 disabled:cursor-not-allowed',
   danger:
-    'bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500 disabled:bg-red-300',
+    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed',
 }
 
 const sizeMap = {
@@ -40,7 +40,8 @@ export function Button({
     <button
       className={clsx(
         'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-        'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+        'transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+        'active:scale-[0.98]',
         variantMap[variant],
         sizeMap[size],
         fullWidth && 'w-full',

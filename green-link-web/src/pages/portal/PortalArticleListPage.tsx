@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
+import { Search } from 'lucide-react'
+import { Icon } from '@/components/Icon'
+import { Badge, type BadgeVariant } from '@/components/Badge'
+import { EmptyState } from '@/components/states/EmptyState'
+import { ErrorState } from '@/components/states/ErrorState'
+import { SkeletonCard } from '@/components/states/SkeletonCard'
 import { PortalNav } from '@/business/PortalNav'
 import { Pagination } from '@/components/Pagination'
 import { usePublicArticleList, usePortalCategories } from '@/services/articleService'
@@ -20,30 +26,31 @@ function HighlightHtml({ html, fallback }: { html: string | null; fallback: stri
   )
 }
 
-// ─── Article Card ─────────────────────────────────────────────────────────────
+// ─── Category variant mapping ─────────────────────────────────────────────────
 
-const CATEGORY_COLORS: Record<string, string> = {
-  NEWS: 'bg-blue-100 text-blue-700',
-  NOTICE: 'bg-amber-100 text-amber-700',
-  POLICY: 'bg-purple-100 text-purple-700',
-  ACTIVITY: 'bg-brand-100 text-brand-700',
+const CODE_VARIANT_MAP: Record<string, BadgeVariant> = {
+  'NEWS': 'news',
+  'NOTICE': 'notice',
+  'POLICY': 'policy',
+  'ACTIVITY': 'activity',
 }
+
+// ─── Article Card ─────────────────────────────────────────────────────────────
 
 function formatDate(s: string | null) {
   return s ? s.slice(0, 10) : ''
 }
 
 function ArticleCard({ article, categoryCode }: { article: ArticleItem; categoryCode?: string }) {
-  const badgeColor =
-    CATEGORY_COLORS[categoryCode ?? ''] ?? 'bg-gray-100 text-gray-600'
+  const variant = CODE_VARIANT_MAP[categoryCode ?? ''] ?? 'default'
 
   return (
     <Link
       to={`/portal/articles/${article.id}`}
-      className="group flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-brand-200 transition-all duration-200 overflow-hidden"
+      className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
     >
       {/* Cover */}
-      <div className="h-44 bg-gradient-to-br from-brand-50 to-emerald-100 overflow-hidden flex-shrink-0">
+      <div className="aspect-[16/10] bg-gradient-to-br from-brand-50 to-emerald-100 overflow-hidden flex-shrink-0">
         {article.coverUrl ? (
           <img
             src={article.coverUrl}
@@ -61,21 +68,19 @@ function ArticleCard({ article, categoryCode }: { article: ArticleItem; category
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           {article.isTop && (
-            <span className="rounded text-xs font-medium bg-red-100 text-red-600 px-1.5 py-0.5">
-              置顶
-            </span>
+            <Badge variant="error" className="text-[10px]">置顶</Badge>
           )}
-          <span className={`rounded text-xs font-medium px-1.5 py-0.5 ${badgeColor}`}>
+          <Badge variant={variant} className="text-[10px]">
             {article.categoryName}
-          </span>
+          </Badge>
         </div>
 
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-brand-600 transition-colors">
+        <h3 className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200">
           <HighlightHtml html={article.highlightTitle} fallback={article.title} />
         </h3>
 
         {(article.highlightSummary || article.summary) && (
-          <p className="mt-1.5 text-xs text-gray-500 line-clamp-2 flex-1">
+          <p className="mt-1.5 text-xs text-stone-500 line-clamp-2 flex-1">
             <HighlightHtml
               html={article.highlightSummary}
               fallback={article.summary ?? ''}
@@ -83,7 +88,7 @@ function ArticleCard({ article, categoryCode }: { article: ArticleItem; category
           </p>
         )}
 
-        <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+        <div className="mt-3 flex items-center justify-between text-xs text-stone-400">
           <span>{article.author ?? '协会编辑'}</span>
           <div className="flex items-center gap-3">
             <span>{article.viewCount} 阅读</span>
@@ -92,28 +97,6 @@ function ArticleCard({ article, categoryCode }: { article: ArticleItem; category
         </div>
       </div>
     </Link>
-  )
-}
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function SkeletonGrid({ count }: { count: number }) {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-xl border border-gray-100 bg-white overflow-hidden animate-pulse"
-        >
-          <div className="h-44 bg-gray-100" />
-          <div className="p-4 space-y-2">
-            <div className="h-3 w-16 bg-gray-100 rounded" />
-            <div className="h-4 w-full bg-gray-100 rounded" />
-            <div className="h-3 w-3/4 bg-gray-100 rounded" />
-          </div>
-        </div>
-      ))}
-    </>
   )
 }
 
@@ -190,27 +173,32 @@ export default function PortalArticleListPage() {
   const total = data?.total ?? 0
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
 
       {/* Page header */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-theme-surface border-b border-theme-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl font-bold text-gray-900">资讯中心</h1>
-          <p className="mt-1 text-sm text-gray-500">绿色低碳行业动态 · 政策解读 · 协会通知</p>
+          <h1 className="text-2xl font-bold text-theme-text-main">资讯中心</h1>
+          <p className="mt-1 text-sm text-theme-text-muted">绿色低碳行业动态 · 政策解读 · 协会通知</p>
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="mt-4 flex gap-2 max-w-lg">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="搜索文章…"
-              className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400 transition"
-            />
+            <div className="relative flex-1">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
+                <Icon icon={Search} size={16} />
+              </div>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="搜索文章…"
+                className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-4 py-2 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+              />
+            </div>
             <button
               type="submit"
-              className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-medium text-white hover:bg-brand-600 transition-colors"
+              className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
             >
               搜索
             </button>
@@ -221,7 +209,7 @@ export default function PortalArticleListPage() {
                   setInputValue('')
                   setParam({ keyword: undefined, page: undefined })
                 }}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 transition-colors"
+                className="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
               >
                 清除
               </button>
@@ -235,10 +223,10 @@ export default function PortalArticleListPage() {
             <button
               onClick={() => handleCategoryChange(undefined)}
               className={[
-                'flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                'flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200',
                 categoryId === undefined
-                  ? 'border-brand-500 text-brand-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  ? 'border-theme-accent text-theme-accent'
+                  : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300',
               ].join(' ')}
             >
               全部
@@ -248,10 +236,10 @@ export default function PortalArticleListPage() {
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.id)}
                 className={[
-                  'flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                  'flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200',
                   categoryId === cat.id
-                    ? 'border-brand-500 text-brand-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    ? 'border-theme-accent text-theme-accent'
+                    : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300',
                 ].join(' ')}
               >
                 {cat.name}
@@ -265,9 +253,9 @@ export default function PortalArticleListPage() {
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Result count / keyword hint */}
         {keyword && !isLoading && (
-          <p className="mb-5 text-sm text-gray-500">
-            关键词 <span className="font-medium text-gray-800">"{keyword}"</span> 的搜索结果，共{' '}
-            <span className="font-medium text-brand-600">{total}</span> 篇
+          <p className="mb-5 text-sm text-stone-500">
+            关键词 <span className="font-medium text-stone-800">"{keyword}"</span> 的搜索结果，共{' '}
+            <span className="font-medium text-theme-accent">{total}</span> 篇
           </p>
         )}
 
@@ -279,10 +267,21 @@ export default function PortalArticleListPage() {
           ].join(' ')}
         >
           {isLoading ? (
-            <SkeletonGrid count={PAGE_SIZE} />
+            Array.from({ length: PAGE_SIZE }).map((_, i) => <SkeletonCard key={i} />)
           ) : isError ? (
-            <div className="col-span-3 py-24 text-center text-red-400 text-sm">
-              加载失败，请刷新页面重试
+            <div className="col-span-full">
+              <ErrorState
+                title="加载失败"
+                description="文章列表加载异常，请检查网络或稍后重试"
+                action={
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="rounded-lg bg-theme-accent px-4 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+                  >
+                    刷新页面
+                  </button>
+                }
+              />
             </div>
           ) : articles.length > 0 ? (
             articles.map((a) => (
@@ -293,8 +292,11 @@ export default function PortalArticleListPage() {
               />
             ))
           ) : (
-            <div className="col-span-3 py-24 text-center text-gray-400 text-sm">
-              {keyword ? '未找到相关文章，请换个关键词试试' : '暂无资讯'}
+            <div className="col-span-full">
+              <EmptyState
+                title={keyword ? '未找到相关文章' : '暂无资讯'}
+                description={keyword ? '请换个关键词试试' : '当前栏目暂无文章，敬请关注后续更新'}
+              />
             </div>
           )}
         </div>
@@ -308,7 +310,7 @@ export default function PortalArticleListPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-6">
+      <footer className="bg-stone-900 text-stone-400 py-6">
         <div className="mx-auto max-w-7xl px-4 text-center text-xs">
           © 2024 山东省绿色低碳产业协会 · 绿产智链平台
         </div>

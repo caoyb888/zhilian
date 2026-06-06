@@ -1,9 +1,21 @@
 import { useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { clsx } from 'clsx'
+import {
+  X,
+  CheckCircle2,
+  Search,
+  Filter,
+  Download,
+  Pencil,
+  ArrowUpDown,
+} from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
-import { Spinner } from '@/components/Spinner'
+import { SkeletonList } from '@/components/states/SkeletonList'
+import { EmptyState } from '@/components/states/EmptyState'
 import { Button } from '@/components/Button'
+import { Badge } from '@/components/Badge'
 import { Pagination } from '@/components/Pagination'
 import {
   useAdminMemberList,
@@ -14,26 +26,17 @@ import type { MemberItem, MemberDetailItem } from '@/types/api'
 
 // ─── badge helpers ────────────────────────────────────────────────────────────
 
-const STATUS_MAP: Record<number, { label: string; cls: string }> = {
-  0: { label: '禁用', cls: 'bg-red-100 text-red-700' },
-  1: { label: '正常', cls: 'bg-emerald-100 text-emerald-700' },
-  2: { label: '审核中', cls: 'bg-amber-100 text-amber-700' },
-}
-
-const LEVEL_MAP: Record<number, { label: string; cls: string }> = {
-  1: { label: '普通', cls: 'bg-gray-100 text-gray-600' },
-  2: { label: 'VIP', cls: 'bg-amber-100 text-amber-700' },
-  3: { label: '理事', cls: 'bg-brand-100 text-brand-700' },
-}
-
 function StatusBadge({ status }: { status: number }) {
-  const m = STATUS_MAP[status] ?? { label: String(status), cls: 'bg-gray-100 text-gray-500' }
-  return <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', m.cls)}>{m.label}</span>
+  if (status === 0) return <Badge variant="error">禁用</Badge>
+  if (status === 1) return <Badge variant="success">正常</Badge>
+  if (status === 2) return <Badge variant="warning">审核中</Badge>
+  return <Badge variant="default">{status}</Badge>
 }
 
 function LevelBadge({ level }: { level: number }) {
-  const m = LEVEL_MAP[level] ?? { label: String(level), cls: 'bg-gray-100 text-gray-500' }
-  return <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', m.cls)}>{m.label}</span>
+  if (level === 3) return <Badge variant="news">理事</Badge>
+  if (level === 2) return <Badge variant="vip">VIP</Badge>
+  return <Badge variant="default">普通</Badge>
 }
 
 // ─── detail modal ─────────────────────────────────────────────────────────────
@@ -42,8 +45,8 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   if (!value) return null
   return (
     <div className="grid grid-cols-3 gap-2 py-2 text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="col-span-2 text-gray-800">{value}</span>
+      <span className="text-stone-500">{label}</span>
+      <span className="col-span-2 text-stone-800">{value}</span>
     </div>
   )
 }
@@ -55,21 +58,27 @@ function DetailModal({ memberId, onClose }: { memberId: number; onClose: () => v
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-lg rounded-xl bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-            <DialogTitle className="text-base font-semibold text-gray-800">会员详情</DialogTitle>
-            <button className="text-gray-400 hover:text-gray-600" onClick={onClose}>✕</button>
+        <DialogPanel className="w-full max-w-lg overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-stone-800">会员详情</DialogTitle>
+            <button
+              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              onClick={onClose}
+              aria-label="关闭"
+            >
+              <Icon icon={X} size={18} />
+            </button>
           </div>
           <div className="max-h-[70vh] overflow-y-auto px-6 py-4">
             {isLoading ? (
-              <div className="flex justify-center py-8"><Spinner /></div>
+              <SkeletonList count={4} />
             ) : data ? (
               <DetailContent detail={data} />
             ) : (
-              <p className="text-center text-sm text-gray-400">加载失败</p>
+              <EmptyState title="加载失败" description="无法获取会员详情，请稍后重试" />
             )}
           </div>
-          <div className="flex justify-end border-t border-gray-100 px-6 py-4">
+          <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
             <Button variant="secondary" size="sm" onClick={onClose}>关闭</Button>
           </div>
         </DialogPanel>
@@ -80,15 +89,15 @@ function DetailModal({ memberId, onClose }: { memberId: number; onClose: () => v
 
 function DetailContent({ detail }: { detail: MemberDetailItem }) {
   return (
-    <div className="divide-y divide-gray-50">
+    <div className="divide-y divide-stone-50">
       <div className="pb-4">
         <div className="flex items-center gap-3">
           {detail.logoUrl && (
             <img src={detail.logoUrl} alt="logo" className="h-12 w-12 rounded-lg object-cover" />
           )}
           <div>
-            <h3 className="font-semibold text-gray-800">{detail.name}</h3>
-            {detail.shortName && <p className="text-xs text-gray-400">{detail.shortName}</p>}
+            <h3 className="font-semibold text-stone-800">{detail.name}</h3>
+            {detail.shortName && <p className="text-xs text-stone-400">{detail.shortName}</p>}
           </div>
         </div>
       </div>
@@ -107,8 +116,8 @@ function DetailContent({ detail }: { detail: MemberDetailItem }) {
       </div>
       {detail.introduction && (
         <div className="py-3">
-          <p className="mb-1 text-xs text-gray-500">简介</p>
-          <p className="text-sm text-gray-700 leading-relaxed">{detail.introduction}</p>
+          <p className="mb-1 text-xs text-stone-500">简介</p>
+          <p className="text-sm leading-relaxed text-stone-700">{detail.introduction}</p>
         </div>
       )}
       <div className="py-1">
@@ -118,10 +127,10 @@ function DetailContent({ detail }: { detail: MemberDetailItem }) {
       </div>
       {detail.tags.length > 0 && (
         <div className="pt-3">
-          <p className="mb-2 text-xs text-gray-500">标签</p>
+          <p className="mb-2 text-xs text-stone-500">标签</p>
           <div className="flex flex-wrap gap-1">
             {detail.tags.map((t) => (
-              <span key={t.id} className="rounded bg-brand-50 px-2 py-0.5 text-xs text-brand-700">
+              <span key={t.id} className="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
                 {t.name}
               </span>
             ))}
@@ -156,19 +165,32 @@ function ToggleStatusModal({
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-          <DialogTitle className="mb-2 text-base font-semibold text-gray-800">
-            确认{actionLabel}
-          </DialogTitle>
-          <p className="text-sm text-gray-600">
-            确认要<span className={targetStatus === 0 ? 'text-red-600' : 'text-emerald-600'}>
-              {actionLabel}
-            </span>会员单位「{member.name}」吗？
-          </p>
-          {mutation.error && (
-            <p className="mt-2 text-xs text-red-500">操作失败，请重试</p>
-          )}
-          <div className="mt-5 flex justify-end gap-2">
+        <DialogPanel className="w-full max-w-sm overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-stone-800">
+              确认{actionLabel}
+            </DialogTitle>
+            <button
+              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              onClick={onClose}
+              aria-label="关闭"
+            >
+              <Icon icon={X} size={18} />
+            </button>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-sm text-stone-600">
+              确认要
+              <span className={targetStatus === 0 ? 'text-red-600' : 'text-emerald-600'}>
+                {actionLabel}
+              </span>
+              会员单位「{member.name}」吗？
+            </p>
+            {mutation.error && (
+              <p className="mt-2 text-xs text-red-500">操作失败，请重试</p>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
             <Button variant="secondary" size="sm" onClick={onClose}>取消</Button>
             <Button
               variant={targetStatus === 0 ? 'danger' : 'primary'}
@@ -235,35 +257,42 @@ export default function MemberListPage() {
       {/* header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">会员管理</h1>
-          <p className="mt-0.5 text-sm text-gray-400">管理协会全部会员单位</p>
+          <h1 className="text-xl font-semibold text-theme-text-main">会员管理</h1>
+          <p className="mt-0.5 text-sm text-theme-text-muted">管理协会全部会员单位</p>
         </div>
         {total > 0 && (
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+          <span className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-600">
             共 {total} 家
           </span>
         )}
       </div>
 
       {/* filter bar */}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-100 bg-white p-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-stone-100 bg-white p-4 shadow-card">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">关键词</label>
-          <input
-            type="text"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="单位名称 / 行业"
-            className="w-48 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          <label className="text-xs text-stone-500">关键词</label>
+          <div className="relative">
+            <Icon
+              icon={Search}
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+            />
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="单位名称 / 行业"
+              className="w-48 rounded-lg border border-stone-200 bg-theme-surface py-1.5 pl-9 pr-3 text-sm text-theme-text-main transition-all duration-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">状态</label>
+          <label className="text-xs text-stone-500">状态</label>
           <select
             value={filterStatus ?? ''}
             onChange={(e) => setFilterStatus(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
           >
             <option value="">全部状态</option>
             <option value="1">正常</option>
@@ -272,11 +301,11 @@ export default function MemberListPage() {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">会员等级</label>
+          <label className="text-xs text-stone-500">会员等级</label>
           <select
             value={filterLevel ?? ''}
             onChange={(e) => setFilterLevel(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
           >
             <option value="">全部等级</option>
             <option value="1">普通会员</option>
@@ -284,36 +313,69 @@ export default function MemberListPage() {
             <option value="3">理事单位</option>
           </select>
         </div>
-        <Button size="sm" onClick={handleSearch}>搜索</Button>
-        <Button variant="ghost" size="sm" onClick={handleReset}>重置</Button>
+        <Button size="sm" onClick={handleSearch}>
+          <Icon icon={Filter} size={14} />
+          搜索
+        </Button>
+        <Button variant="ghost" size="sm" onClick={handleReset}>
+          重置
+        </Button>
+        <Button variant="secondary" size="sm" className="ml-auto">
+          <Icon icon={Download} size={14} />
+          导出
+        </Button>
       </div>
 
       {/* table */}
-      <div className="rounded-xl border border-gray-100 bg-white">
+      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
         {isLoading ? (
-          <div className="flex justify-center py-16"><Spinner /></div>
+          <div className="p-4">
+            <SkeletonList count={5} />
+          </div>
         ) : records.length === 0 ? (
-          <div className="py-16 text-center text-sm text-gray-400">暂无会员数据</div>
+          <EmptyState
+            icon={Search}
+            title="暂无会员数据"
+            description="当前没有符合条件的会员单位"
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs text-gray-500">
+              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-stone-600">
                 <tr>
-                  <th className="px-4 py-3 font-medium">序号</th>
-                  <th className="px-4 py-3 font-medium">单位名称</th>
-                  <th className="px-4 py-3 font-medium">行业</th>
-                  <th className="px-4 py-3 font-medium">等级</th>
-                  <th className="px-4 py-3 font-medium">省/市</th>
-                  <th className="px-4 py-3 font-medium">认证</th>
-                  <th className="px-4 py-3 font-medium">状态</th>
-                  <th className="px-4 py-3 font-medium">注册时间</th>
-                  <th className="px-4 py-3 font-medium">操作</th>
+                  <th className="px-4 py-3">序号</th>
+                  <th className="px-4 py-3">单位名称</th>
+                  <th className="px-4 py-3">行业</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      等级
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3">省/市</th>
+                  <th className="px-4 py-3">认证</th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      状态
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1">
+                      注册时间
+                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                    </span>
+                  </th>
+                  <th className="px-4 py-3 text-right">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {records.map((m, idx) => (
-                  <tr key={m.id} className="hover:bg-gray-50/60">
-                    <td className="px-4 py-3 text-gray-400">
+                  <tr
+                    key={m.id}
+                    className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                  >
+                    <td className="px-4 py-3 text-sm text-stone-400">
                       {(page - 1) * 20 + idx + 1}
                     </td>
                     <td className="px-4 py-3">
@@ -321,53 +383,62 @@ export default function MemberListPage() {
                         {m.logoUrl ? (
                           <img src={m.logoUrl} alt="" className="h-7 w-7 shrink-0 rounded object-cover" />
                         ) : (
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-brand-50 text-xs font-bold text-brand-600">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-emerald-50 text-xs font-bold text-emerald-600">
                             {m.name.charAt(0)}
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-800">{m.name}</p>
-                          {m.shortName && <p className="text-xs text-gray-400">{m.shortName}</p>}
+                          <p className="font-medium text-stone-800">{m.name}</p>
+                          {m.shortName && <p className="text-xs text-stone-400">{m.shortName}</p>}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{m.industry || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-stone-700">{m.industry || '—'}</td>
                     <td className="px-4 py-3">
                       <LevelBadge level={m.memberLevel} />
                     </td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 text-sm text-stone-500">
                       {[m.province, m.city].filter(Boolean).join(' · ') || '—'}
                     </td>
                     <td className="px-4 py-3">
                       {m.isCertified ? (
-                        <span className="text-xs text-emerald-600">✓ 已认证</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                          <Icon icon={CheckCircle2} size={14} />
+                          已认证
+                        </span>
                       ) : (
-                        <span className="text-xs text-gray-300">—</span>
+                        <span className="text-xs text-stone-300">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={m.status} />
                     </td>
-                    <td className="px-4 py-3 text-gray-400">
+                    <td className="px-4 py-3 text-sm text-stone-500">
                       {m.createdAt?.slice(0, 10) ?? '—'}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex items-center gap-1 rounded-lg border border-stone-200 p-0.5">
                         <button
-                          className="text-brand-600 hover:underline"
+                          className="rounded p-1.5 text-stone-500 transition-all duration-200 hover:bg-stone-100 hover:text-theme-accent"
                           onClick={() => setDetailId(m.id)}
+                          title="详情"
                         >
-                          详情
+                          <Icon icon={Pencil} size={14} />
                         </button>
                         {isSuperAdmin && m.status !== 2 && (
                           <button
                             className={clsx(
-                              'hover:underline',
-                              m.status === 1 ? 'text-red-500' : 'text-emerald-600'
+                              'rounded p-1.5 transition-all duration-200 hover:bg-stone-100',
+                              m.status === 1 ? 'text-red-500 hover:text-red-600' : 'text-emerald-600 hover:text-emerald-700'
                             )}
                             onClick={() => setToggleMember(m)}
+                            title={m.status === 1 ? '禁用' : '启用'}
                           >
-                            {m.status === 1 ? '禁用' : '启用'}
+                            {m.status === 1 ? (
+                              <Icon icon={X} size={14} />
+                            ) : (
+                              <Icon icon={CheckCircle2} size={14} />
+                            )}
                           </button>
                         )}
                       </div>
@@ -381,7 +452,7 @@ export default function MemberListPage() {
 
         {/* pagination */}
         {total > 0 && (
-          <div className="px-4 pb-4">
+          <div className="border-t border-stone-100 px-4 py-4">
             <Pagination page={page} total={total} size={20} onChange={setPage} />
           </div>
         )}

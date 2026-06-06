@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Spinner } from '@/components/Spinner'
 import { RequireAuth } from '@/components/RequireAuth'
 import { PrivateRoute } from '@/components/PrivateRoute'
+import { useThemeStore } from '@/stores/themeStore'
 
 const LoginPage                = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
@@ -43,11 +44,20 @@ function PageLoader() {
   )
 }
 
+function ThemeInitializer() {
+  const currentTheme = useThemeStore((s) => s.currentTheme)
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', currentTheme)
+  }, [currentTheme])
+  return null
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
+          <ThemeInitializer />
           <Routes>
             {/* 公开路由 */}
             <Route path="/" element={<Navigate to="/portal" replace />} />

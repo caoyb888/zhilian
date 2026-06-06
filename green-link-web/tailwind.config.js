@@ -4,8 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        // === 运行时主题变量（由 <html data-theme> 控制）===
+        theme: {
+          bg: 'var(--theme-bg)',
+          surface: 'var(--theme-surface)',
+          border: 'var(--theme-border)',
+          'text-main': 'var(--theme-text-main)',
+          'text-muted': 'var(--theme-text-muted)',
+          accent: 'var(--theme-accent)',
+          'accent-hover': 'var(--theme-accent-hover)',
+        },
+        // === 保留原有 emerald 品牌色阶（兼容旧代码过渡）===
         brand: {
-          // 保留原有通用 emerald 色阶（CLAUDE.md 品牌主色 #10b981）
           50: '#ecfdf5',
           100: '#d1fae5',
           200: '#a7f3d0',
@@ -43,11 +53,14 @@ export default {
           },
         },
       },
-      screens: {
-        sm: '640px',
-        md: '768px',
-        lg: '1024px',
-        xl: '1280px',
+      boxShadow: {
+        card: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+        'card-hover': '0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
+        nordic: '0 4px 20px -2px rgb(4 120 87 / 0.08)',
+      },
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.5rem',
       },
     },
   },
