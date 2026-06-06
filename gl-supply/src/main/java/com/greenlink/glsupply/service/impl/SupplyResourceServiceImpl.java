@@ -92,9 +92,10 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         QueryWrapper<SupplyResource> wrapper = new QueryWrapper<SupplyResource>()
                 .select("id", "member_id", "type", "title", "summary", "province", "city",
                         "valid_until", "view_count", "audit_status", "created_at")
+                // 公开接口只返回已审核通过的资源，调用方不得覆盖此过滤
+                .eq("audit_status", AuditStatus.APPROVED.getCode())
                 .eq(StringUtils.hasText(request.getType()), "type", request.getType())
                 .eq(StringUtils.hasText(request.getProvince()), "province", request.getProvince())
-                .eq(request.getAuditStatus() != null, "audit_status", request.getAuditStatus())
                 .eq(request.getMemberId() != null, "member_id", request.getMemberId())
                 .and(StringUtils.hasText(request.getKeyword()), q -> q
                         .like("title", request.getKeyword())
@@ -112,6 +113,27 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
                     return vo;
                 })
                 .toList());
+        return voPage;
+    }
+
+    @Override
+    public Page<ResourceVO> minePageList(Long memberId, ResourcePageRequest request) {
+        QueryWrapper<SupplyResource> wrapper = new QueryWrapper<SupplyResource>()
+                .select("id", "member_id", "type", "title", "summary", "province", "city",
+                        "valid_until", "view_count", "audit_status", "created_at")
+                .eq("member_id", memberId)
+                .eq(request.getAuditStatus() != null, "audit_status", request.getAuditStatus())
+                .eq(StringUtils.hasText(request.getType()), "type", request.getType())
+                .and(StringUtils.hasText(request.getKeyword()), q -> q
+                        .like("title", request.getKeyword())
+                        .or().like("summary", request.getKeyword()))
+                .orderByDesc("created_at");
+
+        Page<SupplyResource> dbPage = resourceMapper.selectPage(
+                new Page<>(request.getPage(), request.getSize()), wrapper);
+
+        Page<ResourceVO> voPage = new Page<>(dbPage.getCurrent(), dbPage.getSize(), dbPage.getTotal());
+        voPage.setRecords(dbPage.getRecords().stream().map(this::toVO).toList());
         return voPage;
     }
 
@@ -181,6 +203,10 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
     @Transactional
     public void withdraw(Long id, Long accountId) {
         SupplyResource resource = getOwnResource(id, accountId);
+        if (resource.getAuditStatus() != AuditStatus.APPROVED.getCode()) {
+            throw new BizException(ResultCode.RESOURCE_AUDIT_INVALID_STATUS,
+                    "仅已上架的资源可以撤回");
+        }
         resource.setAuditStatus(AuditStatus.OFFLINE.getCode());
         resourceMapper.updateById(resource);
         log.info("撤回资源 id={} accountId={}", id, accountId);

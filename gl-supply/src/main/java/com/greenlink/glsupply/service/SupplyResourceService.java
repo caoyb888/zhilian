@@ -15,6 +15,9 @@ public interface SupplyResourceService {
 
     Page<ResourceVO> pageList(ResourcePageRequest request);
 
+    /** 会员中心：查看自己发布的所有资源（不限审核状态） */
+    Page<ResourceVO> minePageList(Long memberId, ResourcePageRequest request);
+
     ResourceDetailVO getById(Long id, Long accountId);
 
     ResourceDetailVO update(Long id, UpdateResourceRequest request, Long accountId);

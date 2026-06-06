@@ -67,8 +67,6 @@ public class SupplyResourceController {
     public Result<Page<ResourceVO>> mine(
             @ModelAttribute ResourcePageRequest request,
             @RequestHeader("X-Member-Id") Long memberId) {
-        request.setMemberId(memberId);
-        // 我的资源可查看所有审核状态
-        return Result.ok(resourceService.pageList(request));
+        return Result.ok(resourceService.minePageList(memberId, request));
     }
 }
