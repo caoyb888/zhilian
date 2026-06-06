@@ -553,6 +553,7 @@ com.greenlink.<service>/
 - 分页列表查询统一使用 `QueryWrapper`（字符串列名）+ `selectPage`，禁止用 `@Select` 注解配合 `IPage<T>` 返回值——该组合的 COUNT 子查询由分页插件生成，实测不可靠。
 - `LambdaQueryWrapper` 可用于条件过滤，但不能在其上调用 `.select(字段引用…)`；指定查询列时改用 `QueryWrapper.select("col1", "col2", …)`，避免在无 Spring 上下文的单元测试中触发 lambda cache 查找失败。
 - 密码存储统一使用 BCrypt，禁止 MD5 / SHA1。
+- **Elasticsearch 索引须显式创建 Mapping，禁止依赖动态建图**。Spring Data Elasticsearch 通过 `elasticsearchOperations.save()` 触发的自动建图会忽略 `@Field(analyzer=…)` 注解，导致 IK 分词器配置丢失，中文搜索全部返回 0 结果。正确做法：在首次部署或索引重建时，先通过 ES REST API（`PUT /<index>`）显式创建带 IK analyzer 的 mapping（`ik_max_word` 写入 / `ik_smart` 搜索），再调用全量同步接口（如 `POST /api/v1/portal/es/sync-all`）写入文档。
 
 ### 5.2 前端编码规范
 
