@@ -308,3 +308,78 @@ export function useUnfavoriteDemand() {
     },
   })
 }
+
+// ─── Mine Hooks ───────────────────────────────────────────────────────────────
+
+export interface MySupplyListParams {
+  page: number
+  size: number
+  auditStatus?: number
+  type?: string
+}
+
+export function useMyResources(params: MySupplyListParams) {
+  return useQuery({
+    queryKey: ['supply', 'resources', 'mine', params],
+    queryFn: async () => {
+      const clean: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== '' && v !== -1) clean[k] = v
+      }
+      const res = await http.get<ApiResult<PageData<ResourceItem>>>('/supply/resources/mine', {
+        params: clean,
+      })
+      return res.data.data
+    },
+    placeholderData: (prev) => prev,
+  })
+}
+
+export function useMyDemands(params: MySupplyListParams) {
+  return useQuery({
+    queryKey: ['supply', 'demands', 'mine', params],
+    queryFn: async () => {
+      const clean: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== '' && v !== -1) clean[k] = v
+      }
+      const res = await http.get<ApiResult<PageData<DemandItem>>>('/supply/demands/mine', {
+        params: clean,
+      })
+      return res.data.data
+    },
+    placeholderData: (prev) => prev,
+  })
+}
+
+export function useWithdrawResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => http.patch(`/supply/resources/${id}/withdraw`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['supply', 'resources', 'mine'] }),
+  })
+}
+
+export function useDeleteResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => http.delete(`/supply/resources/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['supply', 'resources', 'mine'] }),
+  })
+}
+
+export function useCloseDemand() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => http.patch(`/supply/demands/${id}/close`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['supply', 'demands', 'mine'] }),
+  })
+}
+
+export function useDeleteDemand() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => http.delete(`/supply/demands/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['supply', 'demands', 'mine'] }),
+  })
+}
