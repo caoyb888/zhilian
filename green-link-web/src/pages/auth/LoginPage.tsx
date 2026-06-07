@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -40,6 +40,8 @@ type SmsForm = z.infer<typeof smsSchema>
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as { from?: { pathname: string; search: string } } | null)?.from
   const accountInfo = useAuthStore((s) => s.accountInfo)
 
   const [errorMsg, setErrorMsg] = useState('')
@@ -59,15 +61,23 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (accountInfo) {
+      if (from?.pathname) {
+        navigate(from.pathname + (from.search || ''), { replace: true })
+        return
+      }
       if (accountInfo.roles.some((r) => ADMIN_ROLES.includes(r))) {
         navigate('/admin', { replace: true })
       } else {
         navigate('/supply', { replace: true })
       }
     }
-  }, [accountInfo, navigate])
+  }, [accountInfo, navigate, from])
 
   function redirectByRole(roles: string[]) {
+    if (from?.pathname) {
+      navigate(from.pathname + (from.search || ''), { replace: true })
+      return
+    }
     if (roles.some((r) => ADMIN_ROLES.includes(r))) {
       navigate('/admin', { replace: true })
     } else {

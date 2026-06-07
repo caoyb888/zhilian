@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
   Building2, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Calendar, RefreshCw,
@@ -331,6 +331,7 @@ function FilterDrawer({ onClose, ...panelProps }: FilterDrawerProps) {
 
 function LoginPromptModal({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
+  const location = useLocation()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -357,7 +358,7 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/login', { state: { from: location } })}
             className="flex-1 rounded-lg bg-theme-accent py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
           >
             去登录
@@ -384,7 +385,7 @@ function ActiveFilters({ type, province, tagId, tagName, keyword, onRemove }: Ac
   if (keyword) chips.push({ key: 'keyword', label: `关键词: ${keyword}` })
   if (type) chips.push({ key: 'type', label: RESOURCE_TYPE_LABELS[type] ?? type })
   if (province) chips.push({ key: 'province', label: province })
-  if (tagId && tagName) chips.push({ key: 'tagId', label: `#${tagName}` })
+  if (tagId) chips.push({ key: 'tagId', label: tagName ? `#${tagName}` : '标签筛选' })
 
   if (chips.length === 0) return null
 
@@ -428,6 +429,8 @@ export default function SupplyListPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
+  // TODO S5-09: 登录后从服务端初始化 favorites Set（GET /match/favorites）
+  const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -537,13 +540,19 @@ export default function SupplyListPage() {
       setLoginPrompt(true)
       return
     }
+    const showError = () => {
+      setFavoriteError('收藏操作失败，请稍后重试')
+      setTimeout(() => setFavoriteError(null), 3000)
+    }
     if (isFavorited) {
       unfavoriteMutation.mutate(id, {
         onSuccess: () => setFavorites((prev) => { const n = new Set(prev); n.delete(id); return n }),
+        onError: showError,
       })
     } else {
       favoriteMutation.mutate(id, {
-        onSuccess: () => setFavorites((prev) => new Set([...prev, id])),
+        onSuccess: () => setFavorites((prev) => { const n = new Set(prev); n.add(id); return n }),
+        onError: showError,
       })
     }
   }
@@ -649,6 +658,16 @@ export default function SupplyListPage() {
                 </span>
               )}
             </div>
+
+            {/* Favorite error banner */}
+            {favoriteError && (
+              <div className="mb-3 flex items-center justify-between rounded-lg bg-red-50 border border-red-100 px-4 py-2 text-sm text-red-600">
+                {favoriteError}
+                <button type="button" onClick={() => setFavoriteError(null)} className="ml-4 text-red-400 hover:text-red-600">
+                  <Icon icon={X} size={14} />
+                </button>
+              </div>
+            )}
 
             {/* Active filter chips */}
             <ActiveFilters
