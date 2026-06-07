@@ -7,10 +7,13 @@ import com.greenlink.glsupply.dto.request.DemandPageRequest;
 import com.greenlink.glsupply.dto.request.UpdateDemandRequest;
 import com.greenlink.glsupply.dto.response.DemandDetailVO;
 import com.greenlink.glsupply.dto.response.DemandVO;
+import com.greenlink.glsupply.dto.response.SupplyBriefVO;
 import com.greenlink.glsupply.service.SupplyDemandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/supply/demands")
@@ -66,5 +69,11 @@ public class SupplyDemandController {
             @ModelAttribute DemandPageRequest request,
             @RequestHeader("X-Member-Id") Long memberId) {
         return Result.ok(demandService.minePageList(memberId, request));
+    }
+
+    /** 内部接口：按 ID 批量查询需求简要信息（供 gl-match 调用） */
+    @PostMapping("/batch-brief")
+    public Result<List<SupplyBriefVO>> batchBrief(@RequestBody List<Long> ids) {
+        return Result.ok(demandService.batchBrief(ids));
     }
 }

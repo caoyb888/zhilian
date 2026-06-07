@@ -7,10 +7,13 @@ import com.greenlink.glsupply.dto.request.ResourcePageRequest;
 import com.greenlink.glsupply.dto.request.UpdateResourceRequest;
 import com.greenlink.glsupply.dto.response.ResourceDetailVO;
 import com.greenlink.glsupply.dto.response.ResourceVO;
+import com.greenlink.glsupply.dto.response.SupplyBriefVO;
 import com.greenlink.glsupply.service.SupplyResourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/supply/resources")
@@ -68,5 +71,11 @@ public class SupplyResourceController {
             @ModelAttribute ResourcePageRequest request,
             @RequestHeader("X-Member-Id") Long memberId) {
         return Result.ok(resourceService.minePageList(memberId, request));
+    }
+
+    /** 内部接口：按 ID 批量查询资源简要信息（供 gl-match 调用） */
+    @PostMapping("/batch-brief")
+    public Result<List<SupplyBriefVO>> batchBrief(@RequestBody List<Long> ids) {
+        return Result.ok(resourceService.batchBrief(ids));
     }
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tag-relations")
@@ -27,6 +28,12 @@ public class TagRelationController {
     public Result<List<Long>> getBizIdsByTag(@RequestParam Long tagId,
                                               @RequestParam String bizType) {
         return Result.ok(tagRelationService.getBizIdsByTag(tagId, bizType));
+    }
+
+    @GetMapping("/biz-ids-batch")
+    public Result<Map<Long, List<Long>>> getBizIdsByTagsBatch(@RequestParam List<Long> tagIds,
+                                                               @RequestParam String bizType) {
+        return Result.ok(tagRelationService.getBizIdsByTagsBatch(tagIds, bizType));
     }
 
     @PostMapping("/batch")

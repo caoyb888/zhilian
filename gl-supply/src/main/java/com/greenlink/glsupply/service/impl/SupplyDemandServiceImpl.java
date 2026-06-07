@@ -17,6 +17,7 @@ import com.greenlink.glsupply.dto.response.AdminDemandVO;
 import com.greenlink.glsupply.dto.response.AttachmentVO;
 import com.greenlink.glsupply.dto.response.DemandDetailVO;
 import com.greenlink.glsupply.dto.response.DemandVO;
+import com.greenlink.glsupply.dto.response.SupplyBriefVO;
 import com.greenlink.glsupply.dto.response.TagSimpleVO;
 import com.greenlink.glsupply.enums.AuditStatus;
 import com.greenlink.glsupply.feign.TagRelationClient;
@@ -441,6 +442,26 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         demand.setAuditedAt(LocalDateTime.now());
         demandMapper.updateById(demand);
         log.info("管理端下架需求 id={} auditorId={}", id, auditorId);
+    }
+
+    @Override
+    public List<SupplyBriefVO> batchBrief(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        QueryWrapper<SupplyDemand> qw = new QueryWrapper<SupplyDemand>()
+                .select("id", "member_id", "province", "type", "audit_status")
+                .in("id", ids)
+                .eq("is_deleted", 0);
+        return demandMapper.selectList(qw).stream().map(d -> {
+            SupplyBriefVO vo = new SupplyBriefVO();
+            vo.setId(d.getId());
+            vo.setMemberId(d.getMemberId());
+            vo.setProvince(d.getProvince());
+            vo.setType(d.getType());
+            vo.setAuditStatus(d.getAuditStatus());
+            return vo;
+        }).toList();
     }
 
     private AdminDemandVO toAdminVO(SupplyDemand d) {

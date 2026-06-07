@@ -1,5 +1,6 @@
 package com.greenlink.gltag.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.greenlink.common.exception.BizException;
 import com.greenlink.common.result.ResultCode;
 import com.greenlink.gltag.domain.TagRelation;
@@ -15,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +37,19 @@ public class TagRelationServiceImpl implements TagRelationService {
     @Override
     public List<Long> getBizIdsByTag(Long tagId, String bizType) {
         return tagRelationMapper.findBizIdsByTag(tagId, bizType);
+    }
+
+    @Override
+    public Map<Long, List<Long>> getBizIdsByTagsBatch(List<Long> tagIds, String bizType) {
+        if (CollectionUtils.isEmpty(tagIds)) {
+            return Collections.emptyMap();
+        }
+        QueryWrapper<TagRelation> qw = new QueryWrapper<>();
+        qw.in("tag_id", tagIds).eq("biz_type", bizType);
+        List<TagRelation> relations = tagRelationMapper.selectList(qw);
+        return relations.stream().collect(
+                Collectors.groupingBy(TagRelation::getTagId,
+                        Collectors.mapping(TagRelation::getBizId, Collectors.toList())));
     }
 
     @Override

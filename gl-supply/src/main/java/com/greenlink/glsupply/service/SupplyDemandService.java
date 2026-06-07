@@ -8,6 +8,9 @@ import com.greenlink.glsupply.dto.request.UpdateDemandRequest;
 import com.greenlink.glsupply.dto.response.AdminDemandVO;
 import com.greenlink.glsupply.dto.response.DemandDetailVO;
 import com.greenlink.glsupply.dto.response.DemandVO;
+import com.greenlink.glsupply.dto.response.SupplyBriefVO;
+
+import java.util.List;
 
 public interface SupplyDemandService {
 
@@ -33,4 +36,7 @@ public interface SupplyDemandService {
     void reject(Long id, Long auditorId, String remark);
 
     void adminOffline(Long id, Long auditorId);
+
+    /** 内部调用：按 ID 批量查询需求简要信息（供 gl-match 召回过滤使用） */
+    List<SupplyBriefVO> batchBrief(List<Long> ids);
 }

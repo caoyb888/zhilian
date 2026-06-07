@@ -17,6 +17,7 @@ import com.greenlink.glsupply.dto.response.AdminResourceVO;
 import com.greenlink.glsupply.dto.response.AttachmentVO;
 import com.greenlink.glsupply.dto.response.ResourceDetailVO;
 import com.greenlink.glsupply.dto.response.ResourceVO;
+import com.greenlink.glsupply.dto.response.SupplyBriefVO;
 import com.greenlink.glsupply.dto.response.TagSimpleVO;
 import com.greenlink.glsupply.enums.AuditStatus;
 import com.greenlink.glsupply.es.EsPageResult;
@@ -427,6 +428,26 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
                 .eq(SupplyAttachment::getBizType, BIZ_TYPE)
                 .eq(SupplyAttachment::getBizId, resourceId));
         saveAttachments(resourceId, attachments);
+    }
+
+    @Override
+    public List<SupplyBriefVO> batchBrief(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        QueryWrapper<SupplyResource> qw = new QueryWrapper<SupplyResource>()
+                .select("id", "member_id", "province", "type", "audit_status")
+                .in("id", ids)
+                .eq("is_deleted", 0);
+        return resourceMapper.selectList(qw).stream().map(r -> {
+            SupplyBriefVO vo = new SupplyBriefVO();
+            vo.setId(r.getId());
+            vo.setMemberId(r.getMemberId());
+            vo.setProvince(r.getProvince());
+            vo.setType(r.getType());
+            vo.setAuditStatus(r.getAuditStatus());
+            return vo;
+        }).toList();
     }
 
     private void syncTags(Long resourceId, List<Long> tagIds) {
