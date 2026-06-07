@@ -224,4 +224,119 @@ class SupplyDemandServiceTest {
                 .satisfies(e -> assertThat(((BizException) e).getCode())
                         .isEqualTo(ResultCode.PERMISSION_DENIED.getCode()));
     }
+
+    // ─────────────────────────────────────────────
+    // TC-10  审核通过 — PENDING→APPROVED，设置 auditorId
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-10 approve：PENDING 状态成功通过，auditStatus=APPROVED，auditorId 已写入")
+    void approve_success_setsApprovedStatus() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAuditStatus(AuditStatus.PENDING.getCode());
+
+        ArgumentCaptor<SupplyDemand> captor = ArgumentCaptor.forClass(SupplyDemand.class);
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+        when(demandMapper.updateById(captor.capture())).thenReturn(1);
+
+        service.approve(1L, 99L);
+
+        assertThat(captor.getValue().getAuditStatus()).isEqualTo(AuditStatus.APPROVED.getCode());
+        assertThat(captor.getValue().getAuditorId()).isEqualTo(99L);
+        assertThat(captor.getValue().getAuditedAt()).isNotNull();
+        assertThat(captor.getValue().getAuditRemark()).isNull();
+    }
+
+    // ─────────────────────────────────────────────
+    // TC-11  审核通过 — 非 PENDING 状态抛出异常
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-11 approve：非 PENDING 状态，抛出 DEMAND_AUDIT_INVALID_STATUS")
+    void approve_notPending_throwsException() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAuditStatus(AuditStatus.APPROVED.getCode());
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+
+        assertThatThrownBy(() -> service.approve(1L, 99L))
+                .isInstanceOf(BizException.class)
+                .satisfies(e -> assertThat(((BizException) e).getCode())
+                        .isEqualTo(ResultCode.DEMAND_AUDIT_INVALID_STATUS.getCode()));
+    }
+
+    // ─────────────────────────────────────────────
+    // TC-12  审核拒绝 — PENDING→REJECTED，设置 remark
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-12 reject：PENDING 状态成功拒绝，auditStatus=REJECTED，auditRemark 已写入")
+    void reject_success_setsRejectedStatusAndRemark() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAuditStatus(AuditStatus.PENDING.getCode());
+
+        ArgumentCaptor<SupplyDemand> captor = ArgumentCaptor.forClass(SupplyDemand.class);
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+        when(demandMapper.updateById(captor.capture())).thenReturn(1);
+
+        service.reject(1L, 99L, "内容不符合要求");
+
+        assertThat(captor.getValue().getAuditStatus()).isEqualTo(AuditStatus.REJECTED.getCode());
+        assertThat(captor.getValue().getAuditRemark()).isEqualTo("内容不符合要求");
+        assertThat(captor.getValue().getAuditorId()).isEqualTo(99L);
+    }
+
+    // ─────────────────────────────────────────────
+    // TC-13  审核拒绝 — 非 PENDING 状态抛出异常
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-13 reject：非 PENDING 状态，抛出 DEMAND_AUDIT_INVALID_STATUS")
+    void reject_notPending_throwsException() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAuditStatus(AuditStatus.REJECTED.getCode());
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+
+        assertThatThrownBy(() -> service.reject(1L, 99L, "重复拒绝"))
+                .isInstanceOf(BizException.class)
+                .satisfies(e -> assertThat(((BizException) e).getCode())
+                        .isEqualTo(ResultCode.DEMAND_AUDIT_INVALID_STATUS.getCode()));
+    }
+
+    // ─────────────────────────────────────────────
+    // TC-14  管理端下架 — APPROVED→OFFLINE
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-14 adminOffline：APPROVED 状态成功下架，auditStatus=OFFLINE")
+    void adminOffline_success_setsOfflineStatus() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAuditStatus(AuditStatus.APPROVED.getCode());
+
+        ArgumentCaptor<SupplyDemand> captor = ArgumentCaptor.forClass(SupplyDemand.class);
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+        when(demandMapper.updateById(captor.capture())).thenReturn(1);
+
+        service.adminOffline(1L, 99L);
+
+        assertThat(captor.getValue().getAuditStatus()).isEqualTo(AuditStatus.OFFLINE.getCode());
+        assertThat(captor.getValue().getAuditorId()).isEqualTo(99L);
+        assertThat(captor.getValue().getAuditedAt()).isNotNull();
+    }
+
+    // ─────────────────────────────────────────────
+    // TC-15  管理端下架 — 非 APPROVED 状态抛出异常
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-15 adminOffline：非 APPROVED 状态，抛出 DEMAND_AUDIT_INVALID_STATUS")
+    void adminOffline_notApproved_throwsException() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAuditStatus(AuditStatus.PENDING.getCode());
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+
+        assertThatThrownBy(() -> service.adminOffline(1L, 99L))
+                .isInstanceOf(BizException.class)
+                .satisfies(e -> assertThat(((BizException) e).getCode())
+                        .isEqualTo(ResultCode.DEMAND_AUDIT_INVALID_STATUS.getCode()));
+    }
 }

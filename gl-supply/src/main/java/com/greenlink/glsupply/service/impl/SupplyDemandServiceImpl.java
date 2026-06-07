@@ -8,10 +8,12 @@ import com.greenlink.common.result.Result;
 import com.greenlink.common.result.ResultCode;
 import com.greenlink.glsupply.domain.SupplyAttachment;
 import com.greenlink.glsupply.domain.SupplyDemand;
+import com.greenlink.glsupply.dto.request.AdminDemandPageRequest;
 import com.greenlink.glsupply.dto.request.AttachmentDTO;
 import com.greenlink.glsupply.dto.request.CreateDemandRequest;
 import com.greenlink.glsupply.dto.request.DemandPageRequest;
 import com.greenlink.glsupply.dto.request.UpdateDemandRequest;
+import com.greenlink.glsupply.dto.response.AdminDemandVO;
 import com.greenlink.glsupply.dto.response.AttachmentVO;
 import com.greenlink.glsupply.dto.response.DemandDetailVO;
 import com.greenlink.glsupply.dto.response.DemandVO;
@@ -33,6 +35,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -358,6 +361,107 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         vo.setViewCount(d.getViewCount() != null ? d.getViewCount() : 0);
         vo.setAuditStatus(d.getAuditStatus());
         vo.setCreatedAt(d.getCreatedAt());
+        return vo;
+    }
+
+    // -------- 管理端审核 --------
+
+    @Override
+    public Page<AdminDemandVO> adminPageList(AdminDemandPageRequest request) {
+        QueryWrapper<SupplyDemand> wrapper = new QueryWrapper<SupplyDemand>()
+                .select("id", "member_id", "account_id", "type", "title", "summary",
+                        "province", "budget_min", "budget_max", "deadline", "view_count",
+                        "audit_status", "audit_remark", "auditor_id", "audited_at", "created_at")
+                .eq(StringUtils.hasText(request.getType()), "type", request.getType())
+                .eq(StringUtils.hasText(request.getProvince()), "province", request.getProvince())
+                .eq(request.getAuditStatus() != null, "audit_status", request.getAuditStatus())
+                .eq(request.getMemberId() != null, "member_id", request.getMemberId())
+                .and(StringUtils.hasText(request.getKeyword()), q -> q
+                        .like("title", request.getKeyword())
+                        .or().like("summary", request.getKeyword()))
+                .eq("is_deleted", 0)
+                .orderByDesc("created_at");
+
+        Page<SupplyDemand> dbPage = demandMapper.selectPage(
+                new Page<>(request.getPage(), request.getSize()), wrapper);
+
+        Page<AdminDemandVO> voPage = new Page<>(dbPage.getCurrent(), dbPage.getSize(), dbPage.getTotal());
+        voPage.setRecords(dbPage.getRecords().stream().map(this::toAdminVO).toList());
+        return voPage;
+    }
+
+    @Override
+    @Transactional
+    public void approve(Long id, Long auditorId) {
+        SupplyDemand demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw new BizException(ResultCode.DEMAND_NOT_FOUND);
+        }
+        if (!Integer.valueOf(AuditStatus.PENDING.getCode()).equals(demand.getAuditStatus())) {
+            throw new BizException(ResultCode.DEMAND_AUDIT_INVALID_STATUS);
+        }
+        demand.setAuditStatus(AuditStatus.APPROVED.getCode());
+        demand.setAuditorId(auditorId);
+        demand.setAuditedAt(LocalDateTime.now());
+        demand.setAuditRemark(null);
+        demandMapper.updateById(demand);
+        log.info("审核通过需求 id={} auditorId={}", id, auditorId);
+    }
+
+    @Override
+    @Transactional
+    public void reject(Long id, Long auditorId, String remark) {
+        SupplyDemand demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw new BizException(ResultCode.DEMAND_NOT_FOUND);
+        }
+        if (!Integer.valueOf(AuditStatus.PENDING.getCode()).equals(demand.getAuditStatus())) {
+            throw new BizException(ResultCode.DEMAND_AUDIT_INVALID_STATUS);
+        }
+        demand.setAuditStatus(AuditStatus.REJECTED.getCode());
+        demand.setAuditorId(auditorId);
+        demand.setAuditedAt(LocalDateTime.now());
+        demand.setAuditRemark(remark);
+        demandMapper.updateById(demand);
+        log.info("审核拒绝需求 id={} auditorId={} remark={}", id, auditorId, remark);
+    }
+
+    @Override
+    @Transactional
+    public void adminOffline(Long id, Long auditorId) {
+        SupplyDemand demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw new BizException(ResultCode.DEMAND_NOT_FOUND);
+        }
+        if (!Integer.valueOf(AuditStatus.APPROVED.getCode()).equals(demand.getAuditStatus())) {
+            throw new BizException(ResultCode.DEMAND_AUDIT_INVALID_STATUS);
+        }
+        demand.setAuditStatus(AuditStatus.OFFLINE.getCode());
+        demand.setAuditorId(auditorId);
+        demand.setAuditedAt(LocalDateTime.now());
+        demandMapper.updateById(demand);
+        log.info("管理端下架需求 id={} auditorId={}", id, auditorId);
+    }
+
+    private AdminDemandVO toAdminVO(SupplyDemand d) {
+        AdminDemandVO vo = new AdminDemandVO();
+        vo.setId(d.getId());
+        vo.setMemberId(d.getMemberId());
+        vo.setAccountId(d.getAccountId());
+        vo.setType(d.getType());
+        vo.setTitle(d.getTitle());
+        vo.setSummary(d.getSummary());
+        vo.setProvince(d.getProvince());
+        vo.setBudgetMin(d.getBudgetMin());
+        vo.setBudgetMax(d.getBudgetMax());
+        vo.setDeadline(d.getDeadline());
+        vo.setViewCount(d.getViewCount() != null ? d.getViewCount() : 0);
+        vo.setAuditStatus(d.getAuditStatus());
+        vo.setAuditRemark(d.getAuditRemark());
+        vo.setAuditorId(d.getAuditorId());
+        vo.setAuditedAt(d.getAuditedAt());
+        vo.setCreatedAt(d.getCreatedAt());
+        vo.setTags(getTagsByDemand(d.getId()));
         return vo;
     }
 }
