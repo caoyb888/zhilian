@@ -75,6 +75,7 @@ export interface ResourceDetail {
   updatedAt: string | null
   attachments: AttachmentItem[]
   tags: ResourceTagItem[]
+  isFavorited?: boolean
 }
 
 export interface ResourceListParams {
@@ -129,7 +130,7 @@ export function useUnfavoriteResource() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (resourceId: number) =>
-      http.delete(`/match/favorites/RESOURCE/${resourceId}`),
+      http.delete('/match/favorites', { data: { bizType: 'RESOURCE', bizId: resourceId } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'RESOURCE'] }),
   })
 }

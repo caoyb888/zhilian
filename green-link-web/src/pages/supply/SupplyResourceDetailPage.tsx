@@ -250,7 +250,8 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
 export default function SupplyResourceDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const resourceId = id ? Number(id) : null
+  const resourceId = id && /^\d+$/.test(id) ? Number(id) : null
+  const isInvalidId = id !== undefined && resourceId === null
 
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const isLoggedIn = !!accountInfo
@@ -260,6 +261,12 @@ export default function SupplyResourceDetailPage() {
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   const { data: resource, isLoading, isError } = useResourceDetail(resourceId)
+
+  useEffect(() => {
+    if (resource?.isFavorited !== undefined) {
+      setFavorited(resource.isFavorited)
+    }
+  }, [resource?.isFavorited])
 
   // Member name is fetched via contact card for logged-in users, but we also
   // need it for the header (member name display) regardless of login status.
@@ -295,7 +302,7 @@ export default function SupplyResourceDetailPage() {
     }
   }
 
-  if (isError) {
+  if (isError || isInvalidId) {
     return (
       <div className="min-h-screen flex flex-col bg-theme-bg">
         <PortalNav />
