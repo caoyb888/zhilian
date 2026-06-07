@@ -300,7 +300,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
     @Transactional
     public void withdraw(Long id, Long accountId) {
         SupplyResource resource = getOwnResource(id, accountId);
-        if (resource.getAuditStatus() != AuditStatus.APPROVED.getCode()) {
+        if (!Integer.valueOf(AuditStatus.APPROVED.getCode()).equals(resource.getAuditStatus())) {
             throw new BizException(ResultCode.RESOURCE_AUDIT_INVALID_STATUS,
                     "仅已上架的资源可以撤回");
         }
@@ -341,7 +341,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         if (resource == null) {
             throw new BizException(ResultCode.RESOURCE_NOT_FOUND);
         }
-        if (resource.getAuditStatus() != AuditStatus.PENDING.getCode()) {
+        if (!Integer.valueOf(AuditStatus.PENDING.getCode()).equals(resource.getAuditStatus())) {
             throw new BizException(ResultCode.RESOURCE_AUDIT_INVALID_STATUS);
         }
         resource.setAuditStatus(AuditStatus.APPROVED.getCode());
@@ -360,7 +360,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         if (resource == null) {
             throw new BizException(ResultCode.RESOURCE_NOT_FOUND);
         }
-        if (resource.getAuditStatus() != AuditStatus.PENDING.getCode()) {
+        if (!Integer.valueOf(AuditStatus.PENDING.getCode()).equals(resource.getAuditStatus())) {
             throw new BizException(ResultCode.RESOURCE_AUDIT_INVALID_STATUS);
         }
         resource.setAuditStatus(AuditStatus.REJECTED.getCode());
@@ -379,7 +379,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         if (resource == null) {
             throw new BizException(ResultCode.RESOURCE_NOT_FOUND);
         }
-        if (resource.getAuditStatus() != AuditStatus.APPROVED.getCode()) {
+        if (!Integer.valueOf(AuditStatus.APPROVED.getCode()).equals(resource.getAuditStatus())) {
             throw new BizException(ResultCode.RESOURCE_AUDIT_INVALID_STATUS);
         }
         resource.setAuditStatus(AuditStatus.OFFLINE.getCode());
@@ -397,7 +397,8 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         if (resource == null) {
             throw new BizException(ResultCode.RESOURCE_NOT_FOUND);
         }
-        if (accountId != null && !accountId.equals(resource.getAccountId())) {
+        // null accountId 视为未授权，而非静默放行
+        if (accountId == null || !accountId.equals(resource.getAccountId())) {
             throw new BizException(ResultCode.PERMISSION_DENIED);
         }
         return resource;
