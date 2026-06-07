@@ -121,7 +121,7 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
             throw new BizException(ResultCode.DEMAND_NOT_FOUND);
         }
         if (viewCountHelper != null) {
-            viewCountHelper.increment(id);
+            viewCountHelper.incrementDemand(id);
         }
         return buildDetailVO(demand);
     }
