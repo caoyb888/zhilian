@@ -508,8 +508,10 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         vo.setId(r.getId());
         vo.setMemberId(r.getMemberId());
         vo.setType(r.getType());
-        vo.setTitle(hlTitle != null ? hlTitle : r.getTitle());
-        vo.setSummary(hlSummary != null ? hlSummary : r.getSummary());
+        vo.setTitle(r.getTitle());
+        vo.setSummary(r.getSummary());
+        vo.setHighlightTitle(hlTitle);
+        vo.setHighlightSummary(hlSummary);
         vo.setProvince(r.getProvince());
         vo.setCity(r.getCity());
         vo.setValidUntil(r.getValidUntil());

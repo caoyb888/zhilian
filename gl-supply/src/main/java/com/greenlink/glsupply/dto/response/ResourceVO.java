@@ -20,4 +20,6 @@ public class ResourceVO {
     private Integer auditStatus;
     private LocalDateTime createdAt;
     private List<TagSimpleVO> tags;
+    private String highlightTitle;
+    private String highlightSummary;
 }
