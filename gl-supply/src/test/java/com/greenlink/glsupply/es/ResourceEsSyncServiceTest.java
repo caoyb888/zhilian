@@ -75,33 +75,36 @@ class ResourceEsSyncServiceTest {
     }
 
     @Test
-    void syncAll_shouldBulkSave() {
+    void syncAll_shouldBulkSaveAndReturnCount() {
         List<SupplyResource> resources = List.of(
                 buildResource(1L, "资源一", "摘要一"),
                 buildResource(2L, "资源二", "摘要二")
         );
 
-        service.syncAll(resources, List.of());
+        int synced = service.syncAll(resources);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Iterable<ResourceEsDoc>> captor = ArgumentCaptor.forClass(Iterable.class);
         verify(elasticsearchOperations).save(captor.capture());
         List<ResourceEsDoc> docs = (List<ResourceEsDoc>) captor.getValue();
         assertThat(docs).hasSize(2);
+        assertThat(synced).isEqualTo(2);
     }
 
     @Test
-    void syncAll_emptyList_shouldSkip() {
-        service.syncAll(List.of(), List.of());
+    void syncAll_emptyList_shouldSkipAndReturnZero() {
+        int synced = service.syncAll(List.of());
+        assertThat(synced).isEqualTo(0);
         verifyNoInteractions(elasticsearchOperations);
     }
 
     @Test
-    void syncAll_esException_shouldNotPropagate() {
+    void syncAll_esException_shouldNotPropagateAndReturnZero() {
         doThrow(new RuntimeException("ES 连接失败")).when(elasticsearchOperations).save(any(Iterable.class));
 
-        // syncAll 是管理员一次性操作，内部 catch 保证接口不报 500
-        service.syncAll(List.of(buildResource(1L, "标题", "摘要")), List.of());
+        // syncAll 是管理员一次性操作，内部 catch 保证接口不报 500；返回 0 告知调用方写入失败
+        int synced = service.syncAll(List.of(buildResource(1L, "标题", "摘要")));
+        assertThat(synced).isEqualTo(0);
     }
 
     @Test
