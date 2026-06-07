@@ -13,7 +13,9 @@ const PortalArticleListPage    = lazy(() => import('@/pages/portal/PortalArticle
 const PortalArticleDetailPage  = lazy(() => import('@/pages/portal/PortalArticleDetailPage'))
 const PortalActivityListPage   = lazy(() => import('@/pages/portal/PortalActivityListPage'))
 const PortalActivityDetailPage = lazy(() => import('@/pages/portal/PortalActivityDetailPage'))
-const SupplyListPage           = lazy(() => import('@/pages/supply/SupplyListPage'))
+const SupplyListPage              = lazy(() => import('@/pages/supply/SupplyListPage'))
+const SupplyResourceDetailPage    = lazy(() => import('@/pages/supply/SupplyResourceDetailPage'))
+const SupplyPublishPage           = lazy(() => import('@/pages/supply/SupplyPublishPage'))
 const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
 const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
 const SubAccountPage           = lazy(() => import('@/pages/member/SubAccountPage'))
@@ -70,12 +72,14 @@ export default function App() {
             <Route path="/portal/activities/:id" element={<PortalActivityDetailPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
-            {/* 会员端（登录必需） */}
+            {/* 供需对接（公开浏览，收藏/对接需登录） */}
+            <Route path="/supply" element={<SupplyListPage />} />
+            <Route path="/supply/resources/:id" element={<SupplyResourceDetailPage />} />
             <Route
-              path="/supply"
+              path="/supply/resources/publish"
               element={
                 <RequireAuth>
-                  <SupplyListPage />
+                  <SupplyPublishPage />
                 </RequireAuth>
               }
             />
