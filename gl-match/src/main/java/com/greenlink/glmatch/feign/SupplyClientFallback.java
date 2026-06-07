@@ -23,4 +23,16 @@ public class SupplyClientFallback implements SupplyClient {
         log.warn("gl-supply batchBriefDemands 降级 ids={}", ids);
         return Result.ok(Collections.emptyList());
     }
+
+    @Override
+    public Result<SupplyBriefDTO> getResourceMatchBrief(Long id) {
+        log.warn("gl-supply getResourceMatchBrief 降级 id={}", id);
+        return Result.ok(null);
+    }
+
+    @Override
+    public Result<SupplyBriefDTO> getDemandMatchBrief(Long id) {
+        log.warn("gl-supply getDemandMatchBrief 降级 id={}", id);
+        return Result.ok(null);
+    }
 }

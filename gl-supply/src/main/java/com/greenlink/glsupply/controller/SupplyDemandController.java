@@ -71,9 +71,16 @@ public class SupplyDemandController {
         return Result.ok(demandService.minePageList(memberId, request));
     }
 
-    /** 内部接口：按 ID 批量查询需求简要信息（供 gl-match 调用） */
+    /** 内部接口：按 ID 批量查询需求简要信息（供 gl-match 召回过滤调用） */
     @PostMapping("/batch-brief")
     public Result<List<SupplyBriefVO>> batchBrief(@RequestBody List<Long> ids) {
         return Result.ok(demandService.batchBrief(ids));
+    }
+
+    /** 内部接口：查询单条需求 match-brief（含 title/summary，供 gl-match ES 召回使用） */
+    @GetMapping("/{id}/match-brief")
+    public Result<SupplyBriefVO> matchBrief(@PathVariable Long id) {
+        List<SupplyBriefVO> list = demandService.batchBrief(List.of(id));
+        return list.isEmpty() ? Result.fail(3002, "需求不存在") : Result.ok(list.get(0));
     }
 }

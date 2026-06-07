@@ -20,6 +20,7 @@ import com.greenlink.glsupply.dto.response.DemandVO;
 import com.greenlink.glsupply.dto.response.SupplyBriefVO;
 import com.greenlink.glsupply.dto.response.TagSimpleVO;
 import com.greenlink.glsupply.enums.AuditStatus;
+import com.greenlink.glsupply.es.DemandEsSyncService;
 import com.greenlink.glsupply.feign.TagRelationClient;
 import com.greenlink.glsupply.helper.ResourceViewCountHelper;
 import com.greenlink.glsupply.repository.SupplyAttachmentMapper;
@@ -54,6 +55,9 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
 
     @Autowired(required = false)
     private TagRelationClient tagRelationClient;
+
+    @Autowired(required = false)
+    private DemandEsSyncService demandEsSyncService;
 
     @Autowired(required = false)
     private ResourceViewCountHelper viewCountHelper;
@@ -407,6 +411,7 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         demand.setAuditRemark(null);
         demandMapper.updateById(demand);
         log.info("审核通过需求 id={} auditorId={}", id, auditorId);
+        sendEsSaveEvent(demand);
     }
 
     @Override
@@ -442,6 +447,7 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         demand.setAuditedAt(LocalDateTime.now());
         demandMapper.updateById(demand);
         log.info("管理端下架需求 id={} auditorId={}", id, auditorId);
+        sendEsDeleteEvent(id);
     }
 
     @Override
@@ -450,7 +456,7 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
             return Collections.emptyList();
         }
         QueryWrapper<SupplyDemand> qw = new QueryWrapper<SupplyDemand>()
-                .select("id", "member_id", "province", "type", "audit_status")
+                .select("id", "member_id", "province", "type", "audit_status", "title", "summary")
                 .in("id", ids)
                 .eq("is_deleted", 0);
         return demandMapper.selectList(qw).stream().map(d -> {
@@ -460,6 +466,8 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
             vo.setProvince(d.getProvince());
             vo.setType(d.getType());
             vo.setAuditStatus(d.getAuditStatus());
+            vo.setTitle(d.getTitle());
+            vo.setSummary(d.getSummary());
             return vo;
         }).toList();
     }
@@ -484,5 +492,49 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         vo.setCreatedAt(d.getCreatedAt());
         vo.setTags(getTagsByDemand(d.getId()));
         return vo;
+    }
+
+    // -------- ES 同步 --------
+
+    private void sendEsSaveEvent(SupplyDemand demand) {
+        if (demandEsSyncService == null) return;
+        Long demandId = demand.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    List<String> tagNames = fetchTagNames(demandId);
+                    demandEsSyncService.syncSave(demand, tagNames);
+                } catch (Exception e) {
+                    log.warn("需求 ES 同步失败 demandId={}", demandId, e);
+                }
+            }
+        });
+    }
+
+    private void sendEsDeleteEvent(Long demandId) {
+        if (demandEsSyncService == null) return;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    demandEsSyncService.syncDelete(demandId);
+                } catch (Exception e) {
+                    log.warn("需求 ES 删除失败 demandId={}", demandId, e);
+                }
+            }
+        });
+    }
+
+    private List<String> fetchTagNames(Long demandId) {
+        if (tagRelationClient == null) return Collections.emptyList();
+        try {
+            Result<List<TagSimpleVO>> result = tagRelationClient.getByBiz(BIZ_TYPE, demandId);
+            if (result == null || result.getData() == null) return Collections.emptyList();
+            return result.getData().stream().map(TagSimpleVO::getName).toList();
+        } catch (Exception e) {
+            log.warn("ES 同步时获取需求标签失败 demandId={}", demandId, e);
+            return Collections.emptyList();
+        }
     }
 }

@@ -9,4 +9,6 @@ public class SupplyBriefVO {
     private String province;
     private String type;
     private Integer auditStatus;
+    private String title;
+    private String summary;
 }

@@ -436,7 +436,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
             return Collections.emptyList();
         }
         QueryWrapper<SupplyResource> qw = new QueryWrapper<SupplyResource>()
-                .select("id", "member_id", "province", "type", "audit_status")
+                .select("id", "member_id", "province", "type", "audit_status", "title", "summary")
                 .in("id", ids)
                 .eq("is_deleted", 0);
         return resourceMapper.selectList(qw).stream().map(r -> {
@@ -446,6 +446,8 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
             vo.setProvince(r.getProvince());
             vo.setType(r.getType());
             vo.setAuditStatus(r.getAuditStatus());
+            vo.setTitle(r.getTitle());
+            vo.setSummary(r.getSummary());
             return vo;
         }).toList();
     }

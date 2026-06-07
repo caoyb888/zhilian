@@ -73,9 +73,16 @@ public class SupplyResourceController {
         return Result.ok(resourceService.minePageList(memberId, request));
     }
 
-    /** 内部接口：按 ID 批量查询资源简要信息（供 gl-match 调用） */
+    /** 内部接口：按 ID 批量查询资源简要信息（供 gl-match 召回过滤调用） */
     @PostMapping("/batch-brief")
     public Result<List<SupplyBriefVO>> batchBrief(@RequestBody List<Long> ids) {
         return Result.ok(resourceService.batchBrief(ids));
+    }
+
+    /** 内部接口：查询单条资源 match-brief（含 title/summary，供 gl-match ES 召回使用） */
+    @GetMapping("/{id}/match-brief")
+    public Result<SupplyBriefVO> matchBrief(@PathVariable Long id) {
+        List<SupplyBriefVO> list = resourceService.batchBrief(List.of(id));
+        return list.isEmpty() ? Result.fail(3001, "资源不存在") : Result.ok(list.get(0));
     }
 }
