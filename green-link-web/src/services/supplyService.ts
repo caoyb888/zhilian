@@ -5,6 +5,7 @@ import type { ApiResult, PageData } from '@/types/api'
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export type ResourceType = 'PRODUCT' | 'TECHNOLOGY' | 'TALENT'
+export type DemandType = 'PRODUCT' | 'TECHNOLOGY' | 'TALENT'
 
 export const RESOURCE_TYPE_LABELS: Record<string, string> = {
   PRODUCT: '产品/物资',
@@ -12,7 +13,14 @@ export const RESOURCE_TYPE_LABELS: Record<string, string> = {
   TALENT: '人才/团队',
 }
 
+export const DEMAND_TYPE_LABELS: Record<string, string> = {
+  PRODUCT: '产品需求',
+  TECHNOLOGY: '技术需求',
+  TALENT: '人才需求',
+}
+
 export const RESOURCE_TYPES: ResourceType[] = ['PRODUCT', 'TECHNOLOGY', 'TALENT']
+export const DEMAND_TYPES: DemandType[] = ['PRODUCT', 'TECHNOLOGY', 'TALENT']
 
 export const PROVINCES = [
   '山东', '北京', '上海', '广东', '江苏', '浙江', '河南', '四川',
@@ -78,7 +86,59 @@ export interface ResourceDetail {
   isFavorited?: boolean
 }
 
+export interface DemandItem {
+  id: number
+  memberId: number
+  type: string
+  title: string
+  summary: string | null
+  province: string | null
+  budgetMin: number | null
+  budgetMax: number | null
+  deadline: string | null
+  cooperationMode: string | null
+  viewCount: number
+  auditStatus: number
+  memberName: string | null
+  createdAt: string
+  tags: ResourceTagItem[]
+  highlightTitle: string | null
+  highlightSummary: string | null
+}
+
+export interface DemandDetail {
+  id: number
+  memberId: number
+  accountId: number
+  type: string
+  title: string
+  content: string | null
+  summary: string | null
+  province: string | null
+  budgetMin: number | null
+  budgetMax: number | null
+  deadline: string | null
+  cooperationMode: string | null
+  viewCount: number
+  auditStatus: number
+  auditRemark: string | null
+  createdAt: string
+  updatedAt: string | null
+  attachments: AttachmentItem[]
+  tags: ResourceTagItem[]
+  isFavorited?: boolean
+}
+
 export interface ResourceListParams {
+  page: number
+  size: number
+  keyword?: string
+  type?: string
+  province?: string
+  tagId?: number
+}
+
+export interface DemandListParams {
   page: number
   size: number
   keyword?: string
@@ -161,5 +221,82 @@ export function useUnfavoriteResource() {
     mutationFn: (resourceId: number) =>
       http.delete('/match/favorites', { data: { bizType: 'RESOURCE', bizId: resourceId } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'RESOURCE'] }),
+  })
+}
+
+// ─── Demand Hooks ─────────────────────────────────────────────────────────────
+
+export interface CreateDemandBody {
+  type: string
+  title: string
+  content?: string
+  summary?: string
+  province?: string
+  budgetMin?: number | null
+  budgetMax?: number | null
+  deadline?: string
+  cooperationMode?: string
+  tagIds?: number[]
+  attachments?: {
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    fileType?: string | null
+    sortOrder?: number
+  }[]
+}
+
+export function useCreateDemand() {
+  return useMutation({
+    mutationFn: async (body: CreateDemandBody) => {
+      const res = await http.post<ApiResult<DemandDetail>>('/supply/demands', body)
+      return res.data.data
+    },
+  })
+}
+
+export function useDemandDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['supply', 'demand', 'detail', id],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<DemandDetail>>(`/supply/demands/${id}`)
+      return res.data.data
+    },
+    enabled: id !== null,
+  })
+}
+
+export function useDemandList(params: DemandListParams) {
+  return useQuery({
+    queryKey: ['supply', 'demands', params],
+    queryFn: async () => {
+      const clean: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== '' && v !== 0) clean[k] = v
+      }
+      const res = await http.get<ApiResult<PageData<DemandItem>>>('/supply/demands', {
+        params: clean,
+      })
+      return res.data.data
+    },
+    placeholderData: (prev) => prev,
+  })
+}
+
+export function useFavoriteDemand() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (demandId: number) =>
+      http.post('/match/favorites', { bizType: 'DEMAND', bizId: demandId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'DEMAND'] }),
+  })
+}
+
+export function useUnfavoriteDemand() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (demandId: number) =>
+      http.delete('/match/favorites', { data: { bizType: 'DEMAND', bizId: demandId } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'DEMAND'] }),
   })
 }

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
-  Building2, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Calendar, RefreshCw,
+  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -12,20 +12,20 @@ import { ErrorState } from '@/components/states/ErrorState'
 import { PortalNav } from '@/business/PortalNav'
 import { useAuthStore } from '@/stores/authStore'
 import {
-  useResourceList,
-  useFavoriteResource,
-  useUnfavoriteResource,
-  RESOURCE_TYPE_LABELS,
-  RESOURCE_TYPES,
+  useDemandList,
+  useFavoriteDemand,
+  useUnfavoriteDemand,
+  DEMAND_TYPE_LABELS,
+  DEMAND_TYPES,
   PROVINCES,
-  type ResourceItem,
+  type DemandItem,
 } from '@/services/supplyService'
 import { fetchTagCategories, fetchTags, type Tag } from '@/services/tagService'
 import { useQuery } from '@tanstack/react-query'
 
 const PAGE_SIZE = 12
 
-// ─── Highlight-aware text render ──────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function Highlight({ html, fallback }: { html: string | null; fallback: string }) {
   if (!html) return <>{fallback}</>
@@ -37,21 +37,28 @@ function Highlight({ html, fallback }: { html: string | null; fallback: string }
   )
 }
 
-// ─── Resource type badge color ─────────────────────────────────────────────────
+function formatDate(s: string | null | undefined) {
+  return s ? String(s).slice(0, 10) : ''
+}
+
+function formatBudget(min: number | null, max: number | null): string {
+  if (!min && !max) return '面议'
+  if (min && max) return `${min} – ${max} 万元`
+  if (min) return `${min} 万元起`
+  return `≤ ${max} 万元`
+}
+
+// ─── Type badge colors ────────────────────────────────────────────────────────
 
 const TYPE_BADGE_CLASS: Record<string, string> = {
-  PRODUCT: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  PRODUCT: 'bg-orange-50 text-orange-700 border-orange-200',
   TECHNOLOGY: 'bg-blue-50 text-blue-700 border-blue-200',
   TALENT: 'bg-purple-50 text-purple-700 border-purple-200',
 }
 
-function formatDate(s: string) {
-  return s ? s.slice(0, 10) : ''
-}
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-// ─── Skeleton loading ─────────────────────────────────────────────────────────
-
-function ResourceSkeletonCard() {
+function DemandSkeletonCard() {
   return (
     <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card animate-pulse">
       <div className="flex items-center gap-2 mb-3">
@@ -73,98 +80,98 @@ function ResourceSkeletonCard() {
   )
 }
 
-// ─── Resource Card ─────────────────────────────────────────────────────────────
+// ─── Demand Card ──────────────────────────────────────────────────────────────
 
-interface ResourceCardProps {
-  resource: ResourceItem
+interface DemandCardProps {
+  demand: DemandItem
   isFavorited: boolean
   onFavorite: (id: number, favorited: boolean) => void
 }
 
-function ResourceCard({ resource, isFavorited, onFavorite }: ResourceCardProps) {
-  const typeLabel = RESOURCE_TYPE_LABELS[resource.type] ?? resource.type
-  const badgeClass = TYPE_BADGE_CLASS[resource.type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
+function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
+  const typeLabel = DEMAND_TYPE_LABELS[demand.type] ?? demand.type
+  const badgeClass = TYPE_BADGE_CLASS[demand.type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
 
   return (
     <div className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
       <div className="flex flex-1 flex-col p-5">
-        {/* Type badge + location */}
         <div className="flex items-center justify-between mb-2 gap-2">
-          <span
-            className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold tracking-wide border flex-shrink-0 ${badgeClass}`}
-          >
+          <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold tracking-wide border flex-shrink-0 ${badgeClass}`}>
             {typeLabel}
           </span>
-          {(resource.province || resource.city) && (
+          {demand.province && (
             <span className="flex items-center gap-1 text-xs text-stone-400 truncate">
               <Icon icon={MapPin} size={12} />
-              {resource.province}{resource.city ? `·${resource.city}` : ''}
+              {demand.province}
             </span>
           )}
         </div>
 
-        {/* Title */}
         <Link
-          to={`/supply/resources/${resource.id}`}
+          to={`/supply/demands/${demand.id}`}
           className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200 mb-2"
         >
-          <Highlight html={resource.highlightTitle} fallback={resource.title} />
+          <Highlight html={demand.highlightTitle} fallback={demand.title} />
         </Link>
 
-        {/* Summary */}
-        {(resource.highlightSummary || resource.summary) && (
+        {(demand.highlightSummary || demand.summary) && (
           <p className="text-xs text-stone-500 line-clamp-2 mb-3 flex-1">
-            <Highlight
-              html={resource.highlightSummary}
-              fallback={resource.summary ?? ''}
-            />
+            <Highlight html={demand.highlightSummary} fallback={demand.summary ?? ''} />
           </p>
         )}
 
-        {/* Tags */}
-        {resource.tags && resource.tags.length > 0 && (
+        {/* Budget */}
+        <p className="flex items-center gap-1.5 text-xs text-stone-600 font-medium mb-2">
+          <Icon icon={Banknote} size={13} className="text-stone-400 flex-shrink-0" />
+          预算：{formatBudget(demand.budgetMin, demand.budgetMax)}
+        </p>
+
+        {demand.deadline && (
+          <p className="flex items-center gap-1.5 text-xs text-stone-500 mb-2">
+            <Icon icon={Calendar} size={12} className="text-stone-400 flex-shrink-0" />
+            截止：{formatDate(demand.deadline)}
+          </p>
+        )}
+
+        {demand.tags && demand.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {resource.tags.slice(0, 3).map((tag) => (
+            {demand.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag.id}
-                className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-medium"
+                className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-medium"
               >
                 {tag.name}
               </span>
             ))}
-            {resource.tags.length > 3 && (
-              <span className="text-[10px] text-stone-400 px-1 py-0.5">
-                +{resource.tags.length - 3}
-              </span>
+            {demand.tags.length > 3 && (
+              <span className="text-[10px] text-stone-400 px-1 py-0.5">+{demand.tags.length - 3}</span>
             )}
           </div>
         )}
 
-        {/* Company */}
-        {resource.memberName && (
-          <p className="flex items-center gap-1 text-xs text-stone-500 mb-3 truncate">
+        {demand.memberName && (
+          <p className="flex items-center gap-1 text-xs text-stone-500 truncate">
             <Icon icon={Building2} size={12} className="flex-shrink-0 text-stone-400" />
-            {resource.memberName}
+            {demand.memberName}
           </p>
         )}
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between border-t border-stone-100 px-5 py-3">
         <div className="flex items-center gap-3 text-xs text-stone-400">
           <span className="flex items-center gap-1">
             <Icon icon={Eye} size={12} />
-            {resource.viewCount}
+            {demand.viewCount}
           </span>
           <span className="flex items-center gap-1">
             <Icon icon={Calendar} size={12} />
-            {formatDate(resource.createdAt)}
+            {formatDate(demand.createdAt)}
           </span>
         </div>
         <button
           type="button"
           aria-label={isFavorited ? '取消收藏' : '收藏'}
-          onClick={() => onFavorite(resource.id, isFavorited)}
+          onClick={() => onFavorite(demand.id, isFavorited)}
           className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
             isFavorited
               ? 'text-rose-500 bg-rose-50 hover:bg-rose-100'
@@ -199,64 +206,45 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
 
   return (
     <div className="space-y-6">
-      {/* Resource type */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">
-          资源类型
-        </h3>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">需求类型</h3>
         <div className="space-y-2">
-          {RESOURCE_TYPES.map((t) => (
-            <label
-              key={t}
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50"
-            >
+          {DEMAND_TYPES.map((t) => (
+            <label key={t} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
               <input
                 type="checkbox"
                 className="accent-theme-accent h-4 w-4 cursor-pointer rounded border-stone-300"
                 checked={filters.type === t}
                 onChange={() => onChange({ type: filters.type === t ? '' : t })}
               />
-              <span className="text-sm text-stone-700">{RESOURCE_TYPE_LABELS[t]}</span>
+              <span className="text-sm text-stone-700">{DEMAND_TYPE_LABELS[t]}</span>
             </label>
           ))}
         </div>
       </div>
 
-      {/* Province */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">
-          所在省份
-        </h3>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">期望省份</h3>
         <select
           value={filters.province}
           onChange={(e) => onChange({ province: e.target.value })}
           className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
         >
           <option value="">全部省份</option>
-          {PROVINCES.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
+          {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
 
-      {/* Tags */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">
-          标签筛选
-        </h3>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">标签筛选</h3>
         {tagsLoading ? (
-          <div className="flex justify-center py-4">
-            <Spinner size="sm" className="text-stone-300" />
-          </div>
+          <div className="flex justify-center py-4"><Spinner size="sm" className="text-stone-300" /></div>
         ) : tags.length === 0 ? (
           <p className="text-xs text-stone-400">暂无可用标签</p>
         ) : (
           <div className="space-y-1.5">
             {tags.map((tag) => (
-              <label
-                key={tag.id}
-                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50"
-              >
+              <label key={tag.id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
                 <input
                   type="checkbox"
                   className="accent-theme-accent h-4 w-4 cursor-pointer rounded border-stone-300"
@@ -270,7 +258,6 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
         )}
       </div>
 
-      {/* Reset */}
       {hasActive && (
         <button
           type="button"
@@ -287,26 +274,14 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
 
 // ─── Mobile Filter Drawer ─────────────────────────────────────────────────────
 
-interface FilterDrawerProps extends FilterPanelProps {
-  onClose: () => void
-}
-
-function FilterDrawer({ onClose, ...panelProps }: FilterDrawerProps) {
+function FilterDrawer({ onClose, ...panelProps }: FilterPanelProps & { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
           <h2 className="text-base font-semibold text-stone-900">筛选条件</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-stone-400 hover:bg-stone-100 transition-colors"
-            aria-label="关闭"
-          >
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-stone-400 hover:bg-stone-100 transition-colors">
             <Icon icon={X} size={20} />
           </button>
         </div>
@@ -336,33 +311,17 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative rounded-2xl bg-white p-8 shadow-xl max-w-sm w-full mx-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors"
-        >
+        <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
           <Icon icon={X} size={18} />
         </button>
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-400 mx-auto">
           <Icon icon={Heart} size={22} />
         </div>
         <h3 className="text-center text-base font-semibold text-stone-900 mb-2">请先登录</h3>
-        <p className="text-center text-sm text-stone-500 mb-6">登录后即可收藏感兴趣的资源</p>
+        <p className="text-center text-sm text-stone-500 mb-6">登录后即可收藏感兴趣的需求</p>
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
-          >
-            稍后再说
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/login', { state: { from: location } })}
-            className="flex-1 rounded-lg bg-theme-accent py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
-          >
-            去登录
-          </button>
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200">稍后再说</button>
+          <button type="button" onClick={() => navigate('/login', { state: { from: location } })} className="flex-1 rounded-lg bg-theme-accent py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">去登录</button>
         </div>
       </div>
     </div>
@@ -371,38 +330,24 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
 
 // ─── Active filter chips ──────────────────────────────────────────────────────
 
-interface ActiveFiltersProps {
-  type: string
-  province: string
-  tagId: number
-  tagName: string
-  keyword: string
+function ActiveFilters({
+  type, province, tagId, tagName, keyword, onRemove,
+}: {
+  type: string; province: string; tagId: number; tagName: string; keyword: string
   onRemove: (key: 'type' | 'province' | 'tagId' | 'keyword') => void
-}
-
-function ActiveFilters({ type, province, tagId, tagName, keyword, onRemove }: ActiveFiltersProps) {
+}) {
   const chips: { key: 'type' | 'province' | 'tagId' | 'keyword'; label: string }[] = []
   if (keyword) chips.push({ key: 'keyword', label: `关键词: ${keyword}` })
-  if (type) chips.push({ key: 'type', label: RESOURCE_TYPE_LABELS[type] ?? type })
+  if (type) chips.push({ key: 'type', label: DEMAND_TYPE_LABELS[type] ?? type })
   if (province) chips.push({ key: 'province', label: province })
   if (tagId) chips.push({ key: 'tagId', label: tagName ? `#${tagName}` : '标签筛选' })
-
   if (chips.length === 0) return null
-
   return (
     <div className="flex flex-wrap gap-2 mb-4">
       {chips.map((chip) => (
-        <span
-          key={chip.key}
-          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"
-        >
+        <span key={chip.key} className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-medium text-blue-700">
           {chip.label}
-          <button
-            type="button"
-            onClick={() => onRemove(chip.key)}
-            className="rounded-full hover:text-emerald-900 transition-colors"
-            aria-label={`移除 ${chip.label}`}
-          >
+          <button type="button" onClick={() => onRemove(chip.key)} className="rounded-full hover:text-blue-900 transition-colors">
             <Icon icon={X} size={12} />
           </button>
         </span>
@@ -413,28 +358,24 @@ function ActiveFilters({ type, province, tagId, tagName, keyword, onRemove }: Ac
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function SupplyListPage() {
+export default function SupplyDemandListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const accountInfo = useAuthStore((s) => s.accountInfo)
 
-  // URL-synced state
   const keyword = searchParams.get('keyword') ?? ''
   const typeFilter = searchParams.get('type') ?? ''
   const province = searchParams.get('province') ?? ''
   const tagId = Number(searchParams.get('tagId')) || 0
   const page = Number(searchParams.get('page')) || 1
 
-  // Local UI state
   const [inputValue, setInputValue] = useState(keyword)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
-  // TODO S5-09: 登录后从服务端初始化 favorites Set（GET /match/favorites）
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Keep search input in sync with URL
   useEffect(() => { setInputValue(keyword) }, [keyword])
 
   const setParam = useCallback(
@@ -454,7 +395,6 @@ export default function SupplyListPage() {
     [setSearchParams],
   )
 
-  // Debounced search
   function handleSearchInput(value: string) {
     setInputValue(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -469,7 +409,7 @@ export default function SupplyListPage() {
     setParam({ keyword: inputValue || undefined, page: undefined })
   }
 
-  function handleFilterChange(f: Partial<{ type: string; province: string; tagId: number }>) {
+  function handleFilterChange(f: Partial<FilterState>) {
     const updates: Record<string, string | undefined> = { page: undefined }
     if ('type' in f) updates.type = f.type || undefined
     if ('province' in f) updates.province = f.province || undefined
@@ -482,14 +422,9 @@ export default function SupplyListPage() {
   }
 
   function handleRemoveChip(key: 'type' | 'province' | 'tagId' | 'keyword') {
-    if (key === 'keyword') {
-      setInputValue('')
-      setParam({ keyword: undefined, page: undefined })
-    } else if (key === 'tagId') {
-      setParam({ tagId: undefined, page: undefined })
-    } else {
-      setParam({ [key]: undefined, page: undefined })
-    }
+    if (key === 'keyword') { setInputValue(''); setParam({ keyword: undefined, page: undefined }) }
+    else if (key === 'tagId') setParam({ tagId: undefined, page: undefined })
+    else setParam({ [key]: undefined, page: undefined })
   }
 
   function handlePageChange(p: number) {
@@ -497,27 +432,21 @@ export default function SupplyListPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Fetch resources
-  const { data, isLoading, isFetching, isError } = useResourceList({
-    page,
-    size: PAGE_SIZE,
+  const { data, isLoading, isFetching, isError } = useDemandList({
+    page, size: PAGE_SIZE,
     keyword: keyword || undefined,
     type: typeFilter || undefined,
     province: province || undefined,
     tagId: tagId || undefined,
   })
 
-  // Fetch tags for filter (INDUSTRY category)
   const { data: categories } = useQuery({
     queryKey: ['tag-categories'],
     queryFn: fetchTagCategories,
     staleTime: 1000 * 60 * 10,
   })
 
-  const industryCategory = useMemo(
-    () => categories?.find((c) => c.code === 'INDUSTRY'),
-    [categories],
-  )
+  const industryCategory = categories?.find((c) => c.code === 'INDUSTRY')
 
   const { data: tagPage, isLoading: tagsLoading } = useQuery({
     queryKey: ['tags', 'filter', industryCategory?.id],
@@ -527,19 +456,13 @@ export default function SupplyListPage() {
   })
 
   const filterTags = tagPage?.records ?? []
-
-  // Find tag name for active chip
   const activeTagName = filterTags.find((t) => t.id === tagId)?.name ?? ''
 
-  // Favorites
-  const favoriteMutation = useFavoriteResource()
-  const unfavoriteMutation = useUnfavoriteResource()
+  const favoriteMutation = useFavoriteDemand()
+  const unfavoriteMutation = useUnfavoriteDemand()
 
   function handleFavorite(id: number, isFavorited: boolean) {
-    if (!accountInfo) {
-      setLoginPrompt(true)
-      return
-    }
+    if (!accountInfo) { setLoginPrompt(true); return }
     const showError = () => {
       setFavoriteError('收藏操作失败，请稍后重试')
       setTimeout(() => setFavoriteError(null), 3000)
@@ -557,55 +480,43 @@ export default function SupplyListPage() {
     }
   }
 
-  const resources = data?.records ?? []
+  const demands = data?.records ?? []
   const total = data?.total ?? 0
-
-  const filterState = { type: typeFilter, province, tagId }
-  const filterPanelProps = {
-    filters: filterState,
-    tags: filterTags,
-    tagsLoading,
-    onChange: handleFilterChange,
-    onReset: handleFilterReset,
-  }
-
+  const filterState: FilterState = { type: typeFilter, province, tagId }
+  const filterPanelProps = { filters: filterState, tags: filterTags, tagsLoading, onChange: handleFilterChange, onReset: handleFilterReset }
   const activeFiltersCount = [typeFilter, province, tagId].filter(Boolean).length
 
   return (
     <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
 
-      {/* Page header */}
       <div className="bg-theme-surface border-b border-theme-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-bold text-theme-text-main">供需对接平台</h1>
-          <p className="mt-1 text-sm text-theme-text-muted">
-            绿色低碳供需资源汇聚 · 精准对接 · 共赢合作
-          </p>
+          <p className="mt-1 text-sm text-theme-text-muted">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
 
           {/* Resource / Demand tabs */}
           <div className="mt-4 flex gap-1 border-b border-stone-200">
             <Link
               to="/supply"
-              className="px-4 py-2 text-sm font-medium border-b-2 border-theme-accent text-theme-accent -mb-px"
+              className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-stone-500 hover:text-stone-800 hover:border-stone-300 -mb-px transition-colors"
             >
               资源列表
             </Link>
             <Link
               to="/supply/demands"
-              className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-stone-500 hover:text-stone-800 hover:border-stone-300 -mb-px transition-colors"
+              className="px-4 py-2 text-sm font-medium border-b-2 border-theme-accent text-theme-accent -mb-px"
             >
               需求列表
             </Link>
             <Link
-              to="/supply/resources/publish"
+              to="/supply/demands/publish"
               className="ml-auto mb-1 inline-flex items-center gap-1.5 rounded-lg bg-theme-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
             >
-              发布资源
+              发布需求
             </Link>
           </div>
 
-          {/* Search bar */}
           <form onSubmit={handleSearchSubmit} className="mt-4 flex gap-2 max-w-xl">
             <div className="relative flex-1">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
@@ -615,16 +526,11 @@ export default function SupplyListPage() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => handleSearchInput(e.target.value)}
-                placeholder="搜索资源名称、技术领域…"
+                placeholder="搜索需求名称、技术领域…"
                 className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-4 py-2 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
               />
             </div>
-            <button
-              type="submit"
-              className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
-            >
-              搜索
-            </button>
+            <button type="submit" className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">搜索</button>
             {keyword && (
               <button
                 type="button"
@@ -638,19 +544,15 @@ export default function SupplyListPage() {
         </div>
       </div>
 
-      {/* Main layout */}
       <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
-          {/* Desktop filter sidebar */}
           <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0">
             <div className="sticky top-20 rounded-xl border border-stone-100 bg-white p-5 shadow-card">
               <FilterPanel {...filterPanelProps} />
             </div>
           </aside>
 
-          {/* Right content */}
           <div className="flex-1 min-w-0">
-            {/* Mobile filter + result count row */}
             <div className="flex items-center justify-between mb-4 gap-3">
               <div className="flex items-center gap-3">
                 <button
@@ -668,11 +570,10 @@ export default function SupplyListPage() {
                 </button>
                 {!isLoading && (
                   <span className="text-sm text-stone-500">
-                    共 <span className="font-semibold text-stone-800">{total}</span> 条资源
+                    共 <span className="font-semibold text-stone-800">{total}</span> 条需求
                   </span>
                 )}
               </div>
-
               {isFetching && !isLoading && (
                 <span className="flex items-center gap-1.5 text-xs text-stone-400">
                   <Spinner size="sm" className="text-stone-300" />
@@ -681,7 +582,6 @@ export default function SupplyListPage() {
               )}
             </div>
 
-            {/* Favorite error banner */}
             {favoriteError && (
               <div className="mb-3 flex items-center justify-between rounded-lg bg-red-50 border border-red-100 px-4 py-2 text-sm text-red-600">
                 {favoriteError}
@@ -691,66 +591,43 @@ export default function SupplyListPage() {
               </div>
             )}
 
-            {/* Active filter chips */}
             <ActiveFilters
-              type={typeFilter}
-              province={province}
-              tagId={tagId}
-              tagName={activeTagName}
-              keyword={keyword}
-              onRemove={handleRemoveChip}
+              type={typeFilter} province={province} tagId={tagId}
+              tagName={activeTagName} keyword={keyword} onRemove={handleRemoveChip}
             />
 
-            {/* Resource grid */}
-            <div
-              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 transition-opacity duration-200 ${
-                isFetching && !isLoading ? 'opacity-60' : ''
-              }`}
-            >
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 transition-opacity duration-200 ${isFetching && !isLoading ? 'opacity-60' : ''}`}>
               {isLoading ? (
-                Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                  <ResourceSkeletonCard key={i} />
-                ))
+                Array.from({ length: PAGE_SIZE }).map((_, i) => <DemandSkeletonCard key={i} />)
               ) : isError ? (
                 <div className="col-span-full">
                   <ErrorState
                     title="加载失败"
-                    description="资源列表加载异常，请检查网络或稍后重试"
+                    description="需求列表加载异常，请检查网络或稍后重试"
                     action={
-                      <button
-                        onClick={() => window.location.reload()}
-                        className="rounded-lg bg-theme-accent px-4 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
-                      >
+                      <button onClick={() => window.location.reload()} className="rounded-lg bg-theme-accent px-4 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">
                         刷新页面
                       </button>
                     }
                   />
                 </div>
-              ) : resources.length > 0 ? (
-                resources.map((r) => (
-                  <ResourceCard
-                    key={r.id}
-                    resource={r}
-                    isFavorited={favorites.has(r.id)}
-                    onFavorite={handleFavorite}
-                  />
+              ) : demands.length > 0 ? (
+                demands.map((d) => (
+                  <DemandCard key={d.id} demand={d} isFavorited={favorites.has(d.id)} onFavorite={handleFavorite} />
                 ))
               ) : (
                 <div className="col-span-full">
                   <EmptyState
-                    title={keyword || typeFilter || province || tagId ? '未找到相关资源' : '暂无资源'}
+                    title={keyword || typeFilter || province || tagId ? '未找到相关需求' : '暂无需求'}
                     description={
                       keyword || typeFilter || province || tagId
                         ? '请尝试调整搜索条件或筛选项'
-                        : '平台资源正在持续更新，欢迎发布您的供需资源'
+                        : '平台需求正在持续更新，欢迎发布您的合作需求'
                     }
                     action={
                       !keyword && !typeFilter && !province && !tagId ? (
-                        <Link
-                          to="/supply/resources/publish"
-                          className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
-                        >
-                          发布资源
+                        <Link to="/supply/demands/publish" className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">
+                          发布需求
                         </Link>
                       ) : undefined
                     }
@@ -759,34 +636,22 @@ export default function SupplyListPage() {
               )}
             </div>
 
-            {/* Pagination */}
             {total > PAGE_SIZE && (
               <div className="mt-8">
-                <Pagination
-                  page={page}
-                  total={total}
-                  size={PAGE_SIZE}
-                  onChange={handlePageChange}
-                />
+                <Pagination page={page} total={total} size={PAGE_SIZE} onChange={handlePageChange} />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="bg-stone-900 text-stone-400 py-6 mt-auto">
         <div className="mx-auto max-w-7xl px-4 text-center text-xs">
           © 2024 山东省绿色低碳产业协会 · 绿产智链平台
         </div>
       </footer>
 
-      {/* Mobile filter drawer */}
-      {drawerOpen && (
-        <FilterDrawer {...filterPanelProps} onClose={() => setDrawerOpen(false)} />
-      )}
-
-      {/* Login prompt */}
+      {drawerOpen && <FilterDrawer {...filterPanelProps} onClose={() => setDrawerOpen(false)} />}
       {loginPrompt && <LoginPromptModal onClose={() => setLoginPrompt(false)} />}
     </div>
   )

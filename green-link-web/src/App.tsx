@@ -16,6 +16,9 @@ const PortalActivityDetailPage = lazy(() => import('@/pages/portal/PortalActivit
 const SupplyListPage              = lazy(() => import('@/pages/supply/SupplyListPage'))
 const SupplyResourceDetailPage    = lazy(() => import('@/pages/supply/SupplyResourceDetailPage'))
 const SupplyPublishPage           = lazy(() => import('@/pages/supply/SupplyPublishPage'))
+const SupplyDemandListPage        = lazy(() => import('@/pages/supply/SupplyDemandListPage'))
+const SupplyDemandDetailPage      = lazy(() => import('@/pages/supply/SupplyDemandDetailPage'))
+const SupplyDemandPublishPage     = lazy(() => import('@/pages/supply/SupplyDemandPublishPage'))
 const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
 const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
 const SubAccountPage           = lazy(() => import('@/pages/member/SubAccountPage'))
@@ -74,15 +77,11 @@ export default function App() {
 
             {/* 供需对接（公开浏览，收藏/对接需登录） */}
             <Route path="/supply" element={<SupplyListPage />} />
+            <Route path="/supply/resources/publish" element={<RequireAuth><SupplyPublishPage /></RequireAuth>} />
             <Route path="/supply/resources/:id" element={<SupplyResourceDetailPage />} />
-            <Route
-              path="/supply/resources/publish"
-              element={
-                <RequireAuth>
-                  <SupplyPublishPage />
-                </RequireAuth>
-              }
-            />
+            <Route path="/supply/demands" element={<SupplyDemandListPage />} />
+            <Route path="/supply/demands/publish" element={<RequireAuth><SupplyDemandPublishPage /></RequireAuth>} />
+            <Route path="/supply/demands/:id" element={<SupplyDemandDetailPage />} />
 
             {/* 会员中心（登录必需） */}
             <Route
