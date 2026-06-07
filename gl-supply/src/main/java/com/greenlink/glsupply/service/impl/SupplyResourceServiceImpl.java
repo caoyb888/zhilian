@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -187,11 +189,24 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         attachmentMapper.delete(new LambdaQueryWrapper<SupplyAttachment>()
                 .eq(SupplyAttachment::getBizType, BIZ_TYPE)
                 .eq(SupplyAttachment::getBizId, id));
-        if (tagRelationClient != null) {
-            tagRelationClient.deleteByBiz(BIZ_TYPE, id);
-        }
         log.info("删除资源 id={} accountId={}", id, accountId);
         sendDeleteEvent(id);
+        // 标签关联删除在事务提交后执行：Feign 是跨服务调用，不参与本地事务。
+        // 若在事务内调用失败会错误地回滚已完成的 DB 操作；
+        // 移至 afterCommit 后，DB 提交成功才触发，Feign 失败仅产生孤立标签记录，
+        // 不影响资源本身数据一致性，且已有日志可追查。
+        if (tagRelationClient != null) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        tagRelationClient.deleteByBiz(BIZ_TYPE, id);
+                    } catch (Exception e) {
+                        log.warn("删除资源标签关联失败 resourceId={}，tag_relation 表存在孤立记录", id, e);
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -429,6 +444,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         vo.setAuditorId(r.getAuditorId());
         vo.setAuditedAt(r.getAuditedAt());
         vo.setCreatedAt(r.getCreatedAt());
+        vo.setTags(getTagsByResource(r.getId()));
         return vo;
     }
 

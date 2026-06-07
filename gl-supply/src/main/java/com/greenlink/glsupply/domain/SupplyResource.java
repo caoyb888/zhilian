@@ -2,6 +2,7 @@ package com.greenlink.glsupply.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -33,6 +34,7 @@ public class SupplyResource {
     private LocalDateTime auditedAt;
     private BigDecimal carbonAmount;
     private String certType;
+    @TableLogic
     private Integer isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
