@@ -210,7 +210,7 @@ export function useFavoriteResource() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (resourceId: number) =>
-      http.post('/match/favorites', { bizType: 'RESOURCE', bizId: resourceId }),
+      http.post('/favorites', { bizType: 'RESOURCE', bizId: resourceId }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'RESOURCE'] }),
   })
 }
@@ -219,7 +219,7 @@ export function useUnfavoriteResource() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (resourceId: number) =>
-      http.delete('/match/favorites', { data: { bizType: 'RESOURCE', bizId: resourceId } }),
+      http.delete('/favorites', { data: { bizType: 'RESOURCE', bizId: resourceId } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'RESOURCE'] }),
   })
 }
@@ -289,7 +289,7 @@ export function useFavoriteDemand() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (demandId: number) =>
-      http.post('/match/favorites', { bizType: 'DEMAND', bizId: demandId }),
+      http.post('/favorites', { bizType: 'DEMAND', bizId: demandId }),
     onSuccess: (_data, demandId) => {
       queryClient.invalidateQueries({ queryKey: ['supply', 'demand', 'detail', demandId] })
       queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] })
@@ -301,7 +301,7 @@ export function useUnfavoriteDemand() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (demandId: number) =>
-      http.delete('/match/favorites', { data: { bizType: 'DEMAND', bizId: demandId } }),
+      http.delete('/favorites', { data: { bizType: 'DEMAND', bizId: demandId } }),
     onSuccess: (_data, demandId) => {
       queryClient.invalidateQueries({ queryKey: ['supply', 'demand', 'detail', demandId] })
       queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] })
