@@ -7,19 +7,21 @@ interface RichEditorProps {
   onChange: (html: string) => void
   minHeight?: number
   readOnly?: boolean
+  /** If provided, overrides the default base64 image insertion with a MinIO upload. Returns the hosted URL. */
+  imageUploadFn?: (file: File) => Promise<string>
 }
 
 /**
  * Quill v2 wrapper. Use `key` prop from parent to force full remount when
  * switching between different articles.
  */
-export function RichEditor({ defaultValue = '', onChange, minHeight = 360, readOnly = false }: RichEditorProps) {
+export function RichEditor({ defaultValue = '', onChange, minHeight = 360, readOnly = false, imageUploadFn }: RichEditorProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const onChangeRef = useRef(onChange)
+  const imageUploadFnRef = useRef(imageUploadFn)
 
-  useEffect(() => {
-    onChangeRef.current = onChange
-  }, [onChange])
+  useEffect(() => { onChangeRef.current = onChange }, [onChange])
+  useEffect(() => { imageUploadFnRef.current = imageUploadFn }, [imageUploadFn])
 
   useEffect(() => {
     const wrapper = wrapperRef.current
@@ -50,6 +52,32 @@ export function RichEditor({ defaultValue = '', onChange, minHeight = 360, readO
     if (defaultValue) {
       const delta = quill.clipboard.convert({ html: defaultValue })
       quill.setContents(delta, 'silent')
+    }
+
+    // Override default base64 image handler with MinIO upload when imageUploadFn is provided
+    if (!readOnly) {
+      const toolbar = quill.getModule('toolbar') as
+        | { addHandler: (name: string, fn: () => void) => void }
+        | undefined
+      toolbar?.addHandler('image', () => {
+        if (!imageUploadFnRef.current) return
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = async () => {
+          const file = input.files?.[0]
+          if (!file || !imageUploadFnRef.current) return
+          try {
+            const url = await imageUploadFnRef.current(file)
+            const range = quill.getSelection(true)
+            quill.insertEmbed(range.index, 'image', url, 'user')
+            quill.setSelection(range.index + 1, 0)
+          } catch {
+            // silently fail; upload error is handled by the caller
+          }
+        }
+        input.click()
+      })
     }
 
     quill.on('text-change', () => {
