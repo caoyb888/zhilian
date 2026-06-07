@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -40,8 +39,7 @@ public class SupplyEsSyncController {
             batch = resourceMapper.selectPage(new Page<>(pageNum++, SYNC_BATCH_SIZE, false), wrapper)
                     .getRecords();
             if (!batch.isEmpty()) {
-                esSyncService.syncAll(batch, Collections.emptyList());
-                total += batch.size();
+                total += esSyncService.syncAll(batch);
             }
         } while (batch.size() == SYNC_BATCH_SIZE);
         log.info("全量 ES 同步完成，共 {} 条资源", total);

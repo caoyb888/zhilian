@@ -128,11 +128,14 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
             return emptyPage(request);
         }
 
-        // 按 ES 返回的有序 ID 从 MySQL 取完整字段（ES 已过滤 auditStatus=APPROVED + isDeleted=0）
+        // 按 ES 返回的有序 ID 从 MySQL 取完整字段。
+        // auditStatus=APPROVED 二次校验：ES 同步存在延迟窗口，资源被拒绝后 ES 可能仍持有旧状态，
+        // 此处过滤确保即使 ES 数据陈旧也不泄露非公开资源。
         QueryWrapper<SupplyResource> wrapper = new QueryWrapper<SupplyResource>()
                 .select("id", "member_id", "type", "title", "summary", "province", "city",
                         "valid_until", "view_count", "audit_status", "created_at")
-                .in("id", esResult.orderedIds());
+                .in("id", esResult.orderedIds())
+                .eq("audit_status", AuditStatus.APPROVED.getCode());
 
         List<SupplyResource> dbRecords = resourceMapper.selectList(wrapper);
 

@@ -41,16 +41,24 @@ public class ResourceEsSyncService {
         log.debug("ES 删除资源 id={}", id);
     }
 
-    public void syncAll(List<SupplyResource> resources, List<String> tagNames) {
-        if (resources.isEmpty()) return;
+    /**
+     * 批量全量同步（管理端历史数据重建）。tagNames 不逐条拉取，写入 null；
+     * 如需补全 tagNames，可对每条资源重新发送 MQ SAVE 事件触发单条同步。
+     *
+     * @return 实际写入 ES 的条数；写入失败返回 0（异常已记录，不上抛避免 admin API 500）
+     */
+    public int syncAll(List<SupplyResource> resources) {
+        if (resources.isEmpty()) return 0;
         try {
             List<ResourceEsDoc> docs = resources.stream()
-                    .map(r -> toDoc(r, tagNames))
+                    .map(r -> toDoc(r, List.of()))
                     .toList();
             elasticsearchOperations.save(docs);
             log.info("ES 全量同步完成，共 {} 条资源", docs.size());
+            return docs.size();
         } catch (Exception e) {
             log.error("ES 全量同步失败", e);
+            return 0;
         }
     }
 

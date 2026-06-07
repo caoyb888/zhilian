@@ -21,7 +21,7 @@ public interface TagRelationMapper extends BaseMapper<TagRelation> {
             "AND t.is_deleted = 0 AND t.is_active = 1")
     List<TagSimpleVO> findTagsByBiz(@Param("bizType") String bizType, @Param("bizId") Long bizId);
 
-    @Select("SELECT biz_id FROM tag_relation WHERE tag_id = #{tagId} AND biz_type = #{bizType}")
+    @Select("SELECT biz_id FROM tag_relation WHERE tag_id = #{tagId} AND biz_type = #{bizType} LIMIT 1000")
     List<Long> findBizIdsByTag(@Param("tagId") Long tagId, @Param("bizType") String bizType);
 
     @Delete("DELETE FROM tag_relation WHERE biz_type = #{bizType} AND biz_id = #{bizId}")
