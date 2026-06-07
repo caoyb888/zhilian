@@ -87,7 +87,7 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         if (request.getTagId() != null && tagScopeIds != null && tagScopeIds.isEmpty()) {
             return emptyPage(request);
         }
-        return pageListByMysql(request, tagScopeIds, true);
+        return pageListByMysql(request, tagScopeIds);
     }
 
     @Override
@@ -127,6 +127,10 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
     @Transactional
     public DemandDetailVO update(Long id, UpdateDemandRequest request, Long accountId) {
         SupplyDemand demand = getOwnDemand(id, accountId);
+        // 已关闭的需求不允许编辑，须重新发布而非静默重入审核队列
+        if (Integer.valueOf(AuditStatus.OFFLINE.getCode()).equals(demand.getAuditStatus())) {
+            throw new BizException(ResultCode.DEMAND_AUDIT_INVALID_STATUS, "已关闭的需求不能编辑");
+        }
 
         if (request.getType() != null) demand.setType(request.getType());
         if (request.getTitle() != null) demand.setTitle(request.getTitle());
@@ -181,7 +185,7 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
     @Transactional
     public void close(Long id, Long accountId) {
         SupplyDemand demand = getOwnDemand(id, accountId);
-        if (demand.getAuditStatus() != AuditStatus.APPROVED.getCode()) {
+        if (!Integer.valueOf(AuditStatus.APPROVED.getCode()).equals(demand.getAuditStatus())) {
             throw new BizException(ResultCode.DEMAND_AUDIT_INVALID_STATUS, "仅已发布的需求可以关闭");
         }
         demand.setAuditStatus(AuditStatus.OFFLINE.getCode());
@@ -196,17 +200,18 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         if (demand == null) {
             throw new BizException(ResultCode.DEMAND_NOT_FOUND);
         }
-        if (accountId != null && !accountId.equals(demand.getAccountId())) {
+        // null accountId 视为未授权，而非静默放行
+        if (accountId == null || !accountId.equals(demand.getAccountId())) {
             throw new BizException(ResultCode.PERMISSION_DENIED);
         }
         return demand;
     }
 
-    private Page<DemandVO> pageListByMysql(DemandPageRequest request, List<Long> scopeIds, boolean approvedOnly) {
+    private Page<DemandVO> pageListByMysql(DemandPageRequest request, List<Long> scopeIds) {
         QueryWrapper<SupplyDemand> wrapper = new QueryWrapper<SupplyDemand>()
                 .select("id", "member_id", "type", "title", "summary", "province",
                         "budget_min", "budget_max", "deadline", "view_count", "audit_status", "created_at")
-                .eq(approvedOnly, "audit_status", AuditStatus.APPROVED.getCode())
+                .eq("audit_status", AuditStatus.APPROVED.getCode())
                 .eq(StringUtils.hasText(request.getType()), "type", request.getType())
                 .eq(StringUtils.hasText(request.getProvince()), "province", request.getProvince())
                 .eq(request.getMemberId() != null, "member_id", request.getMemberId())

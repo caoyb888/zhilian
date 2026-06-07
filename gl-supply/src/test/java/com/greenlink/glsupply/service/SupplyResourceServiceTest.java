@@ -56,7 +56,7 @@ class SupplyResourceServiceTest {
             r.setId(1L);
             return 1;
         }).when(resourceMapper).insert(any(SupplyResource.class));
-        when(attachmentMapper.insert(any(SupplyAttachment.class))).thenReturn(1);
+        when(attachmentMapper.selectList(any())).thenReturn(List.of());
 
         AttachmentDTO att = new AttachmentDTO();
         att.setFileName("方案.pdf");
@@ -76,10 +76,12 @@ class SupplyResourceServiceTest {
         assertThat(result.getMemberId()).isEqualTo(100L);
         assertThat(result.getAuditStatus()).isEqualTo(AuditStatus.PENDING.getCode());
 
-        ArgumentCaptor<SupplyAttachment> captor = ArgumentCaptor.forClass(SupplyAttachment.class);
-        verify(attachmentMapper).insert(captor.capture());
-        assertThat(captor.getValue().getFileName()).isEqualTo("方案.pdf");
-        assertThat(captor.getValue().getBizType()).isEqualTo("RESOURCE");
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<SupplyAttachment>> captor = ArgumentCaptor.forClass(List.class);
+        verify(attachmentMapper).batchInsert(captor.capture());
+        assertThat(captor.getValue()).hasSize(1);
+        assertThat(captor.getValue().get(0).getFileName()).isEqualTo("方案.pdf");
+        assertThat(captor.getValue().get(0).getBizType()).isEqualTo("RESOURCE");
     }
 
     // ─────────────────────────────────────────────

@@ -185,4 +185,43 @@ class SupplyDemandServiceTest {
                 .satisfies(e -> assertThat(((BizException) e).getCode())
                         .isEqualTo(ResultCode.DEMAND_AUDIT_INVALID_STATUS.getCode()));
     }
+
+    // ─────────────────────────────────────────────
+    // TC-08  更新已关闭的需求 — 抛出状态异常
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-08 更新需求：已关闭状态，抛出 DEMAND_AUDIT_INVALID_STATUS")
+    void update_closedDemand_throwsException() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAccountId(200L);
+        demand.setAuditStatus(AuditStatus.OFFLINE.getCode());
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+
+        UpdateDemandRequest request = new UpdateDemandRequest();
+        request.setTitle("修改已关闭需求的标题");
+
+        assertThatThrownBy(() -> service.update(1L, request, 200L))
+                .isInstanceOf(BizException.class)
+                .satisfies(e -> assertThat(((BizException) e).getCode())
+                        .isEqualTo(ResultCode.DEMAND_AUDIT_INVALID_STATUS.getCode()));
+    }
+
+    // ─────────────────────────────────────────────
+    // TC-09  null accountId — 视为未授权抛出异常
+    // ─────────────────────────────────────────────
+    @Test
+    @DisplayName("TC-09 null accountId：close 时视为未授权，抛出 PERMISSION_DENIED")
+    void close_nullAccountId_throwsPermissionDenied() {
+        SupplyDemand demand = new SupplyDemand();
+        demand.setId(1L);
+        demand.setAccountId(200L);
+        demand.setAuditStatus(AuditStatus.APPROVED.getCode());
+        when(demandMapper.selectById(1L)).thenReturn(demand);
+
+        assertThatThrownBy(() -> service.close(1L, null))
+                .isInstanceOf(BizException.class)
+                .satisfies(e -> assertThat(((BizException) e).getCode())
+                        .isEqualTo(ResultCode.PERMISSION_DENIED.getCode()));
+    }
 }
