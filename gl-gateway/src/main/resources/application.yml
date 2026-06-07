@@ -39,11 +39,15 @@ spring:
         - id: gl-tag
           uri: ${GL_TAG_URL:http://localhost:8089}
           predicates:
-            - Path=/api/v1/tags/**,/api/v1/tag-categories/**
+            - Path=/api/v1/tags/**,/api/v1/tag-categories/**,/api/v1/tag-relations/**
+        - id: gl-supply-admin
+          uri: ${GL_SUPPLY_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/admin/supply/**
         - id: gl-supply
           uri: ${GL_SUPPLY_URL:http://localhost:8084}
           predicates:
-            - Path=/api/v1/resources/**,/api/v1/demands/**
+            - Path=/api/v1/supply/resources/**,/api/v1/supply/demands/**
         - id: gl-match
           uri: ${GL_MATCH_URL:http://localhost:8085}
           predicates:
@@ -90,6 +94,11 @@ jwt:
     - /api/v1/tags
     - /api/v1/tags/**
     - /api/v1/tag-relations
+    - /api/v1/tag-relations/**
+    - /api/v1/supply/resources
+    - /api/v1/supply/resources/*
+    - /api/v1/supply/demands
+    - /api/v1/supply/demands/*
     - /actuator/**
 
 management:
