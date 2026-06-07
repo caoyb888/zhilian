@@ -8,7 +8,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
 @Data
-@Document(indexName = "gl_supply_resource")
+@Document(indexName = "gl_supply_resource", createIndex = false)
 @Setting(settingPath = "/es/supply-resource-settings.json")
 public class ResourceEsDoc {
 
