@@ -397,11 +397,13 @@ function Step4Preview() {
   const typeLabel = DEMAND_TYPE_LABELS[values.type] ?? values.type
 
   function budgetText() {
-    const min = values.budgetMin ? parseFloat(values.budgetMin) : null
-    const max = values.budgetMax ? parseFloat(values.budgetMax) : null
-    if (!min && !max) return '面议'
-    if (min && max) return `${min} – ${max} 万元`
-    if (min) return `${min} 万元起`
+    const min = values.budgetMin !== '' ? parseFloat(values.budgetMin) : null
+    const max = values.budgetMax !== '' ? parseFloat(values.budgetMax) : null
+    const hasMin = min !== null && !isNaN(min)
+    const hasMax = max !== null && !isNaN(max)
+    if (!hasMin && !hasMax) return '面议'
+    if (hasMin && hasMax) return `${min} – ${max} 万元`
+    if (hasMin) return `${min} 万元起`
     return `≤ ${max} 万元`
   }
 

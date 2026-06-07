@@ -247,11 +247,13 @@ export interface CreateDemandBody {
 }
 
 export function useCreateDemand() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: CreateDemandBody) => {
       const res = await http.post<ApiResult<DemandDetail>>('/supply/demands', body)
       return res.data.data
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] }),
   })
 }
 
@@ -288,7 +290,10 @@ export function useFavoriteDemand() {
   return useMutation({
     mutationFn: (demandId: number) =>
       http.post('/match/favorites', { bizType: 'DEMAND', bizId: demandId }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'DEMAND'] }),
+    onSuccess: (_data, demandId) => {
+      queryClient.invalidateQueries({ queryKey: ['supply', 'demand', 'detail', demandId] })
+      queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] })
+    },
   })
 }
 
@@ -297,6 +302,9 @@ export function useUnfavoriteDemand() {
   return useMutation({
     mutationFn: (demandId: number) =>
       http.delete('/match/favorites', { data: { bizType: 'DEMAND', bizId: demandId } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'DEMAND'] }),
+    onSuccess: (_data, demandId) => {
+      queryClient.invalidateQueries({ queryKey: ['supply', 'demand', 'detail', demandId] })
+      queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] })
+    },
   })
 }

@@ -39,9 +39,11 @@ function isImageType(fileType: string | null, fileName: string): boolean {
 }
 
 function formatBudget(min: number | null | undefined, max: number | null | undefined): string {
-  if (!min && !max) return '面议'
-  if (min && max) return `${min} – ${max} 万元`
-  if (min) return `${min} 万元起`
+  const hasMin = min !== null && min !== undefined
+  const hasMax = max !== null && max !== undefined
+  if (!hasMin && !hasMax) return '面议'
+  if (hasMin && hasMax) return `${min} – ${max} 万元`
+  if (hasMin) return `${min} 万元起`
   return `≤ ${max} 万元`
 }
 
@@ -234,6 +236,7 @@ export default function SupplyDemandDetailPage() {
   const unfavoriteMutation = useUnfavoriteDemand()
 
   function handleFavorite() {
+    if (favoriteMutation.isPending || unfavoriteMutation.isPending) return
     if (!isLoggedIn) { setLoginPrompt(true); return }
     const showError = () => {
       setFavoriteError('收藏操作失败，请稍后重试')

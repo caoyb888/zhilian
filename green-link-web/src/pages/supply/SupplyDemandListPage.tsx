@@ -42,9 +42,11 @@ function formatDate(s: string | null | undefined) {
 }
 
 function formatBudget(min: number | null, max: number | null): string {
-  if (!min && !max) return '面议'
-  if (min && max) return `${min} – ${max} 万元`
-  if (min) return `${min} 万元起`
+  const hasMin = min !== null && min !== undefined
+  const hasMax = max !== null && max !== undefined
+  if (!hasMin && !hasMax) return '面议'
+  if (hasMin && hasMax) return `${min} – ${max} 万元`
+  if (hasMin) return `${min} 万元起`
   return `≤ ${max} 万元`
 }
 
@@ -462,6 +464,7 @@ export default function SupplyDemandListPage() {
   const unfavoriteMutation = useUnfavoriteDemand()
 
   function handleFavorite(id: number, isFavorited: boolean) {
+    if (favoriteMutation.isPending || unfavoriteMutation.isPending) return
     if (!accountInfo) { setLoginPrompt(true); return }
     const showError = () => {
       setFavoriteError('收藏操作失败，请稍后重试')
