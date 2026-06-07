@@ -70,15 +70,8 @@ export default function App() {
             <Route path="/portal/activities/:id" element={<PortalActivityDetailPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
-            {/* 会员端（登录必需） */}
-            <Route
-              path="/supply"
-              element={
-                <RequireAuth>
-                  <SupplyListPage />
-                </RequireAuth>
-              }
-            />
+            {/* 供需对接（公开浏览，收藏/对接需登录） */}
+            <Route path="/supply" element={<SupplyListPage />} />
 
             {/* 会员中心（登录必需） */}
             <Route
