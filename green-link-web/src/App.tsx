@@ -21,6 +21,8 @@ const SupplyDemandDetailPage      = lazy(() => import('@/pages/supply/SupplyDema
 const SupplyDemandPublishPage     = lazy(() => import('@/pages/supply/SupplyDemandPublishPage'))
 const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
 const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
+const MyResourcesPage          = lazy(() => import('@/pages/member/MyResourcesPage'))
+const MyDemandsPage            = lazy(() => import('@/pages/member/MyDemandsPage'))
 const SubAccountPage           = lazy(() => import('@/pages/member/SubAccountPage'))
 const NotFoundPage             = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage            = lazy(() => import('@/pages/ForbiddenPage'))
@@ -94,6 +96,8 @@ export default function App() {
             >
               <Route index element={<Navigate to="/member/profile" replace />} />
               <Route path="profile" element={<MemberProfilePage />} />
+              <Route path="my-resources" element={<MyResourcesPage />} />
+              <Route path="my-demands" element={<MyDemandsPage />} />
               <Route path="sub-accounts" element={<SubAccountPage />} />
             </Route>
 

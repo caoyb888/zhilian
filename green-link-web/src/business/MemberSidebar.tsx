@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { User, Users, LogOut } from 'lucide-react'
+import { User, Users, LogOut, Boxes, ClipboardList } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Badge } from '@/components/Badge'
 import { useAuthStore } from '@/stores/authStore'
@@ -7,6 +7,8 @@ import { useLogout } from '@/hooks/useAuthMutations'
 
 const NAV_ITEMS = [
   { label: '个人信息', path: '/member/profile', icon: User },
+  { label: '我的资源', path: '/member/my-resources', icon: Boxes },
+  { label: '我的需求', path: '/member/my-demands', icon: ClipboardList },
   { label: '子账号管理', path: '/member/sub-accounts', icon: Users },
 ]
 
