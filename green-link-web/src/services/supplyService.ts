@@ -89,6 +89,35 @@ export interface ResourceListParams {
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
+export interface CreateResourceBody {
+  type: string
+  title: string
+  content?: string
+  summary?: string
+  province?: string
+  city?: string
+  cooperationMode?: string
+  validUntil?: string
+  contactVisible?: boolean
+  tagIds?: number[]
+  attachments?: {
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    fileType?: string | null
+    sortOrder?: number
+  }[]
+}
+
+export function useCreateResource() {
+  return useMutation({
+    mutationFn: async (body: CreateResourceBody) => {
+      const res = await http.post<ApiResult<ResourceDetail>>('/supply/resources', body)
+      return res.data.data
+    },
+  })
+}
+
 export function useResourceDetail(id: number | null) {
   return useQuery({
     queryKey: ['supply', 'resource', 'detail', id],
