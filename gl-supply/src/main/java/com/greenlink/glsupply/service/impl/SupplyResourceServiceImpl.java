@@ -106,13 +106,8 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
                 new Page<>(request.getPage(), request.getSize()), wrapper);
 
         Page<ResourceVO> voPage = new Page<>(dbPage.getCurrent(), dbPage.getSize(), dbPage.getTotal());
-        voPage.setRecords(dbPage.getRecords().stream()
-                .map(r -> {
-                    ResourceVO vo = toVO(r);
-                    vo.setTags(getTagsByResource(r.getId()));
-                    return vo;
-                })
-                .toList());
+        // 列表接口不逐条调 gl-tag，避免 N+1 Feign 请求；标签在详情接口单独获取
+        voPage.setRecords(dbPage.getRecords().stream().map(this::toVO).toList());
         return voPage;
     }
 
@@ -308,6 +303,7 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
 
     private void saveAttachments(Long resourceId, List<AttachmentDTO> attachments) {
         if (CollectionUtils.isEmpty(attachments)) return;
+        List<SupplyAttachment> entities = new java.util.ArrayList<>(attachments.size());
         for (int i = 0; i < attachments.size(); i++) {
             AttachmentDTO dto = attachments.get(i);
             SupplyAttachment att = new SupplyAttachment();
@@ -318,8 +314,9 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
             att.setFileSize(dto.getFileSize());
             att.setFileType(dto.getFileType());
             att.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : i);
-            attachmentMapper.insert(att);
+            entities.add(att);
         }
+        attachmentMapper.batchInsert(entities);
     }
 
     private void replaceAttachments(Long resourceId, List<AttachmentDTO> attachments) {
