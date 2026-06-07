@@ -15,6 +15,10 @@ public interface TagRelationClient {
     Result<List<TagSimpleVO>> getByBiz(@RequestParam("bizType") String bizType,
                                        @RequestParam("bizId") Long bizId);
 
+    @GetMapping("/api/v1/tag-relations/biz-ids")
+    Result<List<Long>> getBizIdsByTag(@RequestParam("tagId") Long tagId,
+                                      @RequestParam("bizType") String bizType);
+
     @PostMapping("/api/v1/tag-relations/batch")
     Result<Void> batchSet(@RequestBody Map<String, Object> request);
 

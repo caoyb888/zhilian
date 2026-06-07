@@ -19,6 +19,8 @@ import com.greenlink.glsupply.dto.response.ResourceDetailVO;
 import com.greenlink.glsupply.dto.response.ResourceVO;
 import com.greenlink.glsupply.dto.response.TagSimpleVO;
 import com.greenlink.glsupply.enums.AuditStatus;
+import com.greenlink.glsupply.es.EsPageResult;
+import com.greenlink.glsupply.es.ResourceEsSyncService;
 import com.greenlink.glsupply.feign.TagRelationClient;
 import com.greenlink.glsupply.helper.ResourceViewCountHelper;
 import com.greenlink.glsupply.mq.ResourceEventProducer;
@@ -37,10 +39,13 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,6 +65,9 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
 
     @Autowired(required = false)
     private ResourceViewCountHelper viewCountHelper;
+
+    @Autowired(required = false)
+    private ResourceEsSyncService esSyncService;
 
     @Override
     @Transactional
@@ -91,6 +99,62 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
 
     @Override
     public Page<ResourceVO> pageList(ResourcePageRequest request) {
+        // tagId 过滤：先从 gl-tag 取该标签关联的 resourceId 白名单
+        List<Long> tagScopeIds = resolveTagScopeIds(request.getTagId());
+        // 如果指定了 tagId 但没有任何资源挂这个标签，直接返回空
+        if (request.getTagId() != null && tagScopeIds != null && tagScopeIds.isEmpty()) {
+            return emptyPage(request);
+        }
+
+        // 有关键词时走 ES 路径，无关键词时走 MySQL 路径
+        if (StringUtils.hasText(request.getKeyword()) && esSyncService != null) {
+            return pageListByEs(request, tagScopeIds);
+        }
+        return pageListByMysql(request, tagScopeIds);
+    }
+
+    private Page<ResourceVO> pageListByEs(ResourcePageRequest request, List<Long> scopeIds) {
+        EsPageResult esResult;
+        try {
+            esResult = esSyncService.searchByKeyword(
+                    request.getKeyword(), request.getType(), request.getProvince(),
+                    scopeIds, request.getPage(), request.getSize());
+        } catch (Exception e) {
+            log.warn("ES 检索异常，降级到 MySQL 路径 keyword={}", request.getKeyword(), e);
+            return pageListByMysql(request, scopeIds);
+        }
+
+        if (esResult.orderedIds().isEmpty()) {
+            return emptyPage(request);
+        }
+
+        // 按 ES 返回的有序 ID 从 MySQL 取完整字段。
+        // auditStatus=APPROVED 二次校验：ES 同步存在延迟窗口，资源被拒绝后 ES 可能仍持有旧状态，
+        // 此处过滤确保即使 ES 数据陈旧也不泄露非公开资源。
+        QueryWrapper<SupplyResource> wrapper = new QueryWrapper<SupplyResource>()
+                .select("id", "member_id", "type", "title", "summary", "province", "city",
+                        "valid_until", "view_count", "audit_status", "created_at")
+                .in("id", esResult.orderedIds())
+                .eq("audit_status", AuditStatus.APPROVED.getCode());
+
+        List<SupplyResource> dbRecords = resourceMapper.selectList(wrapper);
+
+        // 在内存中按 ES 相关性顺序重排
+        Map<Long, SupplyResource> idMap = dbRecords.stream()
+                .collect(Collectors.toMap(SupplyResource::getId, r -> r));
+        List<ResourceVO> vos = esResult.orderedIds().stream()
+                .filter(idMap::containsKey)
+                .map(id -> toVOWithHighlight(idMap.get(id),
+                        esResult.highlightTitles().get(id),
+                        esResult.highlightSummaries().get(id)))
+                .toList();
+
+        Page<ResourceVO> voPage = new Page<>(request.getPage(), request.getSize(), esResult.total());
+        voPage.setRecords(vos);
+        return voPage;
+    }
+
+    private Page<ResourceVO> pageListByMysql(ResourcePageRequest request, List<Long> scopeIds) {
         QueryWrapper<SupplyResource> wrapper = new QueryWrapper<SupplyResource>()
                 .select("id", "member_id", "type", "title", "summary", "province", "city",
                         "valid_until", "view_count", "audit_status", "created_at")
@@ -99,10 +163,15 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
                 .eq(StringUtils.hasText(request.getType()), "type", request.getType())
                 .eq(StringUtils.hasText(request.getProvince()), "province", request.getProvince())
                 .eq(request.getMemberId() != null, "member_id", request.getMemberId())
+                // ES 降级时 keyword 仍通过 MySQL LIKE 保持过滤，防止降级路径返回全量数据
                 .and(StringUtils.hasText(request.getKeyword()), q -> q
                         .like("title", request.getKeyword())
                         .or().like("summary", request.getKeyword()))
                 .orderByDesc("created_at");
+
+        if (!CollectionUtils.isEmpty(scopeIds)) {
+            wrapper.in("id", scopeIds);
+        }
 
         Page<SupplyResource> dbPage = resourceMapper.selectPage(
                 new Page<>(request.getPage(), request.getSize()), wrapper);
@@ -111,6 +180,24 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
         // 列表接口不逐条调 gl-tag，避免 N+1 Feign 请求；标签在详情接口单独获取
         voPage.setRecords(dbPage.getRecords().stream().map(this::toVO).toList());
         return voPage;
+    }
+
+    /** 调用 gl-tag 取 tagId 关联的 resourceId 列表；null 表示未指定 tagId（不过滤） */
+    private List<Long> resolveTagScopeIds(Long tagId) {
+        if (tagId == null || tagRelationClient == null) return null;
+        try {
+            Result<List<Long>> result = tagRelationClient.getBizIdsByTag(tagId, BIZ_TYPE);
+            return result != null && result.getData() != null ? result.getData() : Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("获取标签资源 ID 失败 tagId={}，tagId 过滤已忽略", tagId, e);
+            return null;
+        }
+    }
+
+    private Page<ResourceVO> emptyPage(ResourcePageRequest request) {
+        Page<ResourceVO> empty = new Page<>(request.getPage(), request.getSize(), 0);
+        empty.setRecords(Collections.emptyList());
+        return empty;
     }
 
     @Override
@@ -412,12 +499,16 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
     }
 
     private ResourceVO toVO(SupplyResource r) {
+        return toVOWithHighlight(r, null, null);
+    }
+
+    private ResourceVO toVOWithHighlight(SupplyResource r, String hlTitle, String hlSummary) {
         ResourceVO vo = new ResourceVO();
         vo.setId(r.getId());
         vo.setMemberId(r.getMemberId());
         vo.setType(r.getType());
-        vo.setTitle(r.getTitle());
-        vo.setSummary(r.getSummary());
+        vo.setTitle(hlTitle != null ? hlTitle : r.getTitle());
+        vo.setSummary(hlSummary != null ? hlSummary : r.getSummary());
         vo.setProvince(r.getProvince());
         vo.setCity(r.getCity());
         vo.setValidUntil(r.getValidUntil());

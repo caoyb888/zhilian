@@ -23,6 +23,12 @@ public class TagRelationController {
         return Result.ok(tagRelationService.getTagsByBiz(bizType, bizId));
     }
 
+    @GetMapping("/biz-ids")
+    public Result<List<Long>> getBizIdsByTag(@RequestParam Long tagId,
+                                              @RequestParam String bizType) {
+        return Result.ok(tagRelationService.getBizIdsByTag(tagId, bizType));
+    }
+
     @PostMapping("/batch")
     public Result<Void> batchSet(@Valid @RequestBody BatchSetTagRelationsRequest request) {
         tagRelationService.batchSet(request);
