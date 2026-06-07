@@ -46,6 +46,38 @@ export interface ResourceItem {
   highlightSummary: string | null
 }
 
+export interface AttachmentItem {
+  id: number
+  fileName: string
+  fileUrl: string
+  fileSize: number | null
+  fileType: string | null
+  sortOrder: number
+}
+
+export interface ResourceDetail {
+  id: number
+  memberId: number
+  accountId: number
+  type: string
+  title: string
+  content: string | null
+  summary: string | null
+  province: string | null
+  city: string | null
+  cooperationMode: string | null
+  validUntil: string | null
+  viewCount: number
+  contactVisible: number
+  auditStatus: number
+  auditRemark: string | null
+  createdAt: string
+  updatedAt: string | null
+  attachments: AttachmentItem[]
+  tags: ResourceTagItem[]
+  isFavorited?: boolean
+}
+
 export interface ResourceListParams {
   page: number
   size: number
@@ -56,6 +88,17 @@ export interface ResourceListParams {
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
+
+export function useResourceDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['supply', 'resource', 'detail', id],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<ResourceDetail>>(`/supply/resources/${id}`)
+      return res.data.data
+    },
+    enabled: id !== null,
+  })
+}
 
 export function useResourceList(params: ResourceListParams) {
   return useQuery({
@@ -87,7 +130,7 @@ export function useUnfavoriteResource() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (resourceId: number) =>
-      http.delete(`/match/favorites/RESOURCE/${resourceId}`),
+      http.delete('/match/favorites', { data: { bizType: 'RESOURCE', bizId: resourceId } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites', 'RESOURCE'] }),
   })
 }
