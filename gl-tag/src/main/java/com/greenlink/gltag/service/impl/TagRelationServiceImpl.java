@@ -31,6 +31,11 @@ public class TagRelationServiceImpl implements TagRelationService {
     }
 
     @Override
+    public List<Long> getBizIdsByTag(Long tagId, String bizType) {
+        return tagRelationMapper.findBizIdsByTag(tagId, bizType);
+    }
+
+    @Override
     @Transactional
     public void batchSet(BatchSetTagRelationsRequest request) {
         tagRelationMapper.deleteByBiz(request.getBizType(), request.getBizId());

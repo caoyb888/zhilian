@@ -20,6 +20,12 @@ public class TagRelationClientFallback implements TagRelationClient {
     }
 
     @Override
+    public Result<List<Long>> getBizIdsByTag(Long tagId, String bizType) {
+        log.warn("gl-tag getBizIdsByTag 降级, tagId={} bizType={}", tagId, bizType);
+        return Result.ok(Collections.emptyList());
+    }
+
+    @Override
     public Result<Void> batchSet(Map<String, Object> request) {
         log.warn("gl-tag batchSet 降级, request={}", request);
         return Result.ok();
