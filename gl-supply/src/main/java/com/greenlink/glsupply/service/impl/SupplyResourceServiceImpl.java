@@ -160,6 +160,10 @@ public class SupplyResourceServiceImpl implements SupplyResourceService {
                 .eq(StringUtils.hasText(request.getType()), "type", request.getType())
                 .eq(StringUtils.hasText(request.getProvince()), "province", request.getProvince())
                 .eq(request.getMemberId() != null, "member_id", request.getMemberId())
+                // ES 降级时 keyword 仍通过 MySQL LIKE 保持过滤，防止降级路径返回全量数据
+                .and(StringUtils.hasText(request.getKeyword()), q -> q
+                        .like("title", request.getKeyword())
+                        .or().like("summary", request.getKeyword()))
                 .orderByDesc("created_at");
 
         if (!CollectionUtils.isEmpty(scopeIds)) {
