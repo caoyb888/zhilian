@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Sparkles, Building2, MapPin, ChevronRight, CheckCircle2, Zap,
 } from 'lucide-react'
