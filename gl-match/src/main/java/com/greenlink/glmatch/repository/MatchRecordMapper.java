@@ -90,6 +90,37 @@ public interface MatchRecordMapper extends BaseMapper<MatchRecord> {
     List<MemberCompletedCount> countCompletedByResourceMemberIds(@Param("memberIds") List<Long> memberIds);
 
     /**
+     * 检查 isApplied：给定资源 ID 与若干需求 ID，返回已有任意对接记录（不限状态）的需求 ID 集合。
+     * 用于推荐列表标记 isApplied=true（含被拒/已撤销记录）。
+     */
+    @Select("<script>" +
+            "SELECT demand_id FROM match_record " +
+            "WHERE resource_id = #{resourceId} " +
+            "AND demand_id IN " +
+            "<foreach item='id' collection='demandIds' open='(' separator=',' close=')'>" +
+            "#{id}" +
+            "</foreach>" +
+            " AND is_deleted = 0" +
+            "</script>")
+    Set<Long> findAnyMatchedDemandIds(@Param("resourceId") Long resourceId,
+                                       @Param("demandIds") List<Long> demandIds);
+
+    /**
+     * 检查 isApplied：给定需求 ID 与若干资源 ID，返回已有任意对接记录（不限状态）的资源 ID 集合。
+     */
+    @Select("<script>" +
+            "SELECT resource_id FROM match_record " +
+            "WHERE demand_id = #{demandId} " +
+            "AND resource_id IN " +
+            "<foreach item='id' collection='resourceIds' open='(' separator=',' close=')'>" +
+            "#{id}" +
+            "</foreach>" +
+            " AND is_deleted = 0" +
+            "</script>")
+    Set<Long> findAnyMatchedResourceIds(@Param("demandId") Long demandId,
+                                         @Param("resourceIds") List<Long> resourceIds);
+
+    /**
      * 统计各会员作为需求方已完成的对接次数（status=5）。
      */
     @Select("<script>" +

@@ -16,6 +16,7 @@ import com.greenlink.glmember.dto.request.AuditMemberRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
 import com.greenlink.glmember.dto.response.AdminAccountVO;
+import com.greenlink.glmember.dto.response.MemberBriefVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
@@ -384,6 +385,20 @@ public class MemberServiceImpl implements MemberService {
                     .build();
         }).collect(Collectors.toList());
         return PageResult.of(records, iPage.getTotal(), page, size);
+    }
+
+    @Override
+    public List<MemberBriefVO> batchBrief(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return java.util.Collections.emptyList();
+        return memberUnitMapper.selectBatchIds(ids).stream()
+                .map(u -> {
+                    MemberBriefVO vo = new MemberBriefVO();
+                    vo.setId(u.getId());
+                    vo.setName(u.getName());
+                    vo.setMemberLevel(u.getMemberLevel());
+                    vo.setProvince(u.getProvince());
+                    return vo;
+                }).collect(Collectors.toList());
     }
 
     private void checkUpdatePermission(Long memberId, Long requestingAccountId, String roles) {

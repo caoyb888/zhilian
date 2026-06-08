@@ -7,6 +7,7 @@ import com.greenlink.glmember.dto.request.MemberStatusRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
 import com.greenlink.glmember.dto.response.AdminAccountVO;
+import com.greenlink.glmember.dto.response.MemberBriefVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
@@ -16,6 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/members")
@@ -89,6 +92,12 @@ public class MemberController {
         requireSuperAdmin(request);
         memberService.updateMemberStatus(memberId, req.getStatus());
         return Result.ok();
+    }
+
+    /** 批量查询会员单位简要信息（供服务间 Feign 内部调用） */
+    @PostMapping("/batch-brief")
+    public Result<List<MemberBriefVO>> batchBrief(@RequestBody List<Long> ids) {
+        return Result.ok(memberService.batchBrief(ids));
     }
 
     /** 管理端账号列表（SUPER_ADMIN / AUDITOR） */
