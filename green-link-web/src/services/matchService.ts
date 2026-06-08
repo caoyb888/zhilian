@@ -65,6 +65,7 @@ export function useApplyMatch() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['match', 'recommendations'] })
+      queryClient.invalidateQueries({ queryKey: ['match', 'records', 'my'] })
     },
   })
 }
