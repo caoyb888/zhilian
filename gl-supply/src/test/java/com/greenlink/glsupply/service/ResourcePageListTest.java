@@ -211,7 +211,8 @@ class ResourcePageListTest {
 
         Page<ResourceVO> result = service.pageList(req);
 
-        assertThat(result.getRecords().get(0).getTitle()).isEqualTo("<em>光伏</em>组件");
+        assertThat(result.getRecords().get(0).getHighlightTitle()).isEqualTo("<em>光伏</em>组件");
+        assertThat(result.getRecords().get(0).getTitle()).isEqualTo("光伏组件供应商");
     }
 
     private SupplyResource buildResource(Long id) {
