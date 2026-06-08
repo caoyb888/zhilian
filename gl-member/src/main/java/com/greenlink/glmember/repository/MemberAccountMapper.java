@@ -34,6 +34,20 @@ public interface MemberAccountMapper extends BaseMapper<MemberAccount> {
     List<MemberAccount> findSubAccountsByMemberId(@Param("memberId") Long memberId);
 
     @Select("<script>" +
+            "SELECT id, member_id FROM member_account " +
+            "WHERE member_id IN " +
+            "<foreach item='id' collection='memberIds' open='(' separator=',' close=')'>" +
+            "#{id}" +
+            "</foreach>" +
+            " AND parent_id IS NULL AND status = 1 AND is_deleted = 0" +
+            "</script>")
+    @org.apache.ibatis.annotations.Results({
+            @org.apache.ibatis.annotations.Result(column = "id",        property = "id"),
+            @org.apache.ibatis.annotations.Result(column = "member_id", property = "memberId")
+    })
+    List<MemberAccount> findMainAccountsByMemberIds(@Param("memberIds") List<Long> memberIds);
+
+    @Select("<script>" +
             "SELECT id, member_id, parent_id, username, phone, email, real_name, " +
             "avatar_url, status, last_login_at, created_at, updated_at " +
             "FROM member_account WHERE is_deleted = 0" +

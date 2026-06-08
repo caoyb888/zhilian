@@ -1,12 +1,14 @@
 package com.greenlink.glmatch.service.impl;
 
 import com.greenlink.common.exception.BizException;
+import com.greenlink.common.mq.MatchEventMessage;
 import com.greenlink.common.result.Result;
 import com.greenlink.glmatch.domain.MatchRecord;
 import com.greenlink.glmatch.dto.SupplyBriefDTO;
 import com.greenlink.glmatch.dto.request.MatchApplyRequest;
 import com.greenlink.glmatch.dto.response.MatchApplyVO;
 import com.greenlink.glmatch.feign.SupplyClient;
+import com.greenlink.glmatch.mq.MatchEventProducer;
 import com.greenlink.glmatch.repository.MatchRecordMapper;
 import com.greenlink.glmatch.service.MatchApplyService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class MatchApplyServiceImpl implements MatchApplyService {
 
     private final SupplyClient supplyClient;
     private final MatchRecordMapper matchRecordMapper;
+    private final MatchEventProducer matchEventProducer;
 
     @Override
     @Transactional
@@ -77,6 +80,19 @@ public class MatchApplyServiceImpl implements MatchApplyService {
         matchRecordMapper.insert(record);
         log.info("对接申请创建成功 recordId={} resourceId={} demandId={} initiatorAccountId={}",
                 record.getId(), req.getResourceId(), req.getDemandId(), accountId);
+
+        matchEventProducer.publish(MatchEventMessage.builder()
+                .eventType(MatchEventMessage.EventType.MATCH_APPLIED.name())
+                .matchId(record.getId())
+                .resourceId(record.getResourceId())
+                .demandId(record.getDemandId())
+                .resourceMemberId(record.getResourceMemberId())
+                .demandMemberId(record.getDemandMemberId())
+                .actorAccountId(accountId)
+                .actorMemberId(memberId)
+                .resourceTitle(resource.getTitle())
+                .demandTitle(demand.getTitle())
+                .build());
 
         return MatchApplyVO.builder()
                 .recordId(record.getId())

@@ -401,6 +401,16 @@ public class MemberServiceImpl implements MemberService {
                 }).collect(Collectors.toList());
     }
 
+    @Override
+    public java.util.Map<Long, Long> getMainAccountIdMap(List<Long> memberIds) {
+        if (memberIds == null || memberIds.isEmpty()) return java.util.Collections.emptyMap();
+        return accountMapper.findMainAccountsByMemberIds(memberIds).stream()
+                .collect(Collectors.toMap(
+                        com.greenlink.glmember.domain.MemberAccount::getMemberId,
+                        com.greenlink.glmember.domain.MemberAccount::getId,
+                        (a, b) -> a));
+    }
+
     private void checkUpdatePermission(Long memberId, Long requestingAccountId, String roles) {
         boolean isAdmin = roles != null &&
                 (roles.contains("SUPER_ADMIN") || roles.contains("CONTENT_ADMIN"));

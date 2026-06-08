@@ -100,6 +100,12 @@ public class MemberController {
         return Result.ok(memberService.batchBrief(ids));
     }
 
+    /** 批量查询各会员主账号ID（供 gl-message 内部调用，无需鉴权） */
+    @PostMapping("/internal/main-account-ids")
+    public Result<java.util.Map<Long, Long>> getMainAccountIds(@RequestBody List<Long> memberIds) {
+        return Result.ok(memberService.getMainAccountIdMap(memberIds));
+    }
+
     /** 管理端账号列表（SUPER_ADMIN / AUDITOR） */
     @GetMapping("/accounts")
     public Result<PageResult<AdminAccountVO>> listAllAccounts(

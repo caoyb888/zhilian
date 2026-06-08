@@ -34,6 +34,10 @@ rocketmq:
     group: gl-message-producer
     send-message-timeout: 3000
 
+gl:
+  member:
+    url: ${GL_MEMBER_URL:http://localhost:18082}
+
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.greenlink.glmessage.domain
