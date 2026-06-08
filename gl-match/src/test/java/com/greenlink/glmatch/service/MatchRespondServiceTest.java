@@ -5,6 +5,7 @@ import com.greenlink.common.exception.BizException;
 import com.greenlink.glmatch.domain.MatchRecord;
 import com.greenlink.glmatch.dto.request.MatchRespondRequest;
 import com.greenlink.glmatch.dto.response.MatchRespondVO;
+import com.greenlink.glmatch.mq.MatchEventProducer;
 import com.greenlink.glmatch.repository.MatchRecordMapper;
 import com.greenlink.glmatch.service.impl.MatchRespondServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,8 @@ class MatchRespondServiceTest {
 
     @Mock
     private MatchRecordMapper matchRecordMapper;
+    @Mock
+    private MatchEventProducer matchEventProducer;
 
     @InjectMocks
     private MatchRespondServiceImpl service;

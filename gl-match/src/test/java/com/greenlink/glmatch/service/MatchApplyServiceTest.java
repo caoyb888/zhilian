@@ -7,6 +7,7 @@ import com.greenlink.glmatch.dto.SupplyBriefDTO;
 import com.greenlink.glmatch.dto.request.MatchApplyRequest;
 import com.greenlink.glmatch.dto.response.MatchApplyVO;
 import com.greenlink.glmatch.feign.SupplyClient;
+import com.greenlink.glmatch.mq.MatchEventProducer;
 import com.greenlink.glmatch.repository.MatchRecordMapper;
 import com.greenlink.glmatch.service.impl.MatchApplyServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,8 @@ class MatchApplyServiceTest {
     private SupplyClient supplyClient;
     @Mock
     private MatchRecordMapper matchRecordMapper;
+    @Mock
+    private MatchEventProducer matchEventProducer;
 
     @InjectMocks
     private MatchApplyServiceImpl service;
