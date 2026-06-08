@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Sparkles, Building2, MapPin, ChevronRight, CheckCircle2, Zap,
 } from 'lucide-react'
@@ -9,6 +9,7 @@ import { Spinner } from '@/components/Spinner'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { PortalNav } from '@/business/PortalNav'
+import { ApplyMatchDialog, type ApplyTarget } from '@/business/ApplyMatchDialog'
 import { useAuthStore } from '@/stores/authStore'
 import { useMyResources, useMyDemands, RESOURCE_TYPE_LABELS, DEMAND_TYPE_LABELS, type ResourceItem, type DemandItem } from '@/services/supplyService'
 import { useRecommendations, type RecommendItem } from '@/services/matchService'
@@ -227,7 +228,8 @@ function LoginPrompt() {
 export default function SupplyRecommendPage() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
+
+  const [applyTarget, setApplyTarget] = useState<{ target: ApplyTarget; defaultSourceId?: number } | null>(null)
 
   const sourceType = (searchParams.get('sourceType') as 'RESOURCE' | 'DEMAND') ?? 'RESOURCE'
   const sourceId   = Number(searchParams.get('sourceId')) || 0
@@ -282,9 +284,15 @@ export default function SupplyRecommendPage() {
     setParam({ page: String(p) })
   }
 
-  function handleApply(_item: RecommendItem) {
-    // S5-11 will wire this up with the apply dialog
-    navigate(`/supply/recommend?sourceType=${activeTab}&sourceId=${sourceId}&applyTarget=${_item.targetId}&applyType=${_item.targetType}`)
+  function handleApply(item: RecommendItem) {
+    setApplyTarget({
+      target: {
+        type: item.targetType as 'RESOURCE' | 'DEMAND',
+        id: item.targetId,
+        title: item.targetTitle,
+      },
+      defaultSourceId: sourceId > 0 ? sourceId : undefined,
+    })
   }
 
   return (
@@ -307,6 +315,15 @@ export default function SupplyRecommendPage() {
       </div>
 
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-6 flex-1">
+        {applyTarget && (
+          <ApplyMatchDialog
+            key={`${applyTarget.target.type}-${applyTarget.target.id}`}
+            target={applyTarget.target}
+            defaultSourceId={applyTarget.defaultSourceId}
+            onClose={() => setApplyTarget(null)}
+          />
+        )}
+
         {!accountInfo ? (
           <LoginPrompt />
         ) : (

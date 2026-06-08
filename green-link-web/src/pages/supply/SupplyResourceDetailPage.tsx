@@ -3,12 +3,13 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
   ArrowLeft, Building2, Calendar, Clock, Download, Eye,
-  FileText, Heart, Lock, Mail, MapPin, Paperclip, Phone, User, X,
+  FileText, Heart, Lock, Mail, MapPin, Paperclip, Phone, User, X, Handshake,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { PortalNav } from '@/business/PortalNav'
 import { Spinner } from '@/components/Spinner'
 import { ErrorState } from '@/components/states/ErrorState'
+import { ApplyMatchDialog } from '@/business/ApplyMatchDialog'
 import { useAuthStore } from '@/stores/authStore'
 import {
   useResourceDetail,
@@ -259,6 +260,7 @@ export default function SupplyResourceDetailPage() {
   const [favOverride, setFavOverride] = useState<boolean | null>(null)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
+  const [applyOpen, setApplyOpen] = useState(false)
 
   const { data: resource, isLoading, isError } = useResourceDetail(resourceId)
 
@@ -544,6 +546,18 @@ export default function SupplyResourceDetailPage() {
                   <Icon icon={Heart} size={16} className={favorited ? 'fill-rose-500 text-rose-500' : ''} />
                   {favorited ? '已收藏' : '收藏资源'}
                 </button>
+
+                {/* Apply — only shown to logged-in non-owners */}
+                {isLoggedIn && accountInfo?.memberId !== resource.memberId && (
+                  <button
+                    type="button"
+                    onClick={() => setApplyOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-500 py-3 text-sm font-semibold text-white hover:bg-emerald-600 transition-all duration-200"
+                  >
+                    <Icon icon={Handshake} size={16} />
+                    发起对接申请
+                  </button>
+                )}
               </aside>
             </div>
           </div>
@@ -557,6 +571,13 @@ export default function SupplyResourceDetailPage() {
       </footer>
 
       {loginPrompt && <LoginPromptModal onClose={() => setLoginPrompt(false)} />}
+
+      {applyOpen && resource && (
+        <ApplyMatchDialog
+          target={{ type: 'RESOURCE', id: resource.id, title: resource.title }}
+          onClose={() => setApplyOpen(false)}
+        />
+      )}
     </div>
   )
 }

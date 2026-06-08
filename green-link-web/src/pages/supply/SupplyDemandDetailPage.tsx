@@ -3,12 +3,13 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
   ArrowLeft, Banknote, Building2, Calendar, Clock, Download,
-  Eye, FileText, Heart, Lock, Mail, MapPin, Paperclip, Phone, User, X,
+  Eye, FileText, Handshake, Heart, Lock, Mail, MapPin, Paperclip, Phone, User, X,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { PortalNav } from '@/business/PortalNav'
 import { Spinner } from '@/components/Spinner'
 import { ErrorState } from '@/components/states/ErrorState'
+import { ApplyMatchDialog } from '@/business/ApplyMatchDialog'
 import { useAuthStore } from '@/stores/authStore'
 import {
   useDemandDetail,
@@ -218,6 +219,7 @@ export default function SupplyDemandDetailPage() {
   const [favOverride, setFavOverride] = useState<boolean | null>(null)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
+  const [applyOpen, setApplyOpen] = useState(false)
 
   const { data: demand, isLoading, isError } = useDemandDetail(demandId)
 
@@ -474,6 +476,18 @@ export default function SupplyDemandDetailPage() {
                   <Icon icon={Heart} size={16} className={favorited ? 'fill-rose-500 text-rose-500' : ''} />
                   {favorited ? '已收藏' : '收藏需求'}
                 </button>
+
+                {/* Apply — only shown to logged-in non-owners */}
+                {isLoggedIn && accountInfo?.memberId !== demand.memberId && (
+                  <button
+                    type="button"
+                    onClick={() => setApplyOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-500 py-3 text-sm font-semibold text-white hover:bg-emerald-600 transition-all duration-200"
+                  >
+                    <Icon icon={Handshake} size={16} />
+                    发起对接申请
+                  </button>
+                )}
               </aside>
             </div>
           </div>
@@ -487,6 +501,13 @@ export default function SupplyDemandDetailPage() {
       </footer>
 
       {loginPrompt && <LoginPromptModal onClose={() => setLoginPrompt(false)} />}
+
+      {applyOpen && demand && (
+        <ApplyMatchDialog
+          target={{ type: 'DEMAND', id: demand.id, title: demand.title }}
+          onClose={() => setApplyOpen(false)}
+        />
+      )}
     </div>
   )
 }
