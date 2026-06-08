@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import http from './http'
@@ -150,6 +151,32 @@ export function useMyMatchRecords(params: MyMatchRecordsParams, enabled = true) 
     enabled,
     placeholderData: (prev) => prev,
   })
+}
+
+// ─── Active match check ───────────────────────────────────────────────────────
+
+/** Status values that block a new match application (backend 3102 logic). */
+const ACTIVE_STATUSES = new Set([1, 2, 3, 5])
+
+/**
+ * Returns the first active match record that involves the given resource or demand,
+ * or null when none exists. `enabled` should be false when the user is not logged
+ * in or is the owner of the target (so they cannot apply anyway).
+ */
+export function useActiveMatchRecord(
+  targetField: 'resourceId' | 'demandId',
+  targetId: number | undefined,
+  enabled: boolean,
+): MatchRecordItem | null {
+  const query = useMyMatchRecords({ page: 1, size: 200 }, enabled && targetId !== undefined)
+  return useMemo(() => {
+    if (!query.data?.records?.length || targetId === undefined) return null
+    return (
+      query.data.records.find(
+        (r) => ACTIVE_STATUSES.has(r.status) && r[targetField] === targetId,
+      ) ?? null
+    )
+  }, [query.data, targetField, targetId])
 }
 
 // ─── Recommendations ─────────────────────────────────────────────────────────
