@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import { Search } from 'lucide-react'
@@ -118,11 +118,11 @@ export default function PortalArticleListPage() {
   const page = Number(searchParams.get('page')) || 1
 
   const [inputValue, setInputValue] = useState(keyword)
-
-  // Keep input in sync when URL changes (e.g. back navigation)
-  useEffect(() => {
+  const [prevKeyword, setPrevKeyword] = useState(keyword)
+  if (prevKeyword !== keyword) {
+    setPrevKeyword(keyword)
     setInputValue(keyword)
-  }, [keyword])
+  }
 
   const setParam = useCallback(
     (updates: Record<string, string | undefined>) => {

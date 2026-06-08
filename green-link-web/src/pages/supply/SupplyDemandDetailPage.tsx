@@ -215,15 +215,13 @@ export default function SupplyDemandDetailPage() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const isLoggedIn = !!accountInfo
 
-  const [favorited, setFavorited] = useState(false)
+  const [favOverride, setFavOverride] = useState<boolean | null>(null)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   const { data: demand, isLoading, isError } = useDemandDetail(demandId)
 
-  useEffect(() => {
-    if (demand?.isFavorited !== undefined) setFavorited(demand.isFavorited)
-  }, [demand?.isFavorited])
+  const favorited = favOverride ?? (demand?.isFavorited ?? false)
 
   const { data: memberPublic } = useMemberDetail(demand?.memberId ?? null)
 
@@ -244,12 +242,12 @@ export default function SupplyDemandDetailPage() {
     }
     if (favorited) {
       unfavoriteMutation.mutate(demand!.id, {
-        onSuccess: () => setFavorited(false),
+        onSuccess: () => setFavOverride(false),
         onError: showError,
       })
     } else {
       favoriteMutation.mutate(demand!.id, {
-        onSuccess: () => setFavorited(true),
+        onSuccess: () => setFavOverride(true),
         onError: showError,
       })
     }

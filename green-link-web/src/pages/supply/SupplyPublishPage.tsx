@@ -684,7 +684,7 @@ export default function SupplyPublishPage() {
       const hasContent = !!(parsed.title || parsed.content || (parsed.tagIds?.length ?? 0) > 0)
       if (hasContent) {
         reset({ ...DEFAULT_VALUES, ...parsed }, { keepDefaultValues: false })
-        setDraftRestored(true)
+        setTimeout(() => setDraftRestored(true), 0)
       }
     } catch {
       // ignore corrupt draft

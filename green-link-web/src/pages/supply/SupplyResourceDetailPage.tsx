@@ -256,17 +256,13 @@ export default function SupplyResourceDetailPage() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const isLoggedIn = !!accountInfo
 
-  const [favorited, setFavorited] = useState(false)
+  const [favOverride, setFavOverride] = useState<boolean | null>(null)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   const { data: resource, isLoading, isError } = useResourceDetail(resourceId)
 
-  useEffect(() => {
-    if (resource?.isFavorited !== undefined) {
-      setFavorited(resource.isFavorited)
-    }
-  }, [resource?.isFavorited])
+  const favorited = favOverride ?? (resource?.isFavorited ?? false)
 
   // Member name is fetched via contact card for logged-in users, but we also
   // need it for the header (member name display) regardless of login status.
@@ -291,12 +287,12 @@ export default function SupplyResourceDetailPage() {
     }
     if (favorited) {
       unfavoriteMutation.mutate(resource!.id, {
-        onSuccess: () => setFavorited(false),
+        onSuccess: () => setFavOverride(false),
         onError: showError,
       })
     } else {
       favoriteMutation.mutate(resource!.id, {
-        onSuccess: () => setFavorited(true),
+        onSuccess: () => setFavOverride(true),
         onError: showError,
       })
     }

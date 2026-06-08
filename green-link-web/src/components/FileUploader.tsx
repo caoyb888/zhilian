@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { uploadFileWithProgress, type FileUploadResult } from '@/services/fileService'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -8,7 +8,7 @@ interface UploadItem {
   name: string
   size: number
   previewUrl?: string
-  status: 'pending' | 'uploading' | 'done' | 'error'
+  status: 'uploading' | 'done' | 'error'
   progress: number
   result?: FileUploadResult
   error?: string
@@ -143,7 +143,9 @@ export function FileUploader({
   const inputRef = useRef<HTMLInputElement>(null)
   const fileRegistry = useRef(new Map<string, File>())
   const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  useLayoutEffect(() => {
+    onChangeRef.current = onChange
+  })
 
   // ─── Notify parent when done-set changes (no side-effects in updaters) ───
   const prevDoneKey = useRef('')
@@ -201,19 +203,6 @@ export function FileUploader({
     [bizType, bizId]
   )
 
-  // Pick up pending items and kick off uploads
-  useEffect(() => {
-    const pending = items.filter((i) => i.status === 'pending')
-    if (pending.length === 0) return
-    setItems((prev) =>
-      prev.map((it) => (it.status === 'pending' ? { ...it, status: 'uploading' } : it))
-    )
-    pending.forEach((it) => {
-      const file = fileRegistry.current.get(it.uid)
-      if (file) startUpload(it.uid, file)
-    })
-  }, [items, startUpload])
-
   // ─── Add files ────────────────────────────────────────────────────────────
 
   const addFiles = useCallback(
@@ -222,13 +211,18 @@ export function FileUploader({
       const maxSizeBytes = maxSizeMB * 1024 * 1024
       const arr = Array.from(incoming)
 
+      // Build new items synchronously so we can kick off uploads immediately
+      const toUpload: Array<{ uid: string; file: File }> = []
+      const newItems: UploadItem[] = []
+
       setItems((prev) => {
         const activeCount = maxFiles === 1 ? 0 : prev.filter((i) => i.status !== 'error').length
         const slots = maxFiles - activeCount
         if (slots <= 0) return prev
 
         const toAdd = arr.slice(0, slots)
-        const newItems: UploadItem[] = []
+        toUpload.length = 0
+        newItems.length = 0
 
         for (const file of toAdd) {
           const id = makeUid()
@@ -253,7 +247,8 @@ export function FileUploader({
             ? URL.createObjectURL(file)
             : undefined
           fileRegistry.current.set(id, file)
-          newItems.push({ uid: id, name: file.name, size: file.size, previewUrl, status: 'pending', progress: 0 })
+          newItems.push({ uid: id, name: file.name, size: file.size, previewUrl, status: 'uploading', progress: 0 })
+          toUpload.push({ uid: id, file })
         }
 
         if (maxFiles === 1) {
@@ -265,8 +260,11 @@ export function FileUploader({
         }
         return [...prev, ...newItems]
       })
+
+      // Kick off uploads outside the state updater
+      toUpload.forEach(({ uid, file }) => startUpload(uid, file))
     },
-    [disabled, accept, maxFiles, maxSizeMB]
+    [disabled, accept, maxFiles, maxSizeMB, startUpload]
   )
 
   // ─── Remove ───────────────────────────────────────────────────────────────
