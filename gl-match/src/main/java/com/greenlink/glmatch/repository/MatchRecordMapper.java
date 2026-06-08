@@ -121,6 +121,18 @@ public interface MatchRecordMapper extends BaseMapper<MatchRecord> {
                                          @Param("resourceIds") List<Long> resourceIds);
 
     /**
+     * 判断 (resourceId, demandId) 对是否存在进行中的对接记录（status: 1待响应 2已接受 3洽谈中 5已完成）。
+     * 用于发起申请时的重复校验，返回 true 则拒绝，错误码 3102。
+     */
+    @Select("SELECT COUNT(1) FROM match_record " +
+            "WHERE resource_id = #{resourceId} " +
+            "AND demand_id = #{demandId} " +
+            "AND status IN (1,2,3,5) " +
+            "AND is_deleted = 0")
+    boolean existsActiveRecord(@Param("resourceId") Long resourceId,
+                                @Param("demandId") Long demandId);
+
+    /**
      * 统计各会员作为需求方已完成的对接次数（status=5）。
      */
     @Select("<script>" +
