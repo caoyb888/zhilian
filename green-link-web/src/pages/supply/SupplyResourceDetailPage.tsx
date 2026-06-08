@@ -19,6 +19,7 @@ import {
   type AttachmentItem,
 } from '@/services/supplyService'
 import { useMemberDetail } from '@/services/memberService'
+import { useActiveMatchRecord } from '@/services/matchService'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -263,6 +264,12 @@ export default function SupplyResourceDetailPage() {
   const [applyOpen, setApplyOpen] = useState(false)
 
   const { data: resource, isLoading, isError } = useResourceDetail(resourceId)
+
+  const activeMatchRecord = useActiveMatchRecord(
+    'resourceId',
+    resource?.id,
+    isLoggedIn && !!resource && accountInfo?.memberId !== resource.memberId,
+  )
 
   const favorited = favOverride ?? (resource?.isFavorited ?? false)
 
@@ -551,11 +558,16 @@ export default function SupplyResourceDetailPage() {
                 {isLoggedIn && accountInfo?.memberId !== resource.memberId && (
                   <button
                     type="button"
-                    onClick={() => setApplyOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-500 py-3 text-sm font-semibold text-white hover:bg-emerald-600 transition-all duration-200"
+                    disabled={!!activeMatchRecord}
+                    onClick={() => !activeMatchRecord && setApplyOpen(true)}
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-all duration-200 ${
+                      activeMatchRecord
+                        ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed'
+                        : 'border-emerald-300 bg-emerald-500 text-white hover:bg-emerald-600'
+                    }`}
                   >
                     <Icon icon={Handshake} size={16} />
-                    发起对接申请
+                    {activeMatchRecord ? '已申请' : '发起对接申请'}
                   </button>
                 )}
               </aside>
