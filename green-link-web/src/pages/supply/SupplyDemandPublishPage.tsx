@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useBlocker } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Clock,
@@ -472,26 +472,6 @@ function Step4Preview() {
   )
 }
 
-// ─── Leave blocker modal ──────────────────────────────────────────────────────
-
-function LeaveBlockerModal({ onProceed, onStay }: { onProceed: () => void; onStay: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div className="relative rounded-2xl bg-white p-8 shadow-xl max-w-sm w-full mx-4">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-500 mx-auto">
-          <Icon icon={AlertCircle} size={24} />
-        </div>
-        <h3 className="text-center text-base font-semibold text-stone-900 mb-2">确认离开？</h3>
-        <p className="text-center text-sm text-stone-500 mb-6">您有未保存的内容，离开后草稿将不会自动保存，请确认操作。</p>
-        <div className="flex gap-3">
-          <button type="button" onClick={onStay} className="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200">继续编辑</button>
-          <button type="button" onClick={onProceed} className="flex-1 rounded-lg bg-red-500 py-2.5 text-sm font-medium text-white hover:bg-red-600 transition-all duration-200">确认离开</button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ─── Success state ────────────────────────────────────────────────────────────
 
@@ -568,11 +548,6 @@ export default function SupplyDemandPublishPage() {
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [isDirty, submitSuccess])
-
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isDirty && !submitSuccess && currentLocation.pathname !== nextLocation.pathname,
-  )
 
   const imageUploadFn = useCallback(async (file: File): Promise<string> => {
     const result = await uploadFileWithProgress(file, { bizType: 'DEMAND' })
@@ -711,9 +686,6 @@ export default function SupplyDemandPublishPage() {
         </div>
       </footer>
 
-      {blocker.state === 'blocked' && (
-        <LeaveBlockerModal onProceed={() => blocker.proceed()} onStay={() => blocker.reset()} />
-      )}
     </div>
   )
 }
