@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { Leaf, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 import { usePermission } from '@/hooks/usePermission'
@@ -55,10 +55,12 @@ export default function AdminLayout() {
     <div className="flex min-h-screen bg-stone-50">
       {/* 桌面侧边栏 */}
       <aside className="hidden w-56 shrink-0 border-r border-stone-200 bg-white md:flex md:flex-col">
-        <div className="flex h-14 items-center gap-2 border-b border-stone-100 px-4">
-          <div className="h-7 w-7 rounded-lg bg-brand-500 flex items-center justify-center">
-            <Icon icon={Leaf} size={16} className="text-white" />
-          </div>
+        <div className="flex h-14 items-center gap-2.5 border-b border-stone-100 px-4">
+          <img
+            src="/lsdt-logo.png"
+            alt="山东省绿色低碳产业发展协会"
+            className="h-7 w-7 rounded-full object-contain ring-1 ring-stone-200"
+          />
           <span className="text-sm font-semibold text-brand-700">绿产智链管理端</span>
         </div>
         {sidebar}
@@ -73,7 +75,14 @@ export default function AdminLayout() {
           />
           <aside className="relative z-50 flex h-full w-56 flex-col bg-white shadow-xl">
             <div className="flex h-14 items-center justify-between border-b border-stone-100 px-4">
-              <span className="text-sm font-semibold text-brand-700">绿产智链管理端</span>
+              <div className="flex items-center gap-2.5">
+                <img
+                  src="/lsdt-logo.png"
+                  alt="山东省绿色低碳产业发展协会"
+                  className="h-7 w-7 rounded-full object-contain ring-1 ring-stone-200"
+                />
+                <span className="text-sm font-semibold text-brand-700">绿产智链管理端</span>
+              </div>
               <button
                 className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100"
                 onClick={() => setSidebarOpen(false)}

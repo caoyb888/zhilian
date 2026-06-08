@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Leaf, Menu, Sparkles, X } from 'lucide-react'
+import { Menu, Sparkles, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -24,12 +24,16 @@ export function PortalNav() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/portal" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-brand-500 flex items-center justify-center">
-              <Icon icon={Leaf} size={18} className="text-white" />
+          <Link to="/portal" className="flex items-center gap-2.5">
+            <img
+              src="/lsdt-logo.png"
+              alt="山东省绿色低碳产业发展协会"
+              className="h-9 w-9 rounded-full object-contain ring-1 ring-stone-100"
+            />
+            <div className="hidden sm:flex flex-col">
+              <span className="font-bold text-stone-900 text-lg leading-tight">绿产智链</span>
+              <span className="text-stone-400 text-xs leading-tight">山东绿色低碳产业智慧平台</span>
             </div>
-            <span className="font-bold text-stone-900 text-lg hidden sm:block">绿产智链</span>
-            <span className="text-stone-400 text-xs hidden sm:block">山东绿色低碳产业智慧平台</span>
           </Link>
 
           {/* Desktop Nav */}
