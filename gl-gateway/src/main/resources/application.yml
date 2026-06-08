@@ -95,11 +95,11 @@ jwt:
     - /api/v1/tags/**
     - /api/v1/tag-relations
     - /api/v1/tag-relations/**
-    - /api/v1/supply/resources
-    - /api/v1/supply/demands
     - /actuator/**
   optional-auth:
+    - /api/v1/supply/resources
     - /api/v1/supply/resources/*
+    - /api/v1/supply/demands
     - /api/v1/supply/demands/*
 
 management:
