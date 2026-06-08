@@ -136,6 +136,7 @@ function RecordCard({ record }: { record: MatchRecordItem }) {
         )}
         <Link
           to={`/member/my-records/${record.recordId}`}
+          state={{ record }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600 transition-colors"
         >
           查看详情

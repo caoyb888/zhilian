@@ -103,6 +103,37 @@ export interface MyMatchRecordsParams {
   status?: number
 }
 
+export type RespondAction = 'ACCEPT' | 'REJECT'
+export type StatusAction = 'NEGOTIATE' | 'COMPLETE' | 'CANCEL'
+
+export function useRespondMatch() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ recordId, action }: { recordId: number; action: RespondAction }) => {
+      const res = await http.patch<ApiResult<{ recordId: number; status: number }>>(
+        `/match/records/${recordId}/respond`,
+        { action },
+      )
+      return res.data.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['match', 'records', 'my'] }),
+  })
+}
+
+export function useUpdateMatchStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ recordId, action }: { recordId: number; action: StatusAction }) => {
+      const res = await http.patch<ApiResult<{ recordId: number; status: number }>>(
+        `/match/records/${recordId}/status`,
+        { action },
+      )
+      return res.data.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['match', 'records', 'my'] }),
+  })
+}
+
 export function useMyMatchRecords(params: MyMatchRecordsParams, enabled = true) {
   return useQuery({
     queryKey: ['match', 'records', 'my', params],
