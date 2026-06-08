@@ -79,7 +79,7 @@ function useTagGroups() {
             categoryId: cat.id,
             categoryName: cat.name,
             tags: page.records
-              .filter((t) => t.isDeleted === 0)
+              .filter((t) => t.isActive !== false)
               .map((t) => ({ id: t.id, name: t.name })),
           }
         }),

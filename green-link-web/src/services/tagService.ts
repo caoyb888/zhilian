@@ -12,12 +12,14 @@ export interface TagCategory {
 export interface Tag {
   id: number
   categoryId: number
+  categoryCode?: string
   name: string
   alias: string | null
   sortOrder: number
-  isDeleted: number
-  createdAt: string
-  updatedAt: string
+  isActive: boolean
+  isDeleted?: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface CreateCategoryRequest {

@@ -78,7 +78,7 @@ function useTagGroups() {
           return {
             categoryId: cat.id,
             categoryName: cat.name,
-            tags: page.records.filter((t) => t.isDeleted === 0).map((t) => ({ id: t.id, name: t.name })),
+            tags: page.records.filter((t) => t.isActive !== false).map((t) => ({ id: t.id, name: t.name })),
           }
         }),
       )
