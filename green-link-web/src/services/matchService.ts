@@ -68,6 +68,59 @@ export function useApplyMatch() {
   })
 }
 
+// ─── My Records ───────────────────────────────────────────────────────────────
+
+export interface MatchCounterparty {
+  memberId: number
+  name: string
+  memberLevel: number
+  province: string | null
+}
+
+export interface MatchRecordItem {
+  recordId: number
+  resourceId: number
+  demandId: number
+  resourceTitle: string | null
+  demandTitle: string | null
+  counterparty: MatchCounterparty | null
+  matchScore: number | null
+  /** 1=系统推荐 2=主动申请 */
+  matchType: number
+  /** 1待响应 2已接受 3洽谈中 5已完成 6已拒绝 7已撤销 */
+  status: number
+  applyMessage: string | null
+  isInitiator: boolean
+  unreadCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MyMatchRecordsParams {
+  page: number
+  size: number
+  /** Single status value; backend accepts Integer only */
+  status?: number
+}
+
+export function useMyMatchRecords(params: MyMatchRecordsParams, enabled = true) {
+  return useQuery({
+    queryKey: ['match', 'records', 'my', params],
+    queryFn: async () => {
+      const urlParams = new URLSearchParams()
+      urlParams.set('page', String(params.page))
+      urlParams.set('size', String(params.size))
+      if (params.status !== undefined) urlParams.set('status', String(params.status))
+      const res = await http.get<ApiResult<PageData<MatchRecordItem>>>(
+        `/match/records/my?${urlParams}`,
+      )
+      return res.data.data
+    },
+    enabled,
+    placeholderData: (prev) => prev,
+  })
+}
+
 // ─── Recommendations ─────────────────────────────────────────────────────────
 
 export function useRecommendations(params: RecommendParams, enabled: boolean) {
