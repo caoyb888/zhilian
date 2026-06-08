@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Leaf, Menu, X } from 'lucide-react'
+import { Leaf, Menu, Sparkles, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -48,6 +48,20 @@ export function PortalNav() {
                 {label}
               </Link>
             ))}
+            {accountInfo && (
+              <Link
+                to="/supply/recommend"
+                className={[
+                  'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive('/supply/recommend')
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50',
+                ].join(' ')}
+              >
+                <Icon icon={Sparkles} size={14} />
+                智能推荐
+              </Link>
+            )}
           </nav>
 
           {/* User / Auth */}
@@ -119,6 +133,21 @@ export function PortalNav() {
                   {label}
                 </Link>
               ))}
+              {accountInfo && (
+                <Link
+                  to="/supply/recommend"
+                  onClick={() => setMobileOpen(false)}
+                  className={[
+                    'inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    isActive('/supply/recommend')
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:bg-stone-50',
+                  ].join(' ')}
+                >
+                  <Icon icon={Sparkles} size={14} />
+                  智能推荐
+                </Link>
+              )}
             </nav>
           </div>
         </div>
