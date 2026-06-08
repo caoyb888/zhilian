@@ -56,6 +56,26 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         }
 
         String token = extractToken(exchange.getRequest());
+
+        // 可选认证路径：有 JWT 则注入头，无 JWT 直接放行
+        if (isOptionalAuth(path)) {
+            if (token == null) {
+                return chain.filter(exchange);
+            }
+            Claims claims;
+            try {
+                claims = parseToken(token);
+            } catch (JwtException e) {
+                return chain.filter(exchange);
+            }
+            ServerHttpRequest mutated = exchange.getRequest().mutate()
+                    .header("X-Account-Id", String.valueOf(claims.get("accountId")))
+                    .header("X-Member-Id", String.valueOf(claims.get("memberId")))
+                    .header("X-Roles", buildRolesHeader(claims))
+                    .build();
+            return chain.filter(exchange.mutate().request(mutated).build());
+        }
+
         if (token == null) {
             return unauthorized(exchange, 1002, "未登录或登录已过期");
         }
@@ -86,6 +106,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     private boolean isWhitelisted(String path) {
         return jwtProperties.getWhitelist().stream()
+                .anyMatch(pattern -> PATH_MATCHER.match(pattern, path));
+    }
+
+    private boolean isOptionalAuth(String path) {
+        return jwtProperties.getOptionalAuth().stream()
                 .anyMatch(pattern -> PATH_MATCHER.match(pattern, path));
     }
 

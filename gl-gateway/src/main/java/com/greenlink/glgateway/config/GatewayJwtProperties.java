@@ -25,4 +25,10 @@ public class GatewayJwtProperties {
             "/api/v1/portal/**",
             "/actuator/**"
     );
+
+    /**
+     * 可选认证路径（Ant 风格）：有 JWT 则注入 X-Account-Id/X-Member-Id，无 JWT 也放行。
+     * 用于供需详情等对游客开放、但登录后需要显示额外信息的接口。
+     */
+    private List<String> optionalAuth = List.of();
 }
