@@ -35,4 +35,14 @@ public interface MatchMessageMapper extends BaseMapper<MatchMessage> {
     })
     List<MatchUnreadCount> countUnreadByMatchIds(@Param("accountId") Long accountId,
                                                   @Param("matchIds") List<Long> matchIds);
+
+    /**
+     * 将指定对接中对方发送的未读消息全部标记为已读。
+     * 返回受影响行数。
+     */
+    @org.apache.ibatis.annotations.Update(
+            "UPDATE match_message SET is_read = 1 " +
+            "WHERE match_id = #{matchId} AND sender_id != #{accountId} AND is_read = 0"
+    )
+    int markAllRead(@Param("matchId") Long matchId, @Param("accountId") Long accountId);
 }
