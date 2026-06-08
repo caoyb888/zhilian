@@ -5,10 +5,13 @@ import com.greenlink.glmember.dto.request.AuditMemberRequest;
 import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
 import com.greenlink.glmember.dto.response.AdminAccountVO;
+import com.greenlink.glmember.dto.response.MemberBriefVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
 import com.greenlink.glmember.dto.response.RegisterResponse;
+
+import java.util.List;
 
 public interface MemberService {
 
@@ -31,4 +34,7 @@ public interface MemberService {
 
     PageResult<AdminAccountVO> listAllAccounts(int page, int size,
                                                Long memberId, Integer status, String keyword);
+
+    /** 批量查询会员单位简要信息（id/name/memberLevel/province），供服务间 Feign 调用 */
+    List<MemberBriefVO> batchBrief(List<Long> ids);
 }

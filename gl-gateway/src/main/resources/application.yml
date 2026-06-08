@@ -51,7 +51,7 @@ spring:
         - id: gl-match
           uri: ${GL_MATCH_URL:http://localhost:8085}
           predicates:
-            - Path=/api/v1/matches/**,/api/v1/favorites/**
+            - Path=/api/v1/match/**,/api/v1/matches/**,/api/v1/favorites/**
         - id: gl-message
           uri: ${GL_MESSAGE_URL:http://localhost:8086}
           predicates:
