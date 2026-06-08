@@ -133,7 +133,7 @@ function LogoUploader({
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
-            !isUploading && inputRef.current?.click()
+            if (!isUploading) inputRef.current?.click()
           }
         }}
       >

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
@@ -426,6 +426,11 @@ export default function SupplyListPage() {
 
   // Local UI state
   const [inputValue, setInputValue] = useState(keyword)
+  const [prevKeyword, setPrevKeyword] = useState(keyword)
+  if (prevKeyword !== keyword) {
+    setPrevKeyword(keyword)
+    setInputValue(keyword)
+  }
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
@@ -433,9 +438,6 @@ export default function SupplyListPage() {
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Keep search input in sync with URL
-  useEffect(() => { setInputValue(keyword) }, [keyword])
 
   const setParam = useCallback(
     (updates: Record<string, string | undefined>) => {

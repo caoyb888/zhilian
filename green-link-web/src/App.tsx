@@ -19,6 +19,7 @@ const SupplyPublishPage           = lazy(() => import('@/pages/supply/SupplyPubl
 const SupplyDemandListPage        = lazy(() => import('@/pages/supply/SupplyDemandListPage'))
 const SupplyDemandDetailPage      = lazy(() => import('@/pages/supply/SupplyDemandDetailPage'))
 const SupplyDemandPublishPage     = lazy(() => import('@/pages/supply/SupplyDemandPublishPage'))
+const SupplyRecommendPage         = lazy(() => import('@/pages/supply/SupplyRecommendPage'))
 const MemberLayout             = lazy(() => import('@/pages/member/MemberLayout'))
 const MemberProfilePage        = lazy(() => import('@/pages/member/MemberProfilePage'))
 const MyResourcesPage          = lazy(() => import('@/pages/member/MyResourcesPage'))
@@ -79,6 +80,7 @@ export default function App() {
 
             {/* 供需对接（公开浏览，收藏/对接需登录） */}
             <Route path="/supply" element={<SupplyListPage />} />
+            <Route path="/supply/recommend" element={<RequireAuth><SupplyRecommendPage /></RequireAuth>} />
             <Route path="/supply/resources/publish" element={<RequireAuth><SupplyPublishPage /></RequireAuth>} />
             <Route path="/supply/resources/:id" element={<SupplyResourceDetailPage />} />
             <Route path="/supply/demands" element={<SupplyDemandListPage />} />
