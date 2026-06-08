@@ -15,18 +15,24 @@ import { useMyMatchRecords, type MatchRecordItem } from '@/services/matchService
 
 const PAGE_SIZE = 10
 
-// Tab definitions.
-// "active" (2,3) and "closed" (6,7) are combined groups: we fetch all records
-// with a large page size and filter client-side (acceptable scale for one user's records).
-const TABS = [
-  { key: 'all',     label: '全部',   apiStatus: undefined as number | undefined, clientStatuses: undefined as number[] | undefined },
-  { key: 'pending', label: '待响应', apiStatus: 1,         clientStatuses: undefined },
-  { key: 'active',  label: '进行中', apiStatus: undefined, clientStatuses: [2, 3] },
-  { key: 'done',    label: '已完成', apiStatus: 5,         clientStatuses: undefined },
-  { key: 'closed',  label: '已关闭', apiStatus: undefined, clientStatuses: [6, 7] },
-] as const
+type TabKey = 'all' | 'pending' | 'active' | 'done' | 'closed'
 
-type TabKey = (typeof TABS)[number]['key']
+interface TabDef {
+  key: TabKey
+  label: string
+  apiStatus?: number
+  clientStatuses?: number[]
+}
+
+// "active" (2,3) and "closed" (6,7) are combined groups: fetch without status
+// filter and apply client-side filtering (acceptable for one user's record count).
+const TABS: TabDef[] = [
+  { key: 'all',     label: '全部' },
+  { key: 'pending', label: '待响应', apiStatus: 1 },
+  { key: 'active',  label: '进行中', clientStatuses: [2, 3] },
+  { key: 'done',    label: '已完成', apiStatus: 5 },
+  { key: 'closed',  label: '已关闭', clientStatuses: [6, 7] },
+]
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
