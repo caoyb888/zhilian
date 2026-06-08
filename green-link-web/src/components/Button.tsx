@@ -11,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantMap = {
   primary:
-    'bg-theme-accent text-white hover:bg-theme-accent-hover focus-visible:ring-theme-accent disabled:opacity-50 disabled:cursor-not-allowed',
+    'bg-theme-accent text-theme-accent-fg hover:bg-theme-accent-hover focus-visible:ring-theme-accent disabled:opacity-50 disabled:cursor-not-allowed',
   secondary:
     'border border-theme-border bg-theme-surface text-theme-text-main hover:bg-stone-50 focus-visible:ring-stone-400 disabled:opacity-50 disabled:cursor-not-allowed',
   ghost:

@@ -13,6 +13,7 @@ export default {
           'text-muted': 'var(--theme-text-muted)',
           accent: 'var(--theme-accent)',
           'accent-hover': 'var(--theme-accent-hover)',
+          'accent-fg': 'var(--theme-accent-fg)',
         },
         // === 保留原有 emerald 品牌色阶（兼容旧代码过渡）===
         brand: {
