@@ -265,7 +265,7 @@ export default function PortalArticleListPage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
             {/* 左侧：标题区 */}
             <div>
               <div className="flex items-center gap-3">
@@ -276,30 +276,13 @@ export default function PortalArticleListPage() {
               <p className="mt-4 text-base text-white/80 font-medium">
                 聚焦绿色低碳，赋能产业发展
               </p>
-
-              {/* 热门搜索标签 */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {HOT_TAGS.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => {
-                      setInputValue(tag)
-                      setParam({ keyword: tag, page: undefined })
-                    }}
-                    className="text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/15 rounded-full px-3 py-1 transition-all border border-white/15 hover:border-white/30"
-                  >
-                    #{tag}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {/* 右侧：搜索区 */}
-            <div className="flex justify-start lg:justify-end">
+            {/* 右侧：搜索区 + 热门标签 */}
+            <div className="flex flex-col gap-3">
               <form
                 onSubmit={handleSearch}
-                className="flex items-center gap-2 w-full max-w-sm"
+                className="flex items-center gap-2 w-full max-w-sm lg:ml-auto"
               >
                 <div className="relative flex-1">
                   <input
@@ -330,30 +313,58 @@ export default function PortalArticleListPage() {
                   </button>
                 )}
               </form>
+
+              {/* 热门搜索标签 */}
+              <div className="flex flex-wrap gap-2 w-full max-w-sm lg:ml-auto">
+                {HOT_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      setInputValue(tag)
+                      setParam({ keyword: tag, page: undefined })
+                    }}
+                    className="text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/15 rounded-full px-3 py-1 transition-all border border-white/15 hover:border-white/30"
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Ticker bar */}
-      <div className="relative bg-emerald-900/20 backdrop-blur-sm border-t border-white/10">
+      <div className="relative overflow-hidden" style={{ background: 'rgba(0, 60, 45, 0.85)' }}>
+        <style>{`
+          @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .ticker-animate {
+            animation: ticker-scroll 20s linear infinite;
+          }
+        `}</style>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <span className="flex-shrink-0 text-[10px] font-bold text-white/50 uppercase tracking-wider bg-white/10 rounded px-1.5 py-0.5">
+          <div className="flex items-center gap-3">
+            <span className="flex-shrink-0 text-[10px] font-bold text-emerald-200 uppercase tracking-wider bg-emerald-500/20 rounded px-1.5 py-0.5">
               快讯
             </span>
-            <div className="flex gap-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {TICKER_ITEMS.map((item, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-2 text-sm text-white/85 whitespace-nowrap"
-                >
-                  <span className="bg-white/15 rounded px-1.5 py-0.5 text-[10px] font-bold text-white">
-                    {item.type}
+            <div className="flex-1 overflow-hidden relative">
+              <div className="ticker-animate flex gap-8 whitespace-nowrap w-max">
+                {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-2 text-sm text-white/90"
+                  >
+                    <span className="bg-emerald-500/25 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">
+                      {item.type}
+                    </span>
+                    {item.text}
                   </span>
-                  {item.text}
-                </span>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
