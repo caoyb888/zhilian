@@ -265,7 +265,7 @@ export default function PortalArticleListPage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             {/* 左侧：标题区 */}
             <div>
               <div className="flex items-center gap-3">
