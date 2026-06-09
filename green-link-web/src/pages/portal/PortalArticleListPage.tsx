@@ -265,24 +265,24 @@ export default function PortalArticleListPage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
             {/* 左侧：标题区 */}
             <div>
               <div className="flex items-center gap-3">
                 <Icon icon={Newspaper} size={32} className="text-white/80" />
-                <h1 className="text-4xl font-bold text-white tracking-tight">资讯中心</h1>
+                <h1 className="text-3xl font-bold text-white tracking-tight">资讯中心</h1>
               </div>
               <div className="mt-3 ml-[2px] w-12 h-0.5 bg-white/30 rounded-full" />
-              <p className="mt-4 text-base text-white/80 font-medium">
+              <p className="mt-3 text-sm text-white/80">
                 聚焦绿色低碳，赋能产业发展
               </p>
             </div>
 
             {/* 右侧：搜索区 + 热门标签 */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 w-full max-w-sm">
               <form
                 onSubmit={handleSearch}
-                className="flex items-center gap-2 w-full max-w-sm lg:ml-auto"
+                className="flex items-center gap-2"
               >
                 <div className="relative flex-1">
                   <input
@@ -315,7 +315,7 @@ export default function PortalArticleListPage() {
               </form>
 
               {/* 热门搜索标签 */}
-              <div className="flex flex-wrap gap-2 w-full max-w-sm lg:ml-auto">
+              <div className="flex flex-wrap gap-2">
                 {HOT_TAGS.map((tag) => (
                   <button
                     key={tag}
