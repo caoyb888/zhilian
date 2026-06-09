@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
-import { Search } from 'lucide-react'
+import { Search, User, Eye, CalendarDays, Flame } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Badge, type BadgeVariant } from '@/components/Badge'
 import { EmptyState } from '@/components/states/EmptyState'
@@ -41,25 +41,50 @@ function formatDate(s: string | null) {
   return s ? s.slice(0, 10) : ''
 }
 
-function ArticleCard({ article, categoryCode }: { article: ArticleItem; categoryCode?: string }) {
+function ArticleCard({
+  article,
+  categoryCode,
+  featured = false,
+}: {
+  article: ArticleItem
+  categoryCode?: string
+  featured?: boolean
+}) {
   const variant = CODE_VARIANT_MAP[categoryCode ?? ''] ?? 'default'
 
   return (
     <Link
       to={`/portal/articles/${article.id}`}
-      className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+      className={[
+        'group flex flex-col overflow-hidden bg-white',
+        'border border-stone-200/80',
+        'rounded-2xl shadow-sm',
+        'hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-900/5',
+        'hover:-translate-y-0.5 transition-all duration-300',
+        featured ? 'lg:col-span-2' : '',
+      ].join(' ')}
     >
       {/* Cover */}
-      <div className="aspect-[16/10] bg-gradient-to-br from-brand-50 to-emerald-100 overflow-hidden flex-shrink-0">
+      <div
+        className={[
+          'bg-gradient-to-br from-emerald-50 to-stone-100 overflow-hidden flex-shrink-0 relative',
+          featured ? 'aspect-[21/9]' : 'aspect-[16/10]',
+        ].join(' ')}
+      >
         {article.coverUrl ? (
           <img
             src={article.coverUrl}
             alt={article.title}
-            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-brand-200 text-5xl font-bold select-none">
-            绿
+          <div className="flex h-full items-center justify-center relative overflow-hidden">
+            <img
+              src="/lsdt-logo.png"
+              alt=""
+              className="absolute w-32 h-32 opacity-10 object-contain"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/80 to-stone-100/80" />
           </div>
         )}
       </div>
@@ -68,9 +93,15 @@ function ArticleCard({ article, categoryCode }: { article: ArticleItem; category
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           {article.isTop && (
-            <Badge variant="error" className="text-[10px]">置顶</Badge>
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-amber-200/60">
+              <Icon icon={Flame} size={10} />
+              置顶
+            </span>
           )}
-          <Badge variant={variant} className="text-[10px]">
+          <Badge
+            variant={variant}
+            className="rounded-full text-[11px] px-2 py-0.5"
+          >
             {article.categoryName}
           </Badge>
         </div>
@@ -89,10 +120,19 @@ function ArticleCard({ article, categoryCode }: { article: ArticleItem; category
         )}
 
         <div className="mt-3 flex items-center justify-between text-xs text-stone-400">
-          <span>{article.author ?? '协会编辑'}</span>
+          <span className="flex items-center gap-1">
+            <Icon icon={User} size={12} />
+            {article.author ?? '协会编辑'}
+          </span>
           <div className="flex items-center gap-3">
-            <span>{article.viewCount} 阅读</span>
-            <span>{formatDate(article.publishedAt)}</span>
+            <span className="flex items-center gap-1">
+              <Icon icon={Eye} size={12} />
+              {article.viewCount}
+            </span>
+            <span className="flex items-center gap-1">
+              <Icon icon={CalendarDays} size={12} />
+              {formatDate(article.publishedAt)}
+            </span>
           </div>
         </div>
       </div>
@@ -172,18 +212,30 @@ export default function PortalArticleListPage() {
   const articles = data?.records ?? []
   const total = data?.total ?? 0
 
+  // Determine if first article should be featured (top article in first page, no category filter, no keyword)
+  const hasFeatured =
+    !isLoading &&
+    !isError &&
+    articles.length > 0 &&
+    page === 1 &&
+    !categoryId &&
+    !keyword &&
+    articles[0]?.isTop
+
   return (
     <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
 
       {/* Page header */}
-      <div className="bg-theme-surface border-b border-theme-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl font-bold text-theme-text-main">资讯中心</h1>
-          <p className="mt-1 text-sm text-theme-text-muted">绿色低碳行业动态 · 政策解读 · 协会通知</p>
+      <div className="bg-gradient-to-b from-emerald-50/60 via-white to-white border-b border-theme-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+          <h1 className="text-2xl font-bold text-theme-text-main tracking-tight">资讯中心</h1>
+          <p className="mt-1 text-sm text-theme-text-muted">
+            绿色低碳行业动态 · 政策解读 · 协会通知
+          </p>
 
           {/* Search bar */}
-          <form onSubmit={handleSearch} className="mt-4 flex gap-2 max-w-lg">
+          <form onSubmit={handleSearch} className="mt-5 flex gap-2 max-w-lg">
             <div className="relative flex-1">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
                 <Icon icon={Search} size={16} />
@@ -193,12 +245,12 @@ export default function PortalArticleListPage() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="搜索文章…"
-                className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-4 py-2 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+                className="w-full rounded-xl border border-stone-200 bg-white pl-9 pr-4 py-2.5 text-sm outline-none shadow-sm focus:border-theme-accent focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               />
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+              className="rounded-xl bg-theme-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover shadow-sm hover:shadow-md transition-all duration-200"
             >
               搜索
             </button>
@@ -209,7 +261,7 @@ export default function PortalArticleListPage() {
                   setInputValue('')
                   setParam({ keyword: undefined, page: undefined })
                 }}
-                className="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
+                className="rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
               >
                 清除
               </button>
@@ -217,16 +269,16 @@ export default function PortalArticleListPage() {
           </form>
         </div>
 
-        {/* Category tabs */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto pb-0 -mb-px">
+        {/* Category pills */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-4">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleCategoryChange(undefined)}
               className={[
-                'flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200',
+                'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
                 categoryId === undefined
-                  ? 'border-theme-accent text-theme-accent'
-                  : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300',
+                  ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                  : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
               ].join(' ')}
             >
               全部
@@ -236,10 +288,10 @@ export default function PortalArticleListPage() {
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.id)}
                 className={[
-                  'flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200',
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
                   categoryId === cat.id
-                    ? 'border-theme-accent text-theme-accent'
-                    : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300',
+                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                    : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
                 ].join(' ')}
               >
                 {cat.name}
@@ -262,7 +314,7 @@ export default function PortalArticleListPage() {
         {/* Article grid */}
         <div
           className={[
-            'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 transition-opacity duration-200',
+            'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 transition-opacity duration-200',
             isFetching && !isLoading ? 'opacity-60' : '',
           ].join(' ')}
         >
@@ -284,11 +336,12 @@ export default function PortalArticleListPage() {
               />
             </div>
           ) : articles.length > 0 ? (
-            articles.map((a) => (
+            articles.map((a, idx) => (
               <ArticleCard
                 key={a.id}
                 article={a}
                 categoryCode={catCodeById.get(a.categoryId)}
+                featured={hasFeatured && idx === 0}
               />
             ))
           ) : (
@@ -303,7 +356,7 @@ export default function PortalArticleListPage() {
 
         {/* Pagination */}
         {total > PAGE_SIZE && (
-          <div className="mt-8">
+          <div className="mt-8 pt-6 border-t border-stone-100">
             <Pagination page={page} total={total} size={PAGE_SIZE} onChange={handlePageChange} />
           </div>
         )}
