@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, Sparkles, X } from 'lucide-react'
+import { Menu, Sparkles, X, ChevronDown, Bell, Search, User } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -22,7 +22,7 @@ export function PortalNav() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-100 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 lg:h-[72px] items-center justify-between">
           {/* Logo */}
           <Link to="/portal" className="flex items-center gap-2.5">
             <img
@@ -30,9 +30,9 @@ export function PortalNav() {
               alt="山东省绿色低碳产业发展协会"
               className="h-9 w-9 rounded-full object-contain ring-1 ring-stone-100"
             />
-            <div className="hidden sm:flex flex-col">
+            <div className="hidden sm:flex flex-col justify-center">
               <span className="font-bold text-stone-900 text-lg leading-tight">绿产智链</span>
-              <span className="text-stone-400 text-xs leading-tight">山东绿色低碳产业智慧平台</span>
+              <span className="text-stone-300 text-[11px] leading-tight">山东绿色低碳产业智慧平台</span>
             </div>
           </Link>
 
@@ -46,7 +46,7 @@ export function PortalNav() {
                   'px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
                   isActive(path)
                     ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50',
+                    : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
                 ].join(' ')}
               >
                 {label}
@@ -59,7 +59,7 @@ export function PortalNav() {
                   'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
                   isActive('/supply/recommend')
                     ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50',
+                    : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
                 ].join(' ')}
               >
                 <Icon icon={Sparkles} size={14} />
@@ -69,14 +69,53 @@ export function PortalNav() {
           </nav>
 
           {/* User / Auth */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {accountInfo ? (
-              <Link
-                to="/member/profile"
-                className="text-sm font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
-              >
-                {accountInfo.realName ?? accountInfo.username} · 会员中心
-              </Link>
+              <>
+                {/* 搜索图标 */}
+                <Link
+                  to="/supply"
+                  className="hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
+                  aria-label="搜索供需"
+                >
+                  <Icon icon={Search} size={18} />
+                </Link>
+
+                {/* 消息通知 */}
+                <Link
+                  to="/member/messages"
+                  className="relative hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
+                  aria-label="消息中心"
+                >
+                  <Icon icon={Bell} size={18} />
+                </Link>
+
+                {/* 发布供需按钮 */}
+                <Link
+                  to="/supply/resources/publish"
+                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-theme-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-theme-accent-hover shadow-sm transition-all"
+                >
+                  发布供需
+                </Link>
+
+                {/* 用户头像 + 姓名 + 下拉 */}
+                <Link
+                  to="/member/profile"
+                  className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full hover:bg-stone-50 transition-all"
+                >
+                  <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden">
+                    {accountInfo.avatarUrl ? (
+                      <img src={accountInfo.avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Icon icon={User} size={14} className="text-emerald-600" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-stone-700 hidden sm:block">
+                    {accountInfo.realName ?? accountInfo.username}
+                  </span>
+                  <Icon icon={ChevronDown} size={14} className="text-stone-400 hidden sm:block" />
+                </Link>
+              </>
             ) : (
               <>
                 <Link
