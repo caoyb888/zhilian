@@ -1,0 +1,26 @@
+# 测试环境配置：禁用 Nacos/Redis/DB/MQ，仅保留 Web 层
+spring:
+  cloud:
+    nacos:
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+      discovery:
+        enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationAutoConfiguration
+      - com.alibaba.cloud.nacos.endpoint.NacosEndpointAutoConfiguration
+      - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+  main:
+    allow-bean-definition-overriding: true
+
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    group: test-group
