@@ -288,11 +288,12 @@ export default function MessagesPage() {
       )}
 
       {/* Pagination */}
-      {data && data.pages > 1 && (
+      {data && data.total > PAGE_SIZE && (
         <Pagination
-          currentPage={page}
-          totalPages={data.pages}
-          onPageChange={handlePageChange}
+          page={page}
+          total={data.total}
+          size={PAGE_SIZE}
+          onChange={handlePageChange}
         />
       )}
     </div>
