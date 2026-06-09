@@ -228,13 +228,13 @@ export default function PortalArticleListPage() {
 
       {/* Page header */}
       <div className="bg-gradient-to-b from-emerald-50/60 via-white to-white border-b border-theme-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+          {/* Title + Search */}
           <h1 className="text-2xl font-bold text-theme-text-main tracking-tight">资讯中心</h1>
           <p className="mt-1 text-sm text-theme-text-muted">
             绿色低碳行业动态 · 政策解读 · 协会通知
           </p>
 
-          {/* Search bar */}
           <form onSubmit={handleSearch} className="mt-5 flex gap-2 max-w-lg">
             <div className="relative flex-1">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
@@ -267,36 +267,38 @@ export default function PortalArticleListPage() {
               </button>
             )}
           </form>
-        </div>
 
-        {/* Category pills */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-4">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleCategoryChange(undefined)}
-              className={[
-                'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
-                categoryId === undefined
-                  ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                  : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
-              ].join(' ')}
+          {/* Category pills */}
+          <div className="mt-5 pt-4 border-t border-stone-100/80">
+            <div
+              className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              全部
-            </button>
-            {topCategories.map((cat) => (
               <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
+                onClick={() => handleCategoryChange(undefined)}
                 className={[
-                  'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
-                  categoryId === cat.id
+                  'flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
+                  categoryId === undefined
                     ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
                     : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
                 ].join(' ')}
               >
-                {cat.name}
+                全部
               </button>
-            ))}
+              {topCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={[
+                    'flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
+                    categoryId === cat.id
+                      ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                      : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
+                  ].join(' ')}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
