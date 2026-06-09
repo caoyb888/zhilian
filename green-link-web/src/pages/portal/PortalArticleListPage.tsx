@@ -264,8 +264,8 @@ export default function PortalArticleListPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* 左侧：标题区 */}
             <div>
               <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export default function PortalArticleListPage() {
             </div>
 
             {/* 右侧：搜索区 + 热门标签 */}
-            <div className="flex flex-col gap-3 w-full max-w-sm">
+            <div className="flex flex-col gap-1.5 w-full max-w-sm">
               <form
                 onSubmit={handleSearch}
                 className="flex items-center gap-2"
@@ -289,14 +289,14 @@ export default function PortalArticleListPage() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="搜索文章…"
-                    className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-4 pr-12 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-lg shadow-black/10 transition-all duration-200"
+                    className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-4 pr-11 py-2 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-md shadow-black/10 transition-all duration-200"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-gradient-to-r from-white/30 to-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white hover:from-white/40 hover:to-white/30 transition-all"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-gradient-to-r from-white/30 to-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white hover:from-white/40 hover:to-white/30 transition-all"
                     aria-label="搜索"
                   >
-                    <Icon icon={Search} size={16} />
+                    <Icon icon={Search} size={14} />
                   </button>
                 </div>
                 {keyword && (
@@ -306,7 +306,7 @@ export default function PortalArticleListPage() {
                       setInputValue('')
                       setParam({ keyword: undefined, page: undefined })
                     }}
-                    className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                    className="flex-shrink-0 rounded-[30px] border border-white/30 px-3 py-1.5 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
                   >
                     清除
                   </button>
@@ -314,7 +314,7 @@ export default function PortalArticleListPage() {
               </form>
 
               {/* 热门搜索标签 */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {HOT_TAGS.map((tag) => (
                   <button
                     key={tag}
@@ -323,7 +323,7 @@ export default function PortalArticleListPage() {
                       setInputValue(tag)
                       setParam({ keyword: tag, page: undefined })
                     }}
-                    className="text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/15 rounded-full px-3 py-1 transition-all border border-white/15 hover:border-white/30"
+                    className="text-xs text-white/70 hover:text-white bg-white/5 hover:bg-white/15 rounded-full px-2.5 py-0.5 transition-all border border-white/15 hover:border-white/30"
                   >
                     #{tag}
                   </button>
