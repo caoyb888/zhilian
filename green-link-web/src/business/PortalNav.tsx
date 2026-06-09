@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, Sparkles, X, ChevronDown, Bell, Search, User } from 'lucide-react'
+import { Bell, ChevronDown, Menu, Search, Sparkles, User, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
+import { useUnreadCount } from '@/services/messageService'
 
 const NAV_LINKS = [
   { label: '首页', path: '/portal' },
@@ -15,6 +16,8 @@ export function PortalNav() {
   const { pathname } = useLocation()
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { data: unreadData } = useUnreadCount(!!accountInfo)
+  const totalUnread = unreadData?.total ?? 0
 
   const isActive = (path: string) =>
     pathname === path || (path !== '/portal' && pathname.startsWith(path))
@@ -83,13 +86,18 @@ export function PortalNav() {
                   <Icon icon={Search} size={18} />
                 </Link>
 
-                {/* 消息通知 */}
+                {/* 消息通知（含未读角标） */}
                 <Link
                   to="/member/messages"
                   className="relative hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
-                  aria-label="消息中心"
+                  aria-label={totalUnread > 0 ? `${totalUnread} 条未读消息` : '消息中心'}
                 >
                   <Icon icon={Bell} size={18} />
+                  {totalUnread > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none">
+                      {totalUnread > 99 ? '99+' : totalUnread}
+                    </span>
+                  )}
                 </Link>
 
                 {/* 发布供需按钮 */}
@@ -191,6 +199,26 @@ export function PortalNav() {
                 >
                   <Icon icon={Sparkles} size={14} />
                   智能推荐
+                </Link>
+              )}
+              {accountInfo && (
+                <Link
+                  to="/member/messages"
+                  onClick={() => setMobileOpen(false)}
+                  className={[
+                    'inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                    isActive('/member/messages')
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:bg-stone-50',
+                  ].join(' ')}
+                >
+                  <Icon icon={Bell} size={14} />
+                  消息中心
+                  {totalUnread > 0 && (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                      {totalUnread > 99 ? '99+' : totalUnread}
+                    </span>
+                  )}
                 </Link>
               )}
             </nav>
