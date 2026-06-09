@@ -289,7 +289,7 @@ export default function PortalArticleListPage() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="搜索文章…"
-                    className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-4 pr-11 py-2 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-md shadow-black/10 transition-all duration-200"
+                    className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-4 pr-11 py-1.5 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-md shadow-black/10 transition-all duration-200"
                   />
                   <button
                     type="submit"
