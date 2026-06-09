@@ -226,79 +226,102 @@ export default function PortalArticleListPage() {
     <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
 
-      {/* Page header */}
-      <div className="bg-white border-b border-theme-border">
-        {/* Title + Search */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-          <h1 className="text-2xl font-bold text-theme-text-main tracking-tight">资讯中心</h1>
-          <p className="mt-1 text-sm text-theme-text-muted">
-            绿色低碳行业动态 · 政策解读 · 协会通知
-          </p>
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        {/* 品牌色渐变背景 */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)',
+          }}
+        />
+        {/* 科技感方格纹路 */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
 
-          <form onSubmit={handleSearch} className="mt-5 flex gap-2 max-w-lg">
-            <div className="relative flex-1">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
-                <Icon icon={Search} size={16} />
-              </div>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="搜索文章…"
-                className="w-full rounded-xl border border-stone-200 bg-white pl-9 pr-4 py-2.5 text-sm outline-none shadow-sm focus:border-theme-accent focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
-              />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            {/* 左侧：标题 + 副标题 */}
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">资讯中心</h1>
+              <p className="mt-2 text-sm text-white/80">绿色低碳产业资讯汇集地</p>
             </div>
-            <button
-              type="submit"
-              className="rounded-xl bg-theme-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              搜索
-            </button>
-            {keyword && (
-              <button
-                type="button"
-                onClick={() => {
-                  setInputValue('')
-                  setParam({ keyword: undefined, page: undefined })
-                }}
-                className="rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
-              >
-                清除
-              </button>
-            )}
-          </form>
-        </div>
 
-        {/* Category pills — 独立背景层，与上层形成明确分界 */}
-        <div className="bg-stone-50/80 border-t border-stone-100">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex flex-wrap gap-2">
+            {/* 右侧：搜索组件（玻璃拟态） */}
+            <form
+              onSubmit={handleSearch}
+              className="flex gap-2 w-full max-w-md lg:w-auto lg:min-w-[360px]"
+            >
+              <div className="relative flex-1">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
+                  <Icon icon={Search} size={16} />
+                </div>
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="搜索文章…"
+                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 transition-all duration-200"
+                />
+              </div>
               <button
-                onClick={() => handleCategoryChange(undefined)}
+                type="submit"
+                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-6 py-3 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
+              >
+                搜索
+              </button>
+              {keyword && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInputValue('')
+                    setParam({ keyword: undefined, page: undefined })
+                  }}
+                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                >
+                  清除
+                </button>
+              )}
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Category pills */}
+      <div className="bg-white border-b border-theme-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleCategoryChange(undefined)}
+              className={[
+                'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
+                categoryId === undefined
+                  ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                  : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
+              ].join(' ')}
+            >
+              全部
+            </button>
+            {topCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
                 className={[
                   'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
-                  categoryId === undefined
+                  categoryId === cat.id
                     ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
                     : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
                 ].join(' ')}
               >
-                全部
+                {cat.name}
               </button>
-              {topCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className={[
-                    'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
-                    categoryId === cat.id
-                      ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                      : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
-                  ].join(' ')}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>
