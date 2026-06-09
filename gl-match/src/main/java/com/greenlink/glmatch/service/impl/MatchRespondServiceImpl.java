@@ -2,9 +2,11 @@ package com.greenlink.glmatch.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.greenlink.common.exception.BizException;
+import com.greenlink.common.mq.MatchEventMessage;
 import com.greenlink.glmatch.domain.MatchRecord;
 import com.greenlink.glmatch.dto.request.MatchRespondRequest;
 import com.greenlink.glmatch.dto.response.MatchRespondVO;
+import com.greenlink.glmatch.mq.MatchEventProducer;
 import com.greenlink.glmatch.repository.MatchRecordMapper;
 import com.greenlink.glmatch.service.MatchRespondService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class MatchRespondServiceImpl implements MatchRespondService {
     private static final int CODE_ILLEGAL_TRANSIT  = 3103;
 
     private final MatchRecordMapper matchRecordMapper;
+    private final MatchEventProducer matchEventProducer;
 
     @Override
     @Transactional
@@ -75,6 +78,21 @@ public class MatchRespondServiceImpl implements MatchRespondService {
 
         log.info("对接申请已响应 recordId={} action={} newStatus={} respondentMemberId={}",
                 recordId, req.getAction(), targetStatus, memberId);
+
+        String eventType = "ACCEPT".equals(req.getAction())
+                ? MatchEventMessage.EventType.MATCH_ACCEPTED.name()
+                : MatchEventMessage.EventType.MATCH_REJECTED.name();
+        matchEventProducer.publish(MatchEventMessage.builder()
+                .eventType(eventType)
+                .matchId(recordId)
+                .resourceId(record.getResourceId())
+                .demandId(record.getDemandId())
+                .resourceMemberId(record.getResourceMemberId())
+                .demandMemberId(record.getDemandMemberId())
+                .actorAccountId(accountId)
+                .actorMemberId(memberId)
+                .initiatorAccountId(record.getInitiatorId())
+                .build());
 
         return MatchRespondVO.builder()
                 .recordId(recordId)

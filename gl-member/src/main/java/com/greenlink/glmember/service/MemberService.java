@@ -12,6 +12,7 @@ import com.greenlink.glmember.dto.response.MemberVO;
 import com.greenlink.glmember.dto.response.RegisterResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MemberService {
 
@@ -37,4 +38,10 @@ public interface MemberService {
 
     /** 批量查询会员单位简要信息（id/name/memberLevel/province），供服务间 Feign 调用 */
     List<MemberBriefVO> batchBrief(List<Long> ids);
+
+    /**
+     * 批量查询各会员单位主账号ID（parent_id IS NULL, status=1），供内部服务调用。
+     * key=memberId, value=accountId；无主账号的 memberId 不出现在 map 中。
+     */
+    Map<Long, Long> getMainAccountIdMap(List<Long> memberIds);
 }

@@ -2,9 +2,11 @@ package com.greenlink.glmatch.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.greenlink.common.exception.BizException;
+import com.greenlink.common.mq.MatchEventMessage;
 import com.greenlink.glmatch.domain.MatchRecord;
 import com.greenlink.glmatch.dto.request.MatchStatusUpdateRequest;
 import com.greenlink.glmatch.dto.response.MatchStatusUpdateVO;
+import com.greenlink.glmatch.mq.MatchEventProducer;
 import com.greenlink.glmatch.repository.MatchRecordMapper;
 import com.greenlink.glmatch.service.MatchStatusUpdateService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class MatchStatusUpdateServiceImpl implements MatchStatusUpdateService {
     private static final int CODE_ILLEGAL_TRANSIT = 3103;
 
     private final MatchRecordMapper matchRecordMapper;
+    private final MatchEventProducer matchEventProducer;
 
     @Override
     @Transactional
@@ -65,6 +68,25 @@ public class MatchStatusUpdateServiceImpl implements MatchStatusUpdateService {
 
         log.info("对接状态更新 recordId={} action={} {} → {} operatorMemberId={}",
                 recordId, req.getAction(), currentStatus, targetStatus, memberId);
+
+        String eventType = switch (req.getAction()) {
+            case "COMPLETE" -> MatchEventMessage.EventType.MATCH_COMPLETED.name();
+            case "CANCEL"   -> MatchEventMessage.EventType.MATCH_CANCELLED.name();
+            default -> null;
+        };
+        if (eventType != null) {
+            matchEventProducer.publish(MatchEventMessage.builder()
+                    .eventType(eventType)
+                    .matchId(recordId)
+                    .resourceId(record.getResourceId())
+                    .demandId(record.getDemandId())
+                    .resourceMemberId(record.getResourceMemberId())
+                    .demandMemberId(record.getDemandMemberId())
+                    .actorAccountId(accountId)
+                    .actorMemberId(memberId)
+                    .initiatorAccountId(record.getInitiatorId())
+                    .build());
+        }
 
         return MatchStatusUpdateVO.builder()
                 .recordId(recordId)
