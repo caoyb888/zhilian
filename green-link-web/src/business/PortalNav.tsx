@@ -93,7 +93,7 @@ export function PortalNav() {
                 {/* 发布供需按钮 */}
                 <Link
                   to="/supply/resources/publish"
-                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-theme-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-theme-accent-hover shadow-sm transition-all"
+                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 px-4 py-1.5 text-sm font-medium hover:bg-emerald-100 transition-all"
                 >
                   发布供需
                 </Link>
