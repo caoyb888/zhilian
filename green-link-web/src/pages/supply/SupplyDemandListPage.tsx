@@ -496,57 +496,95 @@ export default function SupplyDemandListPage() {
     <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
 
-      <div className="bg-theme-surface border-b border-theme-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl font-bold text-theme-text-main">供需对接平台</h1>
-          <p className="mt-1 text-sm text-theme-text-muted">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        {/* 品牌色渐变背景 */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)',
+          }}
+        />
+        {/* 科技感方格纹路 */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
 
-          {/* Resource / Demand tabs */}
-          <div className="mt-4 flex gap-1 border-b border-stone-200">
-            <Link
-              to="/supply"
-              className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-stone-500 hover:text-stone-800 hover:border-stone-300 -mb-px transition-colors"
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            {/* 左侧：标题 + 副标题 */}
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
+              <p className="mt-2 text-sm text-white/80">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
+            </div>
+
+            {/* 右侧：搜索组件（玻璃拟态） */}
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex gap-2 w-full max-w-md lg:w-auto lg:min-w-[360px]"
             >
-              资源列表
-            </Link>
-            <Link
-              to="/supply/demands"
-              className="px-4 py-2 text-sm font-medium border-b-2 border-theme-accent text-theme-accent -mb-px"
-            >
-              需求列表
-            </Link>
+              <div className="relative flex-1">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
+                  <Icon icon={Search} size={16} />
+                </div>
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  placeholder="搜索需求名称、技术领域…"
+                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 transition-all duration-200"
+                />
+              </div>
+              <button
+                type="submit"
+                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-6 py-3 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
+              >
+                搜索
+              </button>
+              {keyword && (
+                <button
+                  type="button"
+                  onClick={() => { setInputValue(''); setParam({ keyword: undefined, page: undefined }) }}
+                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                >
+                  清除
+                </button>
+              )}
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs + 发布按钮 */}
+      <div className="bg-white border-b border-theme-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/supply"
+                className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
+              >
+                资源列表
+              </Link>
+              <Link
+                to="/supply/demands"
+                className="rounded-full px-4 py-1.5 text-sm font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 transition-all duration-200"
+              >
+                需求列表
+              </Link>
+            </div>
             <Link
               to="/supply/demands/publish"
-              className="ml-auto mb-1 inline-flex items-center gap-1.5 rounded-lg bg-theme-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+              className="inline-flex items-center gap-1.5 rounded-full bg-theme-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
             >
               发布需求
             </Link>
           </div>
-
-          <form onSubmit={handleSearchSubmit} className="mt-4 flex gap-2 max-w-xl">
-            <div className="relative flex-1">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
-                <Icon icon={Search} size={16} />
-              </div>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => handleSearchInput(e.target.value)}
-                placeholder="搜索需求名称、技术领域…"
-                className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-4 py-2 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
-              />
-            </div>
-            <button type="submit" className="rounded-lg bg-theme-accent px-5 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">搜索</button>
-            {keyword && (
-              <button
-                type="button"
-                onClick={() => { setInputValue(''); setParam({ keyword: undefined, page: undefined }) }}
-                className="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
-              >
-                清除
-              </button>
-            )}
-          </form>
         </div>
       </div>
 

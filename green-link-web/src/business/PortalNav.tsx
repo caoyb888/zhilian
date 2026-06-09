@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Bell, Menu, Sparkles, X } from 'lucide-react'
+import { Bell, ChevronDown, Menu, Search, Sparkles, User, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 import { useUnreadCount } from '@/services/messageService'
@@ -23,62 +23,73 @@ export function PortalNav() {
     pathname === path || (path !== '/portal' && pathname.startsWith(path))
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-100 shadow-sm">
+    <header className="sticky top-0 z-40 bg-gradient-to-b from-[#F8FAF9] to-white border-b border-stone-100/80 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/portal" className="flex items-center gap-2.5">
+        <div className="relative flex h-16 lg:h-[72px] items-center">
+          {/* Logo — 左 */}
+          <Link to="/portal" className="relative z-10 flex items-center gap-2.5 flex-shrink-0">
             <img
               src="/lsdt-logo.png"
               alt="山东省绿色低碳产业发展协会"
               className="h-9 w-9 rounded-full object-contain ring-1 ring-stone-100"
             />
-            <div className="hidden sm:flex flex-col">
+            <div className="hidden sm:flex flex-col justify-center">
               <span className="font-bold text-stone-900 text-lg leading-tight">绿产智链</span>
-              <span className="text-stone-400 text-xs leading-tight">山东绿色低碳产业智慧平台</span>
+              <span className="text-stone-300 text-[11px] leading-tight">山东绿色低碳产业智慧平台</span>
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ label, path }) => (
-              <Link
-                key={path}
-                to={path}
-                className={[
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive(path)
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50',
-                ].join(' ')}
-              >
-                {label}
-              </Link>
-            ))}
-            {accountInfo && (
-              <Link
-                to="/supply/recommend"
-                className={[
-                  'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive('/supply/recommend')
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50',
-                ].join(' ')}
-              >
-                <Icon icon={Sparkles} size={14} />
-                智能推荐
-              </Link>
-            )}
+          {/* Desktop Nav — 中（绝对居中） */}
+          <nav className="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {NAV_LINKS.map(({ label, path }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={[
+                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    isActive(path)
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
+                  ].join(' ')}
+                >
+                  {label}
+                </Link>
+              ))}
+              {accountInfo && (
+                <Link
+                  to="/supply/recommend"
+                  className={[
+                    'inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    isActive('/supply/recommend')
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
+                  ].join(' ')}
+                >
+                  <Icon icon={Sparkles} size={14} />
+                  智能推荐
+                </Link>
+              )}
+            </div>
           </nav>
 
-          {/* User / Auth */}
-          <div className="flex items-center gap-3">
+          {/* User / Auth — 右 */}
+          <div className="relative z-10 flex items-center gap-2 ml-auto flex-shrink-0">
             {accountInfo ? (
               <>
-                {/* Bell icon with unread badge */}
+                {/* 搜索图标 */}
+                <Link
+                  to="/supply"
+                  className="hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
+                  aria-label="搜索供需"
+                >
+                  <Icon icon={Search} size={18} />
+                </Link>
+
+                {/* 消息通知（含未读角标） */}
                 <Link
                   to="/member/messages"
-                  className="relative p-1.5 text-stone-500 hover:text-stone-800 transition-colors"
+                  className="relative hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
                   aria-label={totalUnread > 0 ? `${totalUnread} 条未读消息` : '消息中心'}
                 >
                   <Icon icon={Bell} size={18} />
@@ -88,11 +99,31 @@ export function PortalNav() {
                     </span>
                   )}
                 </Link>
+
+                {/* 发布供需按钮 */}
+                <Link
+                  to="/supply/resources/publish"
+                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 px-4 py-1.5 text-sm font-medium hover:bg-emerald-100 transition-all"
+                >
+                  发布供需
+                </Link>
+
+                {/* 用户头像 + 姓名 + 下拉 */}
                 <Link
                   to="/member/profile"
-                  className="text-sm font-medium text-emerald-700 hover:text-emerald-800 transition-colors"
+                  className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full hover:bg-stone-50 transition-all"
                 >
-                  {accountInfo.realName ?? accountInfo.username} · 会员中心
+                  <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden">
+                    {accountInfo.avatarUrl ? (
+                      <img src={accountInfo.avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Icon icon={User} size={14} className="text-emerald-600" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-stone-700 hidden sm:block">
+                    {accountInfo.realName ?? accountInfo.username}
+                  </span>
+                  <Icon icon={ChevronDown} size={14} className="text-stone-400 hidden sm:block" />
                 </Link>
               </>
             ) : (

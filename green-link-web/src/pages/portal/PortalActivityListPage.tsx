@@ -39,19 +39,31 @@ function ActivityCard({ activity }: { activity: Activity }) {
   return (
     <Link
       to={`/portal/activities/${activity.id}`}
-      className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+      className={[
+        'group flex flex-col overflow-hidden bg-white',
+        'border border-stone-200/80',
+        'rounded-2xl shadow-sm',
+        'hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-900/5',
+        'hover:-translate-y-0.5 transition-all duration-300',
+      ].join(' ')}
     >
       {/* Cover */}
-      <div className="aspect-[16/10] bg-gradient-to-br from-emerald-50 to-teal-100 overflow-hidden flex-shrink-0">
+      <div className="aspect-[16/10] bg-gradient-to-br from-emerald-50 to-stone-100 overflow-hidden flex-shrink-0 relative">
         {activity.coverUrl ? (
           <img
             src={activity.coverUrl}
             alt={activity.title}
-            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-teal-200 select-none">
-            <Icon icon={CalendarDays} size={40} />
+          <div className="flex h-full items-center justify-center relative overflow-hidden">
+            <img
+              src="/lsdt-logo.png"
+              alt=""
+              className="absolute w-24 h-24 opacity-10 object-contain"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/80 to-stone-100/80" />
+            <Icon icon={CalendarDays} size={32} className="relative text-emerald-200" />
           </div>
         )}
       </div>
@@ -172,25 +184,62 @@ export default function PortalActivityListPage() {
     <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
 
-      {/* Page header */}
-      <div className="bg-theme-surface border-b border-theme-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl font-bold text-theme-text-main">近期活动</h1>
-          <p className="mt-1 text-sm text-theme-text-muted">绿色产业交流会议 · 对接展览 · 专题培训</p>
-        </div>
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        {/* 品牌色渐变背景 */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)',
+          }}
+        />
+        {/* 科技感方格纹路 */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
 
-        {/* Status tabs */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            {/* 左侧：标题 + 副标题 */}
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">近期活动</h1>
+              <p className="mt-2 text-sm text-white/80">绿色产业交流会议 · 对接展览 · 专题培训</p>
+            </div>
+
+            {/* 右侧：统计/装饰区（活动页暂无搜索，用简洁图标占位保持视觉平衡） */}
+            <div className="hidden lg:flex items-center gap-6 text-white/70">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Icon icon={CalendarDays} size={20} className="text-white" />
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-white leading-none">{total}</div>
+                  <div className="text-xs text-white/60 mt-0.5">场活动</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status pills */}
+      <div className="bg-white border-b border-theme-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-wrap gap-2">
             {STATUS_TABS.map(({ label, value }) => (
               <button
                 key={label}
                 onClick={() => handleStatusChange(value)}
                 className={[
-                  'px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200',
+                  'rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200',
                   status === value
-                    ? 'border-theme-accent text-theme-accent'
-                    : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300',
+                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                    : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700',
                 ].join(' ')}
               >
                 {label}
@@ -239,7 +288,7 @@ export default function PortalActivityListPage() {
         </div>
 
         {total > PAGE_SIZE && (
-          <div className="mt-8">
+          <div className="mt-8 pt-6 border-t border-stone-100">
             <Pagination page={page} total={total} size={PAGE_SIZE} onChange={handlePageChange} />
           </div>
         )}
