@@ -20,11 +20,11 @@ export function PortalNav() {
     pathname === path || (path !== '/portal' && pathname.startsWith(path))
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-100 shadow-sm">
+    <header className="sticky top-0 z-40 bg-gradient-to-b from-[#F8FAF9] to-white border-b border-stone-100/80 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 lg:h-[72px] items-center justify-between">
-          {/* Logo */}
-          <Link to="/portal" className="flex items-center gap-2.5">
+        <div className="relative flex h-16 lg:h-[72px] items-center">
+          {/* Logo — 左 */}
+          <Link to="/portal" className="relative z-10 flex items-center gap-2.5 flex-shrink-0">
             <img
               src="/lsdt-logo.png"
               alt="山东省绿色低碳产业发展协会"
@@ -36,40 +36,42 @@ export function PortalNav() {
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ label, path }) => (
-              <Link
-                key={path}
-                to={path}
-                className={[
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive(path)
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
-                ].join(' ')}
-              >
-                {label}
-              </Link>
-            ))}
-            {accountInfo && (
-              <Link
-                to="/supply/recommend"
-                className={[
-                  'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive('/supply/recommend')
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
-                ].join(' ')}
-              >
-                <Icon icon={Sparkles} size={14} />
-                智能推荐
-              </Link>
-            )}
+          {/* Desktop Nav — 中（绝对居中） */}
+          <nav className="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {NAV_LINKS.map(({ label, path }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={[
+                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    isActive(path)
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
+                  ].join(' ')}
+                >
+                  {label}
+                </Link>
+              ))}
+              {accountInfo && (
+                <Link
+                  to="/supply/recommend"
+                  className={[
+                    'inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    isActive('/supply/recommend')
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
+                  ].join(' ')}
+                >
+                  <Icon icon={Sparkles} size={14} />
+                  智能推荐
+                </Link>
+              )}
+            </div>
           </nav>
 
-          {/* User / Auth */}
-          <div className="flex items-center gap-2">
+          {/* User / Auth — 右 */}
+          <div className="relative z-10 flex items-center gap-2 ml-auto flex-shrink-0">
             {accountInfo ? (
               <>
                 {/* 搜索图标 */}
