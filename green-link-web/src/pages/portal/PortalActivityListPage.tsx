@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { MapPin, Calendar, CalendarDays, Clock } from 'lucide-react'
+import { MapPin, Calendar, CalendarDays, Clock, PartyPopper } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
@@ -207,7 +207,10 @@ export default function PortalActivityListPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* 左侧：标题 + 副标题 */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">近期活动</h1>
+              <div className="flex items-center gap-2">
+                <Icon icon={PartyPopper} size={24} className="text-white/70" />
+                <h1 className="text-3xl font-bold text-white tracking-tight">近期活动</h1>
+              </div>
               <p className="mt-1 text-sm text-white/70">绿色产业交流会议 · 对接展览 · 专题培训</p>
             </div>
 

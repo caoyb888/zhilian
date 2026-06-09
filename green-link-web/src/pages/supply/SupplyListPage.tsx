@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
-  Building2, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Calendar, RefreshCw,
+  Building2, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Calendar, RefreshCw, Handshake,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -600,7 +600,10 @@ export default function SupplyListPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* 左侧：标题 + 副标题 */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
+              <div className="flex items-center gap-2">
+                <Icon icon={Handshake} size={24} className="text-white/70" />
+                <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
+              </div>
               <p className="mt-1 text-sm text-white/70">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
             </div>
 
