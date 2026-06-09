@@ -293,6 +293,7 @@ export function useFavoriteDemand() {
     onSuccess: (_data, demandId) => {
       queryClient.invalidateQueries({ queryKey: ['supply', 'demand', 'detail', demandId] })
       queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] })
+      queryClient.invalidateQueries({ queryKey: ['favorites', 'DEMAND'] })
     },
   })
 }
@@ -305,7 +306,33 @@ export function useUnfavoriteDemand() {
     onSuccess: (_data, demandId) => {
       queryClient.invalidateQueries({ queryKey: ['supply', 'demand', 'detail', demandId] })
       queryClient.invalidateQueries({ queryKey: ['supply', 'demands'] })
+      queryClient.invalidateQueries({ queryKey: ['favorites', 'DEMAND'] })
     },
+  })
+}
+
+// ─── Favorites List ────────────────────────────────────────────────────────────
+
+export interface FavoriteItem {
+  favoriteId: number
+  bizType: 'RESOURCE' | 'DEMAND'
+  bizId: number
+  title: string
+  summary: string | null
+  type: string
+  createdAt: string
+}
+
+export function useFavoriteList(bizType: 'RESOURCE' | 'DEMAND', page: number, size: number) {
+  return useQuery({
+    queryKey: ['favorites', bizType, page, size],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<PageData<FavoriteItem>>>('/favorites', {
+        params: { bizType, page, size },
+      })
+      return res.data.data
+    },
+    placeholderData: (prev) => prev,
   })
 }
 

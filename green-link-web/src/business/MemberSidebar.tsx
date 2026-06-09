@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, Boxes, ClipboardList, Handshake, LogOut, User, Users } from 'lucide-react'
+import { Bell, Boxes, ClipboardList, Handshake, Heart, LogOut, User, Users } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Badge } from '@/components/Badge'
 import { useAuthStore } from '@/stores/authStore'
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: '我的需求', path: '/member/my-demands', icon: ClipboardList },
   { label: '我的对接', path: '/member/my-records', icon: Handshake },
   { label: '消息中心', path: '/member/messages', icon: Bell },
+  { label: '我的收藏', path: '/member/favorites', icon: Heart },
   { label: '子账号管理', path: '/member/sub-accounts', icon: Users },
 ]
 
