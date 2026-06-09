@@ -1,15 +1,17 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { User, Users, LogOut, Boxes, ClipboardList, Handshake } from 'lucide-react'
+import { Bell, Boxes, ClipboardList, Handshake, LogOut, User, Users } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Badge } from '@/components/Badge'
 import { useAuthStore } from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuthMutations'
+import { useUnreadCount } from '@/services/messageService'
 
 const NAV_ITEMS = [
   { label: '个人信息', path: '/member/profile', icon: User },
   { label: '我的资源', path: '/member/my-resources', icon: Boxes },
   { label: '我的需求', path: '/member/my-demands', icon: ClipboardList },
   { label: '我的对接', path: '/member/my-records', icon: Handshake },
+  { label: '消息中心', path: '/member/messages', icon: Bell },
   { label: '子账号管理', path: '/member/sub-accounts', icon: Users },
 ]
 
@@ -26,6 +28,7 @@ export function MemberSidebar() {
   const levelMeta = accountInfo
     ? (MEMBER_LEVEL_MAP[accountInfo.memberLevel] ?? MEMBER_LEVEL_MAP[1])
     : null
+  const { data: unreadCount } = useUnreadCount(!!accountInfo)
 
   return (
     <aside className="w-56 flex-shrink-0">
@@ -51,23 +54,32 @@ export function MemberSidebar() {
 
       {/* Nav */}
       <nav className="rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
-        {NAV_ITEMS.map(({ label, path, icon }) => (
-          <NavLink
-            key={path}
-            to={path}
-            className={({ isActive }) =>
-              [
-                'flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-all duration-200',
-                isActive
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900',
-              ].join(' ')
-            }
-          >
-            <Icon icon={icon} size={18} />
-            {label}
-          </NavLink>
-        ))}
+        {NAV_ITEMS.map(({ label, path, icon }) => {
+          const isMessages = path === '/member/messages'
+          const msgUnread = isMessages ? (unreadCount?.total ?? 0) : 0
+          return (
+            <NavLink
+              key={path}
+              to={path}
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900',
+                ].join(' ')
+              }
+            >
+              <Icon icon={icon} size={18} />
+              <span className="flex-1">{label}</span>
+              {msgUnread > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                  {msgUnread > 99 ? '99+' : msgUnread}
+                </span>
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* Logout */}
