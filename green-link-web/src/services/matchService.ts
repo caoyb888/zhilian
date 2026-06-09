@@ -180,6 +180,68 @@ export function useActiveMatchRecord(
   }, [query.data, targetField, targetId])
 }
 
+// ─── Match Messages ───────────────────────────────────────────────────────────
+
+export interface MatchMessage {
+  id: number
+  matchId: number
+  senderId: number
+  content: string
+  /** 1=文本 2=附件 */
+  msgType: number
+  attachUrl: string | null
+  isRead: boolean
+  createdAt: string
+}
+
+export interface SendMatchMessageBody {
+  content: string
+  msgType?: number
+  attachUrl?: string
+}
+
+export async function fetchMatchMessages(
+  matchId: number,
+  params: { page: number; size: number },
+): Promise<PageData<MatchMessage>> {
+  const res = await http.get<ApiResult<PageData<MatchMessage>>>(
+    `/match/records/${matchId}/messages`,
+    { params },
+  )
+  return res.data.data
+}
+
+export function useSendMatchMessage(matchId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: SendMatchMessageBody) => {
+      const res = await http.post<ApiResult<MatchMessage>>(
+        `/match/records/${matchId}/messages`,
+        body,
+      )
+      return res.data.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['match', 'records', 'my'] })
+    },
+  })
+}
+
+export function useMarkMatchMessagesRead(matchId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const res = await http.patch<ApiResult<{ markedCount: number }>>(
+        `/match/records/${matchId}/messages/read`,
+      )
+      return res.data.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['match', 'records', 'my'] })
+    },
+  })
+}
+
 // ─── Recommendations ─────────────────────────────────────────────────────────
 
 export function useRecommendations(params: RecommendParams, enabled: boolean) {

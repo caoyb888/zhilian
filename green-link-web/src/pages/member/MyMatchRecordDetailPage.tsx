@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { clsx } from 'clsx'
 import {
   AlertTriangle, ArrowLeft, Building2, CalendarDays, CheckCircle2,
-  FileText, Handshake, MapPin, MessageSquare, Sparkles, XCircle,
+  FileText, Handshake, MapPin, MessageCircle, MessageSquare, Sparkles, XCircle,
 } from 'lucide-react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { Icon } from '@/components/Icon'
@@ -495,6 +495,22 @@ export default function MyMatchRecordDetailPage() {
           {/* Quick links */}
           <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">快速跳转</p>
+
+            {/* Chat entry */}
+            <Link
+              to={`/member/my-records/${record.recordId}/chat`}
+              state={{ record }}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+            >
+              <Icon icon={MessageCircle} size={14} className="text-emerald-500 flex-shrink-0" />
+              进入对接沟通
+              {record.unreadCount > 0 && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
+                  {record.unreadCount > 99 ? '99+' : record.unreadCount}
+                </span>
+              )}
+            </Link>
+
             {record.resourceId && (
               <Link
                 to={`/supply/resources/${record.resourceId}`}
