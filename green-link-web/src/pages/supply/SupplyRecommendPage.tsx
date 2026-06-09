@@ -299,16 +299,42 @@ export default function SupplyRecommendPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <PortalNav />
 
-      {/* Page header */}
-      <div className="bg-white border-b border-stone-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <Icon icon={Sparkles} size={20} className="text-emerald-600" />
-            </div>
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        {/* 品牌色渐变背景 */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)',
+          }}
+        />
+        {/* 科技感方格纹路 */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* 左侧：标题 + 副标题 */}
             <div>
-              <h1 className="text-lg font-bold text-stone-900">智能推荐</h1>
-              <p className="text-xs text-stone-400 mt-0.5">基于行业标签与地域相近度为您精准匹配供需</p>
+              <h1 className="text-3xl font-bold text-white tracking-tight">智能推荐</h1>
+              <p className="mt-2 text-sm text-white/80">基于行业标签与地域相近度为您精准匹配供需</p>
+            </div>
+
+            {/* 右侧：装饰图标区 */}
+            <div className="hidden lg:flex items-center gap-3 text-white/70">
+              <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                <Icon icon={Sparkles} size={24} className="text-white" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-white leading-none">AI 匹配</div>
+                <div className="text-xs text-white/60 mt-0.5">标签召回 + 相似度排序</div>
+              </div>
             </div>
           </div>
         </div>
