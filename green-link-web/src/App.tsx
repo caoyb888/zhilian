@@ -26,6 +26,7 @@ const MyResourcesPage          = lazy(() => import('@/pages/member/MyResourcesPa
 const MyDemandsPage            = lazy(() => import('@/pages/member/MyDemandsPage'))
 const MyMatchRecordsPage       = lazy(() => import('@/pages/member/MyMatchRecordsPage'))
 const MyMatchRecordDetailPage  = lazy(() => import('@/pages/member/MyMatchRecordDetailPage'))
+const MatchChatPage            = lazy(() => import('@/pages/member/MatchChatPage'))
 const SubAccountPage           = lazy(() => import('@/pages/member/SubAccountPage'))
 const NotFoundPage             = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage            = lazy(() => import('@/pages/ForbiddenPage'))
@@ -104,6 +105,7 @@ export default function App() {
               <Route path="my-demands" element={<MyDemandsPage />} />
               <Route path="my-records" element={<MyMatchRecordsPage />} />
               <Route path="my-records/:id" element={<MyMatchRecordDetailPage />} />
+              <Route path="my-records/:id/chat" element={<MatchChatPage />} />
               <Route path="sub-accounts" element={<SubAccountPage />} />
             </Route>
 
