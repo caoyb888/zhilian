@@ -268,12 +268,11 @@ export default function PortalArticleListPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             {/* 左侧：标题区 */}
             <div>
-              <div className="flex items-center gap-3">
-                <Icon icon={Newspaper} size={32} className="text-white/80" />
+              <div className="flex items-center gap-2">
+                <Icon icon={Newspaper} size={24} className="text-white/70" />
                 <h1 className="text-3xl font-bold text-white tracking-tight">资讯中心</h1>
               </div>
-              <div className="mt-3 ml-[2px] w-12 h-0.5 bg-white/30 rounded-full" />
-              <p className="mt-3 text-sm text-white/80">
+              <p className="mt-1 text-sm text-white/70">
                 聚焦绿色低碳，赋能产业发展
               </p>
             </div>
