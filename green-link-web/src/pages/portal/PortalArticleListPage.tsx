@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
-import { Search, User, Eye, CalendarDays, Flame } from 'lucide-react'
+import { Search, User, Eye, CalendarDays, Flame, Newspaper } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Badge, type BadgeVariant } from '@/components/Badge'
 import { EmptyState } from '@/components/states/EmptyState'
@@ -13,6 +13,18 @@ import { usePublicArticleList, usePortalCategories } from '@/services/articleSer
 import type { ArticleItem, CategoryItem } from '@/services/articleService'
 
 const PAGE_SIZE = 12
+
+// ─── Hot search tags ──────────────────────────────────────────────────────────
+
+const HOT_TAGS = ['碳达峰', '双碳政策', '技术专利', '绿色金融']
+
+// ─── Ticker items ─────────────────────────────────────────────────────────────
+
+const TICKER_ITEMS = [
+  { type: '最新', text: '山东省碳达峰实施方案解读已发布' },
+  { type: '通知', text: '下一场双碳技术交流会将于6月15日举行' },
+  { type: '政策', text: '绿色低碳产业发展专项资金申报指南' },
+]
 
 // ─── Highlight-aware text render ──────────────────────────────────────────────
 
@@ -235,6 +247,13 @@ export default function PortalArticleListPage() {
             background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)',
           }}
         />
+        {/* 径向光晕装饰 */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            background: 'radial-gradient(circle at 25% 50%, rgba(255,255,255,0.9) 0%, transparent 55%)',
+          }}
+        />
         {/* 科技感方格纹路 */}
         <div
           className="absolute inset-0 opacity-[0.08]"
@@ -246,49 +265,96 @@ export default function PortalArticleListPage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            {/* 左侧：标题 + 副标题 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            {/* 左侧：标题区 */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">资讯中心</h1>
-              <p className="mt-2 text-sm text-white/80">绿色低碳产业资讯汇集地</p>
+              <div className="flex items-center gap-3">
+                <Icon icon={Newspaper} size={32} className="text-white/80" />
+                <h1 className="text-4xl font-bold text-white tracking-tight">资讯中心</h1>
+              </div>
+              <div className="mt-3 ml-[2px] w-12 h-0.5 bg-white/30 rounded-full" />
+              <p className="mt-4 text-base text-white/80 font-medium">
+                聚焦绿色低碳，赋能产业发展
+              </p>
+
+              {/* 热门搜索标签 */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {HOT_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      setInputValue(tag)
+                      setParam({ keyword: tag, page: undefined })
+                    }}
+                    className="text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/15 rounded-full px-3 py-1 transition-all border border-white/15 hover:border-white/30"
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* 右侧：搜索组件（玻璃拟态） */}
-            <form
-              onSubmit={handleSearch}
-              className="flex gap-2 w-full max-w-md lg:w-auto lg:min-w-[360px]"
-            >
-              <div className="relative flex-1">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
-                  <Icon icon={Search} size={16} />
-                </div>
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="搜索文章…"
-                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 transition-all duration-200"
-                />
-              </div>
-              <button
-                type="submit"
-                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-6 py-3 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
+            {/* 右侧：搜索区 */}
+            <div className="flex justify-start lg:justify-end">
+              <form
+                onSubmit={handleSearch}
+                className="flex items-center gap-2 w-full max-w-sm"
               >
-                搜索
-              </button>
-              {keyword && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInputValue('')
-                    setParam({ keyword: undefined, page: undefined })
-                  }}
-                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="搜索文章…"
+                    className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-4 pr-12 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-lg shadow-black/10 transition-all duration-200"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-gradient-to-r from-white/30 to-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white hover:from-white/40 hover:to-white/30 transition-all"
+                    aria-label="搜索"
+                  >
+                    <Icon icon={Search} size={16} />
+                  </button>
+                </div>
+                {keyword && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInputValue('')
+                      setParam({ keyword: undefined, page: undefined })
+                    }}
+                    className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                  >
+                    清除
+                  </button>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticker bar */}
+      <div className="relative bg-emerald-900/20 backdrop-blur-sm border-t border-white/10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <span className="flex-shrink-0 text-[10px] font-bold text-white/50 uppercase tracking-wider bg-white/10 rounded px-1.5 py-0.5">
+              快讯
+            </span>
+            <div className="flex gap-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {TICKER_ITEMS.map((item, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-2 text-sm text-white/85 whitespace-nowrap"
                 >
-                  清除
-                </button>
-              )}
-            </form>
+                  <span className="bg-white/15 rounded px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    {item.type}
+                  </span>
+                  {item.text}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
