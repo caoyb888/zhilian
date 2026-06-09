@@ -26,5 +26,9 @@ public class MessageNotification {
     /** 0待发送 1已发送 2失败 */
     private Integer sendStatus;
     private LocalDateTime sendAt;
+    /** 已重试次数（最多 3 次） */
+    private Integer retryCount;
+    /** 最后一次推送失败原因 */
+    private String failReason;
     private LocalDateTime createdAt;
 }
