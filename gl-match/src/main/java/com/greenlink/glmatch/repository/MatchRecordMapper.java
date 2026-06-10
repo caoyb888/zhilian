@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Mapper
@@ -150,4 +151,20 @@ public interface MatchRecordMapper extends BaseMapper<MatchRecord> {
             @Result(column = "cnt", property = "cnt")
     })
     List<MemberCompletedCount> countCompletedByDemandMemberIds(@Param("memberIds") List<Long> memberIds);
+
+    /**
+     * 按天统计近 N 天内新增的对接记录数量（以 created_at 计）。
+     */
+    @Select("SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS createdDate, COUNT(*) AS cnt " +
+            "FROM match_record " +
+            "WHERE created_at >= #{startDate} " +
+            "  AND created_at < DATE_ADD(#{endDate}, INTERVAL 1 DAY) " +
+            "  AND is_deleted = 0 " +
+            "GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')")
+    @Results({
+            @Result(column = "createdDate", property = "createdDate"),
+            @Result(column = "cnt",         property = "cnt")
+    })
+    List<Map<String, Object>> countCreatedByDay(@Param("startDate") String startDate,
+                                                 @Param("endDate")   String endDate);
 }

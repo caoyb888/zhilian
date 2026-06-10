@@ -3,6 +3,7 @@ package com.greenlink.gladmin.service.impl;
 import com.greenlink.common.result.Result;
 import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
+import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MatchStatsDTO;
 import com.greenlink.gladmin.dto.response.MemberStatsDTO;
 import com.greenlink.gladmin.dto.response.SupplyStatsDTO;
@@ -53,6 +54,22 @@ public class DashboardServiceImpl implements DashboardService {
         }
         AuditSummaryVO fallback = new AuditSummaryVO();
         fallback.setLast7DaysAudit(new java.util.ArrayList<>());
+        return fallback;
+    }
+
+    @Override
+    public MatchDetailStatsVO getMatchDetailStats() {
+        try {
+            Result<MatchDetailStatsVO> result = matchClient.getMatchDetailStats();
+            if (result != null && result.getCode() == 0 && result.getData() != null) {
+                return result.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取对接数据统计失败", e);
+        }
+        MatchDetailStatsVO fallback = new MatchDetailStatsVO();
+        fallback.setSuccessRate(java.math.BigDecimal.ZERO);
+        fallback.setLast30DaysTrend(new java.util.ArrayList<>());
         return fallback;
     }
 
