@@ -1,6 +1,7 @@
 package com.greenlink.gladmin.feign;
 
 import com.greenlink.common.result.Result;
+import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.SupplyStatsDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,4 +12,7 @@ public interface SupplyClient {
 
     @GetMapping("/api/v1/supply/internal/stats")
     Result<SupplyStatsDTO> getStats();
+
+    @GetMapping("/api/v1/supply/internal/audit-summary")
+    Result<AuditSummaryVO> getAuditSummary();
 }
