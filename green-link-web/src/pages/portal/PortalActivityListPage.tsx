@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { MapPin, Calendar, CalendarDays, Clock } from 'lucide-react'
+import { MapPin, Calendar, CalendarDays, Clock, PartyPopper } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
@@ -203,15 +203,18 @@ export default function PortalActivityListPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* 左侧：标题 + 副标题 */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">近期活动</h1>
-              <p className="mt-2 text-sm text-white/80">绿色产业交流会议 · 对接展览 · 专题培训</p>
+              <div className="flex items-center gap-2">
+                <Icon icon={PartyPopper} size={24} className="text-white/70" />
+                <h1 className="text-3xl font-bold text-white tracking-tight">近期活动</h1>
+              </div>
+              <p className="mt-1 text-sm text-white/70">绿色产业交流会议 · 对接展览 · 专题培训</p>
             </div>
 
-            {/* 右侧：统计/装饰区（活动页暂无搜索，用简洁图标占位保持视觉平衡） */}
+            {/* 右侧：统计/装饰区 */}
             <div className="hidden lg:flex items-center gap-6 text-white/70">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
@@ -221,6 +224,41 @@ export default function PortalActivityListPage() {
                   <div className="text-lg font-bold text-white leading-none">{total}</div>
                   <div className="text-xs text-white/60 mt-0.5">场活动</div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticker bar */}
+      <div className="relative overflow-hidden" style={{ background: 'rgba(0, 60, 45, 0.85)' }}>
+        <style>{`
+          @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .ticker-animate {
+            animation: ticker-scroll 20s linear infinite;
+          }
+        `}</style>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className="flex-shrink-0 text-[10px] font-bold text-emerald-200 uppercase tracking-wider bg-emerald-500/20 rounded px-1.5 py-0.5">
+              最新活动
+            </span>
+            <div className="flex-1 overflow-hidden relative">
+              <div className="ticker-animate flex gap-8 whitespace-nowrap w-max">
+                {[
+                  { type: '活动', text: '山东省双碳技术交流峰会将于7月举办' },
+                  { type: '展览', text: '绿色低碳产业成果展报名启动' },
+                  { type: '培训', text: '碳资产管理师认证培训班开放报名' },
+                  { type: '会议', text: '全国绿色金融创新发展论坛征稿中' },
+                ].map((item, i) => (
+                  <span key={i} className="inline-flex items-center gap-2 text-sm text-white/90">
+                    <span className="bg-emerald-500/25 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">{item.type}</span>
+                    {item.text}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
