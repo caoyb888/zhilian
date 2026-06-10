@@ -3,6 +3,7 @@ package com.greenlink.gladmin.controller;
 import com.greenlink.common.result.Result;
 import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
+import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
 import com.greenlink.gladmin.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,5 +62,27 @@ public class DashboardController {
     @GetMapping("/audit-summary")
     public Result<AuditSummaryVO> auditSummary() {
         return Result.ok(dashboardService.getAuditSummary());
+    }
+
+    /**
+     * 对接数据统计（S7-03）。
+     *
+     * <pre>
+     * GET /api/v1/admin/dashboard/match-stats
+     * 响应：
+     * {
+     *   "totalMatchCount": 340,
+     *   "completedMatchCount": 144,
+     *   "successRate": 42.35,
+     *   "last30DaysTrend": [
+     *     {"date": "2026-05-13", "newMatchCount": 5},
+     *     ...共 30 条，升序
+     *   ]
+     * }
+     * </pre>
+     */
+    @GetMapping("/match-stats")
+    public Result<MatchDetailStatsVO> matchStats() {
+        return Result.ok(dashboardService.getMatchDetailStats());
     }
 }
