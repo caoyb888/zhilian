@@ -411,6 +411,23 @@ public class MemberServiceImpl implements MemberService {
                         (a, b) -> a));
     }
 
+    @Override
+    public com.greenlink.glmember.dto.response.MemberStatsVO getStats() {
+        java.time.LocalDateTime monthStart = java.time.LocalDate.now()
+                .withDayOfMonth(1).atStartOfDay();
+
+        long total = memberUnitMapper.selectCount(
+                new QueryWrapper<MemberUnit>().eq("status", 1));
+        long newThisMonth = memberUnitMapper.selectCount(
+                new QueryWrapper<MemberUnit>().ge("created_at", monthStart));
+
+        com.greenlink.glmember.dto.response.MemberStatsVO vo =
+                new com.greenlink.glmember.dto.response.MemberStatsVO();
+        vo.setTotalMembers(total);
+        vo.setNewMembersThisMonth(newThisMonth);
+        return vo;
+    }
+
     private void checkUpdatePermission(Long memberId, Long requestingAccountId, String roles) {
         boolean isAdmin = roles != null &&
                 (roles.contains("SUPER_ADMIN") || roles.contains("CONTENT_ADMIN"));

@@ -9,6 +9,7 @@ import com.greenlink.glmember.dto.response.MemberBriefVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
+import com.greenlink.glmember.dto.response.MemberStatsVO;
 import com.greenlink.glmember.dto.response.RegisterResponse;
 
 import java.util.List;
@@ -44,4 +45,7 @@ public interface MemberService {
      * key=memberId, value=accountId；无主账号的 memberId 不出现在 map 中。
      */
     Map<Long, Long> getMainAccountIdMap(List<Long> memberIds);
+
+    /** 内部统计：总会员数（status=1）与本月新增数，供 gl-admin 看板聚合调用 */
+    MemberStatsVO getStats();
 }

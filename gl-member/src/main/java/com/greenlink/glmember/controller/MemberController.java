@@ -10,6 +10,7 @@ import com.greenlink.glmember.dto.response.AdminAccountVO;
 import com.greenlink.glmember.dto.response.MemberBriefVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
+import com.greenlink.glmember.dto.response.MemberStatsVO;
 import com.greenlink.glmember.dto.response.MemberVO;
 import com.greenlink.glmember.dto.response.RegisterResponse;
 import com.greenlink.glmember.service.MemberService;
@@ -92,6 +93,12 @@ public class MemberController {
         requireSuperAdmin(request);
         memberService.updateMemberStatus(memberId, req.getStatus());
         return Result.ok();
+    }
+
+    /** 内部统计接口：总会员数 + 本月新增（供 gl-admin 看板 Feign 调用，无需登录） */
+    @GetMapping("/internal/stats")
+    public Result<MemberStatsVO> internalStats() {
+        return Result.ok(memberService.getStats());
     }
 
     /** 批量查询会员单位简要信息（供服务间 Feign 内部调用） */
