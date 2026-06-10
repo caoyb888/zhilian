@@ -4,6 +4,7 @@ import com.greenlink.common.result.Result;
 import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
 import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
+import com.greenlink.gladmin.dto.response.MemberDetailStatsVO;
 import com.greenlink.gladmin.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,5 +85,27 @@ public class DashboardController {
     @GetMapping("/match-stats")
     public Result<MatchDetailStatsVO> matchStats() {
         return Result.ok(dashboardService.getMatchDetailStats());
+    }
+
+    /**
+     * 会员数据统计（S7-04）。
+     *
+     * <pre>
+     * GET /api/v1/admin/dashboard/member-stats
+     * 响应：
+     * {
+     *   "totalMembers": 120,
+     *   "newMembersThisMonth": 8,
+     *   "industryDistribution": [
+     *     {"industry": "新能源", "count": 35},
+     *     {"industry": "节能环保", "count": 28},
+     *     ...最多 20 条，降序
+     *   ]
+     * }
+     * </pre>
+     */
+    @GetMapping("/member-stats")
+    public Result<MemberDetailStatsVO> memberStats() {
+        return Result.ok(dashboardService.getMemberDetailStats());
     }
 }

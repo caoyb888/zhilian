@@ -5,6 +5,7 @@ import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
 import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MatchStatsDTO;
+import com.greenlink.gladmin.dto.response.MemberDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MemberStatsDTO;
 import com.greenlink.gladmin.dto.response.SupplyStatsDTO;
 import com.greenlink.gladmin.feign.MatchClient;
@@ -70,6 +71,21 @@ public class DashboardServiceImpl implements DashboardService {
         MatchDetailStatsVO fallback = new MatchDetailStatsVO();
         fallback.setSuccessRate(java.math.BigDecimal.ZERO);
         fallback.setLast30DaysTrend(new java.util.ArrayList<>());
+        return fallback;
+    }
+
+    @Override
+    public MemberDetailStatsVO getMemberDetailStats() {
+        try {
+            Result<MemberDetailStatsVO> result = memberClient.getMemberDetailStats();
+            if (result != null && result.getCode() == 0 && result.getData() != null) {
+                return result.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取会员数据统计失败", e);
+        }
+        MemberDetailStatsVO fallback = new MemberDetailStatsVO();
+        fallback.setIndustryDistribution(new java.util.ArrayList<>());
         return fallback;
     }
 

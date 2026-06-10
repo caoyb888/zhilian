@@ -8,6 +8,7 @@ import com.greenlink.glmember.dto.request.RegisterRequest;
 import com.greenlink.glmember.dto.request.UpdateMemberRequest;
 import com.greenlink.glmember.dto.response.AdminAccountVO;
 import com.greenlink.glmember.dto.response.MemberBriefVO;
+import com.greenlink.glmember.dto.response.MemberDetailStatsVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberStatsVO;
@@ -99,6 +100,12 @@ public class MemberController {
     @GetMapping("/internal/stats")
     public Result<MemberStatsVO> internalStats() {
         return Result.ok(memberService.getStats());
+    }
+
+    /** 内部详细统计：总会员数 + 本月新增 + 行业分布 TOP-20（供 gl-admin S7-04 调用） */
+    @GetMapping("/internal/member-stats")
+    public Result<MemberDetailStatsVO> internalMemberStats() {
+        return Result.ok(memberService.getMemberDetailStats());
     }
 
     /** 批量查询会员单位简要信息（供服务间 Feign 内部调用） */
