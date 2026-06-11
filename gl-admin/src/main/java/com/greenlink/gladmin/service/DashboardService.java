@@ -4,6 +4,7 @@ import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
 import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MemberDetailStatsVO;
+import com.greenlink.gladmin.dto.response.MessageStatsVO;
 
 public interface DashboardService {
 
@@ -18,4 +19,7 @@ public interface DashboardService {
 
     /** 会员数据统计：总会员数 + 本月新增 + 行业分布（S7-04） */
     MemberDetailStatsVO getMemberDetailStats();
+
+    /** 消息发送统计：站内信 + 微信发送成功率（S7-05） */
+    MessageStatsVO getMessageStats();
 }

@@ -5,6 +5,7 @@ import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
 import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MemberDetailStatsVO;
+import com.greenlink.gladmin.dto.response.MessageStatsVO;
 import com.greenlink.gladmin.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -107,5 +108,22 @@ public class DashboardController {
     @GetMapping("/member-stats")
     public Result<MemberDetailStatsVO> memberStats() {
         return Result.ok(dashboardService.getMemberDetailStats());
+    }
+
+    /**
+     * 消息发送统计（S7-05）。
+     *
+     * <pre>
+     * GET /api/v1/admin/dashboard/message-stats
+     * 响应：
+     * {
+     *   "site":   {"totalProcessed":850,"successCount":840,"failedCount":10,"successRate":98.82},
+     *   "wechat": {"totalProcessed":120,"successCount":98, "failedCount":22,"successRate":81.67}
+     * }
+     * </pre>
+     */
+    @GetMapping("/message-stats")
+    public Result<MessageStatsVO> messageStats() {
+        return Result.ok(dashboardService.getMessageStats());
     }
 }
