@@ -25,6 +25,8 @@ gl:
     url: ${GL_SUPPLY_URL:http://localhost:8084}
   match:
     url: ${GL_MATCH_URL:http://localhost:8085}
+  message:
+    url: ${GL_MESSAGE_URL:http://localhost:8086}
 
 management:
   endpoints:

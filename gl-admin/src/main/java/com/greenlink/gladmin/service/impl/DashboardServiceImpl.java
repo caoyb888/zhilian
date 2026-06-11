@@ -2,14 +2,17 @@ package com.greenlink.gladmin.service.impl;
 
 import com.greenlink.common.result.Result;
 import com.greenlink.gladmin.dto.response.AuditSummaryVO;
+import com.greenlink.gladmin.dto.response.ChannelStatDTO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
 import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MatchStatsDTO;
 import com.greenlink.gladmin.dto.response.MemberDetailStatsVO;
 import com.greenlink.gladmin.dto.response.MemberStatsDTO;
+import com.greenlink.gladmin.dto.response.MessageStatsVO;
 import com.greenlink.gladmin.dto.response.SupplyStatsDTO;
 import com.greenlink.gladmin.feign.MatchClient;
 import com.greenlink.gladmin.feign.MemberClient;
+import com.greenlink.gladmin.feign.MessageClient;
 import com.greenlink.gladmin.feign.SupplyClient;
 import com.greenlink.gladmin.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final MemberClient memberClient;
     private final SupplyClient supplyClient;
     private final MatchClient matchClient;
+    private final MessageClient messageClient;
 
     @Override
     public DashboardOverviewVO getOverview() {
@@ -86,6 +90,26 @@ public class DashboardServiceImpl implements DashboardService {
         }
         MemberDetailStatsVO fallback = new MemberDetailStatsVO();
         fallback.setIndustryDistribution(new java.util.ArrayList<>());
+        return fallback;
+    }
+
+    @Override
+    public MessageStatsVO getMessageStats() {
+        try {
+            Result<MessageStatsVO> result = messageClient.getMessageStats();
+            if (result != null && result.getCode() == 0 && result.getData() != null) {
+                return result.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取消息发送统计失败", e);
+        }
+        ChannelStatDTO zero = new ChannelStatDTO();
+        zero.setSuccessRate(java.math.BigDecimal.ZERO);
+        ChannelStatDTO zeroWc = new ChannelStatDTO();
+        zeroWc.setSuccessRate(java.math.BigDecimal.ZERO);
+        MessageStatsVO fallback = new MessageStatsVO();
+        fallback.setSite(zero);
+        fallback.setWechat(zeroWc);
         return fallback;
     }
 
