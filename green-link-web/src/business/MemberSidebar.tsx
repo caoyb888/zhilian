@@ -32,7 +32,7 @@ export function MemberSidebar() {
   const { data: unreadCount } = useUnreadCount(!!accountInfo)
 
   return (
-    <aside className="w-56 flex-shrink-0">
+    <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 sticky top-16 lg:top-[4.5rem] max-h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4.5rem)] overflow-y-auto self-start">
       {/* Profile summary */}
       <div className="mb-4 rounded-xl border border-stone-100 bg-white p-4 shadow-card">
         <div className="flex flex-col items-center text-center gap-2">
