@@ -59,6 +59,65 @@ export type MemberRole = 'MEMBER' | 'VIP_MEMBER' | 'EXPERT'
 
 export const ADMIN_ROLES: string[] = ['SUPER_ADMIN', 'CONTENT_ADMIN', 'AUDITOR', 'FINANCE']
 
+// ─── Admin Dashboard types (S7-01 ~ S7-05) ───────────────────────────────────
+
+export interface DashboardOverviewVO {
+  totalMembers: number
+  newMembersThisMonth: number
+  pendingAuditCount: number
+  totalMatchCount: number
+  matchSuccessRate: number
+}
+
+export interface AuditDailyStat {
+  date: string
+  auditedCount: number
+}
+
+export interface AuditSummaryVO {
+  pendingResourceCount: number
+  pendingDemandCount: number
+  totalPendingAudit: number
+  last7DaysAudit: AuditDailyStat[]
+}
+
+export interface MatchTrendDailyStat {
+  date: string
+  newMatchCount: number
+}
+
+export interface MatchDetailStatsVO {
+  totalMatchCount: number
+  completedMatchCount: number
+  successRate: number
+  last30DaysTrend: MatchTrendDailyStat[]
+}
+
+export interface IndustryDistStat {
+  industry: string
+  count: number
+}
+
+export interface MemberDetailStatsVO {
+  totalMembers: number
+  newMembersThisMonth: number
+  industryDistribution: IndustryDistStat[]
+}
+
+export interface ChannelStatDTO {
+  totalProcessed: number
+  successCount: number
+  failedCount: number
+  successRate: number
+}
+
+export interface MessageStatsVO {
+  site: ChannelStatDTO
+  wechat: ChannelStatDTO
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface MemberTagItem {
   id: number
   name: string
