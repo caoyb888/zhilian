@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
-  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin,
+  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Handshake,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -515,18 +515,21 @@ export default function SupplyDemandListPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* 左侧：标题 + 副标题 */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
-              <p className="mt-2 text-sm text-white/80">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
+              <div className="flex items-center gap-2">
+                <Icon icon={Handshake} size={24} className="text-white/70" />
+                <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
+              </div>
+              <p className="mt-1 text-sm text-white/70">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
             </div>
 
             {/* 右侧：搜索组件（玻璃拟态） */}
             <form
               onSubmit={handleSearchSubmit}
-              className="flex gap-2 w-full max-w-md lg:w-auto lg:min-w-[360px]"
+              className="flex gap-2 w-full max-w-sm"
             >
               <div className="relative flex-1">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
@@ -537,12 +540,12 @@ export default function SupplyDemandListPage() {
                   value={inputValue}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   placeholder="搜索需求名称、技术领域…"
-                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 transition-all duration-200"
+                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-2 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-md shadow-black/10 transition-all duration-200"
                 />
               </div>
               <button
                 type="submit"
-                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-6 py-3 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
+                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-5 py-2 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
               >
                 搜索
               </button>
@@ -550,12 +553,47 @@ export default function SupplyDemandListPage() {
                 <button
                   type="button"
                   onClick={() => { setInputValue(''); setParam({ keyword: undefined, page: undefined }) }}
-                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
                 >
                   清除
                 </button>
               )}
             </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticker bar */}
+      <div className="relative overflow-hidden" style={{ background: 'rgba(0, 60, 45, 0.85)' }}>
+        <style>{`
+          @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .ticker-animate {
+            animation: ticker-scroll 20s linear infinite;
+          }
+        `}</style>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className="flex-shrink-0 text-[10px] font-bold text-emerald-200 uppercase tracking-wider bg-emerald-500/20 rounded px-1.5 py-0.5">
+              最新供需
+            </span>
+            <div className="flex-1 overflow-hidden relative">
+              <div className="ticker-animate flex gap-8 whitespace-nowrap w-max">
+                {[
+                  { type: '需求', text: '某企业求购光伏组件供应商' },
+                  { type: '资源', text: '新能源储能技术专利寻求合作' },
+                  { type: '对接', text: '碳中和服务商招募合作伙伴' },
+                  { type: '需求', text: '绿色建筑节能改造方案征集' },
+                ].map((item, i) => (
+                  <span key={i} className="inline-flex items-center gap-2 text-sm text-white/90">
+                    <span className="bg-emerald-500/25 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">{item.type}</span>
+                    {item.text}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
