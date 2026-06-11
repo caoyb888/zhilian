@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify'
 import {
   ArrowLeft, Building2, Calendar, Clock, Download, Eye,
   FileText, Heart, Lock, Mail, MapPin, Paperclip, Phone, User, X, Handshake,
+  Share2, Link2, Check, Layers, Sparkles, Tag, BarChart3, BookOpen, Tags, Info,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { PortalNav } from '@/business/PortalNav'
@@ -19,7 +20,7 @@ import {
   type AttachmentItem,
 } from '@/services/supplyService'
 import { useMemberDetail } from '@/services/memberService'
-import { useActiveMatchRecord } from '@/services/matchService'
+import { useActiveMatchRecord, useRecommendations } from '@/services/matchService'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -67,9 +68,37 @@ function ReadingProgressBar() {
 // ─── Type badge ───────────────────────────────────────────────────────────────
 
 const TYPE_BADGE_CLASS: Record<string, string> = {
-  PRODUCT: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  TECHNOLOGY: 'bg-blue-50 text-blue-700 border-blue-200',
-  TALENT: 'bg-purple-50 text-purple-700 border-purple-200',
+  PRODUCT: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  TECHNOLOGY: 'bg-blue-50 text-blue-700 ring-blue-200',
+  TALENT: 'bg-purple-50 text-purple-700 ring-purple-200',
+}
+
+// ─── Meta Tag Pill ────────────────────────────────────────────────────────────
+
+function MetaTag({
+  icon: IconComp,
+  label,
+  value,
+  highlight = false,
+}: {
+  icon: typeof Eye
+  label: string
+  value: string
+  highlight?: boolean
+}) {
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors ${
+        highlight
+          ? 'bg-emerald-50/80 text-emerald-700 ring-1 ring-emerald-200'
+          : 'bg-white/70 text-stone-600 ring-1 ring-stone-200/60'
+      }`}
+      title={`${label}: ${value}`}
+    >
+      <IconComp size={13} className={highlight ? 'text-emerald-500' : 'text-stone-400'} />
+      <span>{value}</span>
+    </div>
+  )
 }
 
 // ─── Attachments ──────────────────────────────────────────────────────────────
@@ -83,16 +112,16 @@ function AttachmentPreview({ att }: { att: AttachmentItem }) {
         href={att.fileUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative block overflow-hidden rounded-xl border border-stone-200 bg-stone-50 hover:border-theme-accent transition-colors duration-200"
+        className="group relative block overflow-hidden rounded-2xl bg-stone-100 hover:shadow-card-hover transition-all duration-300"
         title={att.fileName}
       >
         <img
           src={att.fileUrl}
           alt={att.fileName}
-          className="h-36 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="h-40 w-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
-        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-3">
+        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-3">
           <span className="text-xs text-white font-medium truncate">{att.fileName}</span>
         </div>
       </a>
@@ -105,20 +134,20 @@ function AttachmentPreview({ att }: { att: AttachmentItem }) {
       target="_blank"
       rel="noopener noreferrer"
       download={att.fileName}
-      className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 hover:border-theme-accent hover:bg-stone-100 transition-all duration-200 group"
+      className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 hover:shadow-card-hover transition-all duration-300 group"
     >
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white border border-stone-200 text-stone-500 group-hover:text-theme-accent transition-colors">
+      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-stone-50 text-stone-500 group-hover:text-emerald-600 group-hover:bg-emerald-50 transition-colors">
         <Icon icon={FileText} size={20} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-stone-800 truncate group-hover:text-theme-accent transition-colors">
+        <p className="text-sm font-medium text-stone-800 truncate group-hover:text-emerald-700 transition-colors">
           {att.fileName}
         </p>
         {att.fileSize && (
           <p className="text-xs text-stone-400 mt-0.5">{formatFileSize(att.fileSize)}</p>
         )}
       </div>
-      <Icon icon={Download} size={16} className="flex-shrink-0 text-stone-400 group-hover:text-theme-accent transition-colors" />
+      <Icon icon={Download} size={16} className="flex-shrink-0 text-stone-300 group-hover:text-emerald-500 transition-colors" />
     </a>
   )
 }
@@ -140,8 +169,8 @@ function ContactCard({ memberId, contactVisible, isLoggedIn, onLoginRequest }: C
   if (contactVisible === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-6 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-stone-400">
-          <Icon icon={Lock} size={18} />
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-50 text-stone-400">
+          <Icon icon={Lock} size={20} />
         </div>
         <p className="text-sm text-stone-500">该发布方未开放联系方式</p>
       </div>
@@ -151,14 +180,14 @@ function ContactCard({ memberId, contactVisible, isLoggedIn, onLoginRequest }: C
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col items-center gap-3 py-6 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-theme-accent">
-          <Icon icon={Lock} size={18} />
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
+          <Icon icon={Lock} size={20} />
         </div>
         <p className="text-sm text-stone-600">登录后可查看联系方式</p>
         <button
           type="button"
           onClick={onLoginRequest}
-          className="w-full rounded-lg bg-theme-accent py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+          className="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 transition-all duration-200"
         >
           立即登录
         </button>
@@ -178,22 +207,28 @@ function ContactCard({ memberId, contactVisible, isLoggedIn, onLoginRequest }: C
     <div className="space-y-3">
       {member?.contactName && (
         <div className="flex items-center gap-3 text-sm text-stone-700">
-          <Icon icon={User} size={16} className="flex-shrink-0 text-stone-400" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-50 text-stone-400">
+            <Icon icon={User} size={14} />
+          </div>
           <span>{member.contactName}</span>
         </div>
       )}
       {member?.contactPhone && (
         <div className="flex items-center gap-3 text-sm text-stone-700">
-          <Icon icon={Phone} size={16} className="flex-shrink-0 text-stone-400" />
-          <a href={`tel:${member.contactPhone}`} className="hover:text-theme-accent transition-colors">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-50 text-stone-400">
+            <Icon icon={Phone} size={14} />
+          </div>
+          <a href={`tel:${member.contactPhone}`} className="hover:text-emerald-600 transition-colors">
             {member.contactPhone}
           </a>
         </div>
       )}
       {member?.contactEmail && (
         <div className="flex items-center gap-3 text-sm text-stone-700">
-          <Icon icon={Mail} size={16} className="flex-shrink-0 text-stone-400" />
-          <a href={`mailto:${member.contactEmail}`} className="truncate hover:text-theme-accent transition-colors">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-50 text-stone-400">
+            <Icon icon={Mail} size={14} />
+          </div>
+          <a href={`mailto:${member.contactEmail}`} className="truncate hover:text-emerald-600 transition-colors">
             {member.contactEmail}
           </a>
         </div>
@@ -213,35 +248,202 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative rounded-2xl bg-white p-8 shadow-xl max-w-sm w-full mx-4">
+      <div className="relative rounded-3xl bg-white p-8 shadow-2xl max-w-sm w-full mx-4">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors"
+          className="absolute right-4 top-4 rounded-xl p-1.5 text-stone-400 hover:bg-stone-100 transition-colors"
         >
           <Icon icon={X} size={18} />
         </button>
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-theme-accent mx-auto">
-          <Icon icon={Lock} size={22} />
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 mx-auto">
+          <Icon icon={Lock} size={24} />
         </div>
-        <h3 className="text-center text-base font-semibold text-stone-900 mb-2">请先登录</h3>
+        <h3 className="text-center text-lg font-semibold text-stone-900 mb-2">请先登录</h3>
         <p className="text-center text-sm text-stone-500 mb-6">登录后即可查看联系方式及收藏资源</p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-stone-200 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
+            className="flex-1 rounded-xl border border-stone-200 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
           >
             稍后再说
           </button>
           <button
             type="button"
             onClick={() => navigate('/login', { state: { from: location } })}
-            className="flex-1 rounded-lg bg-theme-accent py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+            className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 transition-all duration-200"
           >
             去登录
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Share Panel ──────────────────────────────────────────────────────────────
+
+function SharePanel({ title }: { title: string }) {
+  const [copied, setCopied] = useState(false)
+  const [posterOpen, setPosterOpen] = useState(false)
+  const url = typeof window !== 'undefined' ? window.location.href : ''
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleNativeShare = async () => {
+    if ('share' in navigator) {
+      try {
+        await navigator.share({ title, url })
+        return
+      } catch {
+        // 用户取消或失败，fallback
+      }
+    }
+    setPosterOpen(true)
+  }
+
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleCopy}
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium transition-all duration-200 ${
+            copied
+              ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+              : 'bg-white text-stone-600 ring-1 ring-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <Icon icon={copied ? Check : Link2} size={14} />
+          {copied ? '已复制链接' : '复制链接'}
+        </button>
+        <button
+          onClick={handleNativeShare}
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-white text-stone-600 ring-1 ring-stone-200 py-2.5 text-xs font-medium hover:bg-stone-50 transition-all duration-200"
+        >
+          <Icon icon={Share2} size={14} />
+          海报分享
+        </button>
+      </div>
+
+      {posterOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPosterOpen(false)} />
+          <div className="relative rounded-3xl bg-white p-6 shadow-2xl max-w-sm w-full mx-4">
+            <button
+              type="button"
+              onClick={() => setPosterOpen(false)}
+              className="absolute right-3 top-3 rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors"
+            >
+              <Icon icon={X} size={16} />
+            </button>
+            {/* Poster Card */}
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white text-center space-y-4">
+              <div className="flex items-center justify-center gap-2 opacity-90">
+                <Icon icon={Sparkles} size={18} />
+                <span className="text-sm font-medium">绿产智链 · 优质资源</span>
+              </div>
+              <h4 className="text-lg font-bold leading-snug">{title}</h4>
+              <div className="inline-block rounded-lg bg-white/20 px-3 py-1 text-xs backdrop-blur-sm">
+                扫码或访问链接查看详情
+              </div>
+              <div className="rounded-xl bg-white p-3 mx-auto w-32 h-32 flex items-center justify-center">
+                {/* 简单二维码占位：用当前 URL 生成一个可识别的图案 */}
+                <div className="w-full h-full bg-stone-900 rounded-lg p-1">
+                  <div className="w-full h-full bg-white rounded flex items-center justify-center">
+                    <span className="text-[8px] text-stone-500 text-center leading-tight break-all px-1">
+                      {url.replace(/^https?:\/\//, '').slice(0, 40)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs opacity-80">山东省绿色低碳产业发展协会</p>
+            </div>
+            <p className="text-center text-xs text-stone-400 mt-4">截图保存海报，分享给好友</p>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─── Similar Resources ────────────────────────────────────────────────────────
+
+function SimilarResources({ resourceId }: { resourceId: number }) {
+  const navigate = useNavigate()
+  const { data, isLoading } = useRecommendations(
+    { sourceType: 'RESOURCE', sourceId: resourceId, page: 1, size: 4 },
+    true,
+  )
+
+  const items = useMemo(
+    () => data?.records.filter((r) => r.targetType === 'RESOURCE' && r.targetId !== resourceId).slice(0, 4) ?? [],
+    [data, resourceId],
+  )
+
+  if (isLoading) {
+    return (
+      <div className="mt-14">
+        <div className="flex items-center gap-2 mb-5">
+          <Icon icon={Layers} size={20} className="text-emerald-500" />
+          <h2 className="text-lg font-bold text-stone-800">相似资源推荐</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-32 rounded-3xl bg-stone-100 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="mt-14">
+      <div className="flex items-center gap-2 mb-5">
+        <Icon icon={Layers} size={20} className="text-emerald-500" />
+        <h2 className="text-lg font-bold text-stone-800">相似资源推荐</h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {items.map((item) => (
+          <div
+            key={item.targetId}
+            onClick={() => navigate(`/supply/resources/${item.targetId}`)}
+            className="group cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-stone-100 hover:ring-emerald-200 hover:shadow-nordic transition-all duration-300"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                <Icon icon={BarChart3} size={12} />
+                匹配度 {item.matchScore}%
+              </span>
+            </div>
+            <h3 className="text-sm font-semibold text-stone-800 line-clamp-2 group-hover:text-emerald-700 transition-colors leading-relaxed">
+              {item.targetTitle}
+            </h3>
+            {item.targetMember && (
+              <p className="text-xs text-stone-400 mt-3 flex items-center gap-1.5">
+                <Icon icon={Building2} size={12} />
+                {item.targetMember.name}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -273,8 +475,6 @@ export default function SupplyResourceDetailPage() {
 
   const favorited = favOverride ?? (resource?.isFavorited ?? false)
 
-  // Member name is fetched via contact card for logged-in users, but we also
-  // need it for the header (member name display) regardless of login status.
   const { data: memberPublic } = useMemberDetail(resource?.memberId ?? null)
 
   const sanitizedContent = useMemo(
@@ -318,7 +518,7 @@ export default function SupplyResourceDetailPage() {
             action={
               <button
                 onClick={() => navigate('/supply')}
-                className="rounded-lg bg-theme-accent px-4 py-2 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+                className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 transition-all duration-200"
               >
                 返回资源列表
               </button>
@@ -331,7 +531,7 @@ export default function SupplyResourceDetailPage() {
 
   const typeLabel = resource ? (RESOURCE_TYPE_LABELS[resource.type] ?? resource.type) : ''
   const badgeClass = resource
-    ? (TYPE_BADGE_CLASS[resource.type] ?? 'bg-gray-50 text-gray-600 border-gray-200')
+    ? (TYPE_BADGE_CLASS[resource.type] ?? 'bg-gray-50 text-gray-600 ring-gray-200')
     : ''
 
   const images = resource?.attachments.filter((a) => isImageType(a.fileType, a.fileName)) ?? []
@@ -344,81 +544,93 @@ export default function SupplyResourceDetailPage() {
 
       {isLoading || !resource ? (
         <div className="flex flex-1 items-center justify-center">
-          <Spinner size="lg" className="text-theme-accent" />
+          <Spinner size="lg" className="text-emerald-500" />
         </div>
       ) : (
         <main className="flex-1">
-          {/* Header */}
-          <div className="bg-theme-surface border-b border-theme-border">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-              {/* Breadcrumb */}
-              <nav className="flex items-center gap-2 text-xs text-stone-400 mb-4">
-                <Link to="/portal" className="hover:text-theme-accent transition-colors">首页</Link>
-                <span>›</span>
-                <Link to="/supply" className="hover:text-theme-accent transition-colors">供需对接</Link>
-                <span>›</span>
-                <span className="text-stone-600 truncate max-w-[200px]">{resource.title}</span>
-              </nav>
-
-              {/* Type badge + location */}
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold tracking-wide border ${badgeClass}`}>
-                  {typeLabel}
-                </span>
-                {(resource.province || resource.city) && (
-                  <span className="flex items-center gap-1 text-sm text-stone-500">
-                    <Icon icon={MapPin} size={14} />
-                    {resource.province}{resource.city ? `·${resource.city}` : ''}
-                  </span>
-                )}
-              </div>
-
-              {/* Title */}
-              <h1 className="text-2xl sm:text-3xl font-bold text-theme-text-main leading-snug">
-                {resource.title}
-              </h1>
-
-              {/* Meta */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-stone-500">
-                {memberPublic?.name && (
-                  <span className="flex items-center gap-1.5">
-                    <Icon icon={Building2} size={14} className="text-stone-400" />
-                    <span className="font-medium text-stone-700">{memberPublic.name}</span>
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5">
-                  <Icon icon={Eye} size={14} />
-                  <span>{resource.viewCount} 次浏览</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Icon icon={Calendar} size={14} />
-                  <span>{formatDate(resource.createdAt)}</span>
-                </span>
-                {resource.validUntil && (
-                  <span className="flex items-center gap-1.5">
-                    <Icon icon={Clock} size={14} />
-                    <span>有效期至 {formatDate(resource.validUntil)}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Body */}
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Main content */}
               <div className="flex-1 min-w-0 space-y-8">
-                {/* Summary */}
+                {/* Header */}
+                <div className="pt-2 pb-4">
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-2 text-xs text-stone-400 mb-5">
+                <Link to="/portal" className="hover:text-emerald-600 transition-colors">首页</Link>
+                <span className="text-stone-300">›</span>
+                <Link to="/supply" className="hover:text-emerald-600 transition-colors">供需对接</Link>
+                <span className="text-stone-300">›</span>
+                <span className="text-stone-600 truncate max-w-[220px]">{resource.title}</span>
+              </nav>
+
+              {/* Type badge */}
+              <div className="mb-4">
+                <span className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-bold tracking-wide ring-1 ${badgeClass}`}>
+                  {typeLabel}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-tight tracking-tight">
+                {resource.title}
+              </h1>
+
+              {/* Meta tags */}
+              <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                {memberPublic?.name && (
+                  <MetaTag
+                    icon={Building2}
+                    label="发布方"
+                    value={memberPublic.name}
+                    highlight
+                  />
+                )}
+                <MetaTag icon={Eye} label="浏览量" value={`${resource.viewCount} 次浏览`} />
+                <MetaTag icon={Calendar} label="发布时间" value={formatDate(resource.createdAt)} />
+                {resource.validUntil && (
+                  <MetaTag icon={Clock} label="有效期" value={`至 ${formatDate(resource.validUntil)}`} />
+                )}
+                {(resource.province || resource.city) && (
+                  <MetaTag
+                    icon={MapPin}
+                    label="地区"
+                    value={`${resource.province ?? ''}${resource.city ? ` · ${resource.city}` : ''}`}
+                  />
+                )}
+                {memberPublic?.industry && (
+                  <MetaTag icon={Tag} label="行业" value={memberPublic.industry} />
+                )}
+              </div>
+                </div>
+
+                {/* Highlights */}
                 {resource.summary && (
-                  <div className="rounded-xl bg-emerald-50 border-l-4 border-emerald-400 px-5 py-4 text-sm text-stone-700 leading-relaxed">
-                    {resource.summary}
+                  <div className="rounded-3xl bg-emerald-50/60 ring-1 ring-emerald-100 px-6 py-6">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <Icon icon={Sparkles} size={20} className="text-emerald-500" />
+                      <span className="text-base font-bold text-emerald-800">产品亮点</span>
+                    </div>
+                    <ul className="space-y-2.5">
+                      {resource.summary
+                        .split(/[\n,，;；]/)
+                        .map((s) => s.trim())
+                        .filter((s) => s.length > 0)
+                        .map((item, i) => (
+                          <li key={i} className="flex items-start gap-3 text-sm text-stone-700 leading-relaxed">
+                            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                    </ul>
                   </div>
                 )}
 
                 {/* Rich text content */}
-                <div>
-                  <h2 className="text-base font-semibold text-stone-800 mb-4">详细介绍</h2>
+                <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-6 sm:p-8">
+                  <h2 className="text-base font-bold text-stone-800 mb-5 flex items-center gap-2.5">
+                    <Icon icon={BookOpen} size={18} className="text-emerald-500" />
+                    详细介绍
+                  </h2>
                   {sanitizedContent ? (
                     <article
                       className="article-content"
@@ -432,12 +644,15 @@ export default function SupplyResourceDetailPage() {
                 {/* Tags */}
                 {resource.tags.length > 0 && (
                   <div>
-                    <h2 className="text-base font-semibold text-stone-800 mb-3">相关标签</h2>
+                    <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2.5">
+                      <Icon icon={Tags} size={18} className="text-emerald-500" />
+                      相关标签
+                    </h2>
                     <div className="flex flex-wrap gap-2">
                       {resource.tags.map((tag) => (
                         <span
                           key={tag.id}
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50/80 ring-1 ring-emerald-200 px-3.5 py-1.5 text-xs font-medium text-emerald-700"
                         >
                           #{tag.name}
                         </span>
@@ -449,12 +664,11 @@ export default function SupplyResourceDetailPage() {
                 {/* Attachments */}
                 {resource.attachments.length > 0 && (
                   <div>
-                    <h2 className="flex items-center gap-2 text-base font-semibold text-stone-800 mb-4">
-                      <Icon icon={Paperclip} size={16} className="text-stone-500" />
+                    <h2 className="flex items-center gap-2.5 text-base font-bold text-stone-800 mb-5">
+                      <Icon icon={Paperclip} size={18} className="text-emerald-500" />
                       附件（{resource.attachments.length}）
                     </h2>
 
-                    {/* Image previews */}
                     {images.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                         {images.map((att) => (
@@ -463,7 +677,6 @@ export default function SupplyResourceDetailPage() {
                       </div>
                     )}
 
-                    {/* File downloads */}
                     {files.length > 0 && (
                       <div className="space-y-2">
                         {files.map((att) => (
@@ -474,11 +687,14 @@ export default function SupplyResourceDetailPage() {
                   </div>
                 )}
 
+                {/* Similar resources */}
+                <SimilarResources resourceId={resource.id} />
+
                 {/* Back link */}
-                <div className="border-t border-theme-border pt-6 flex items-center justify-between">
+                <div className="flex items-center justify-between pt-4">
                   <Link
                     to="/supply"
-                    className="inline-flex items-center gap-2 text-sm text-theme-accent hover:text-theme-accent-hover font-medium transition-colors"
+                    className="inline-flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
                   >
                     <Icon icon={ArrowLeft} size={14} />
                     返回资源列表
@@ -492,84 +708,130 @@ export default function SupplyResourceDetailPage() {
                 </div>
               </div>
 
-              {/* Sidebar */}
-              <aside className="lg:w-72 flex-shrink-0 space-y-4">
-                {/* Contact card */}
-                <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card">
-                  <h3 className="text-sm font-semibold text-stone-800 mb-4">联系方式</h3>
-                  {favoriteError && (
-                    <div className="mb-3 flex items-center justify-between rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-600">
-                      {favoriteError}
-                      <button type="button" onClick={() => setFavoriteError(null)}>
-                        <Icon icon={X} size={12} />
+              {/* Sidebar — sticky */}
+              <aside className="lg:w-80 flex-shrink-0">
+                <div className="lg:sticky lg:top-24 space-y-4">
+                  {/* CTA — 发起对接申请（核心操作置顶） */}
+                  {isLoggedIn && accountInfo?.memberId !== resource.memberId && (
+                    <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-5 shadow-card">
+                      <button
+                        type="button"
+                        disabled={!!activeMatchRecord}
+                        onClick={() => !activeMatchRecord && setApplyOpen(true)}
+                        className={`w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all duration-200 ${
+                          activeMatchRecord
+                            ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                            : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
+                        }`}
+                      >
+                        <Icon icon={Handshake} size={18} />
+                        {activeMatchRecord ? '已申请对接' : '发起对接申请'}
                       </button>
+                      {!activeMatchRecord && (
+                        <p className="text-xs text-stone-400 text-center mt-2.5">
+                          点击即可向发布方发送合作意向
+                        </p>
+                      )}
                     </div>
                   )}
-                  <ContactCard
-                    memberId={resource.memberId}
-                    contactVisible={resource.contactVisible}
-                    isLoggedIn={isLoggedIn}
-                    onLoginRequest={() => setLoginPrompt(true)}
-                  />
-                </div>
 
-                {/* Resource info card */}
-                <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card space-y-3">
-                  <h3 className="text-sm font-semibold text-stone-800">资源信息</h3>
-                  {resource.cooperationMode && (
-                    <div>
-                      <p className="text-xs text-stone-400 mb-1">合作方式</p>
-                      <p className="text-sm text-stone-700">{resource.cooperationMode}</p>
+                  {/* Resource info card */}
+                  <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-5 space-y-4">
+                    <h3 className="text-sm font-bold text-stone-800 flex items-center gap-2.5">
+                      <Icon icon={Info} size={16} className="text-emerald-500" />
+                      资源信息
+                    </h3>
+                    <div className="space-y-3">
+                      {resource.cooperationMode && (
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-stone-50 text-stone-400">
+                            <Icon icon={Handshake} size={14} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-stone-400">合作方式</p>
+                            <p className="text-sm font-medium text-stone-700 mt-0.5">{resource.cooperationMode}</p>
+                          </div>
+                        </div>
+                      )}
+                      {resource.validUntil && (
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-stone-50 text-stone-400">
+                            <Icon icon={Clock} size={14} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-stone-400">有效期至</p>
+                            <p className="text-sm font-medium text-stone-700 mt-0.5">{formatDate(resource.validUntil)}</p>
+                          </div>
+                        </div>
+                      )}
+                      {memberPublic?.industry && (
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-stone-50 text-stone-400">
+                            <Icon icon={Tag} size={14} />
+                          </div>
+                          <div>
+                            <p className="text-xs text-stone-400">所属行业</p>
+                            <p className="text-sm font-medium text-stone-700 mt-0.5">{memberPublic.industry}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-stone-50 text-stone-400">
+                          <Icon icon={Calendar} size={14} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-stone-400">发布时间</p>
+                          <p className="text-sm font-medium text-stone-700 mt-0.5">{formatDate(resource.createdAt)}</p>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  {resource.validUntil && (
-                    <div>
-                      <p className="text-xs text-stone-400 mb-1">有效期至</p>
-                      <p className="text-sm text-stone-700">{formatDate(resource.validUntil)}</p>
-                    </div>
-                  )}
-                  {memberPublic?.industry && (
-                    <div>
-                      <p className="text-xs text-stone-400 mb-1">所属行业</p>
-                      <p className="text-sm text-stone-700">{memberPublic.industry}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-xs text-stone-400 mb-1">发布时间</p>
-                    <p className="text-sm text-stone-700">{formatDate(resource.createdAt)}</p>
                   </div>
-                </div>
 
-                {/* Favorite */}
-                <button
-                  type="button"
-                  onClick={handleFavorite}
-                  className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-medium transition-all duration-200 ${
-                    favorited
-                      ? 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
-                      : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'
-                  }`}
-                >
-                  <Icon icon={Heart} size={16} className={favorited ? 'fill-rose-500 text-rose-500' : ''} />
-                  {favorited ? '已收藏' : '收藏资源'}
-                </button>
+                  {/* Contact card */}
+                  <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-5 shadow-card">
+                    <h3 className="text-sm font-bold text-stone-800 mb-4 flex items-center gap-2.5">
+                      <Icon icon={Phone} size={16} className="text-emerald-500" />
+                      联系方式
+                    </h3>
+                    {favoriteError && (
+                      <div className="mb-3 flex items-center justify-between rounded-xl bg-red-50 ring-1 ring-red-100 px-3 py-2 text-xs text-red-600">
+                        {favoriteError}
+                        <button type="button" onClick={() => setFavoriteError(null)}>
+                          <Icon icon={X} size={12} />
+                        </button>
+                      </div>
+                    )}
+                    <ContactCard
+                      memberId={resource.memberId}
+                      contactVisible={resource.contactVisible}
+                      isLoggedIn={isLoggedIn}
+                      onLoginRequest={() => setLoginPrompt(true)}
+                    />
+                  </div>
 
-                {/* Apply — only shown to logged-in non-owners */}
-                {isLoggedIn && accountInfo?.memberId !== resource.memberId && (
+                  {/* Favorite */}
                   <button
                     type="button"
-                    disabled={!!activeMatchRecord}
-                    onClick={() => !activeMatchRecord && setApplyOpen(true)}
-                    className={`w-full flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-all duration-200 ${
-                      activeMatchRecord
-                        ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed'
-                        : 'border-emerald-300 bg-emerald-500 text-white hover:bg-emerald-600'
+                    onClick={handleFavorite}
+                    className={`w-full flex items-center justify-center gap-2 rounded-3xl py-3.5 text-sm font-medium transition-all duration-200 ${
+                      favorited
+                        ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100'
+                        : 'bg-white text-stone-600 ring-1 ring-stone-200 hover:bg-stone-50'
                     }`}
                   >
-                    <Icon icon={Handshake} size={16} />
-                    {activeMatchRecord ? '已申请' : '发起对接申请'}
+                    <Icon icon={Heart} size={16} className={favorited ? 'fill-rose-500 text-rose-500' : ''} />
+                    {favorited ? '已收藏' : '收藏资源'}
                   </button>
-                )}
+
+                  {/* Share */}
+                  <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-5">
+                    <h3 className="text-sm font-bold text-stone-800 mb-3 flex items-center gap-2.5">
+                      <Icon icon={Share2} size={16} className="text-emerald-500" />
+                      分享资源
+                    </h3>
+                    <SharePanel title={resource.title} />
+                  </div>
+                </div>
               </aside>
             </div>
           </div>
