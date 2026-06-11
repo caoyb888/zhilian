@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Search } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 import { usePermission } from '@/hooks/usePermission'
@@ -42,6 +42,18 @@ export default function AdminLayout() {
   function handleLogout() {
     logoutMutation.mutate(undefined, { onSettled: () => navigate('/login') })
   }
+
+  // Ctrl+K / Cmd+K → 跳转全局搜索
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        navigate('/admin/search')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navigate])
 
   const sidebar = (
     <nav className="flex flex-col gap-1 p-4">
@@ -107,7 +119,14 @@ export default function AdminLayout() {
           >
             <Icon icon={Menu} size={20} />
           </button>
-          <div className="hidden text-sm text-stone-500 md:block" />
+          <button
+            onClick={() => navigate('/admin/search')}
+            className="hidden items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-500 transition-colors hover:bg-white hover:text-stone-700 md:flex"
+          >
+            <Icon icon={Search} size={13} />
+            <span>搜索…</span>
+            <kbd className="ml-1 rounded bg-stone-200 px-1 py-0.5 text-stone-400" style={{ fontSize: 10 }}>⌘K</kbd>
+          </button>
           <div className="flex items-center gap-3">
             <span className="text-sm text-stone-600">
               {accountInfo?.realName ?? accountInfo?.username}

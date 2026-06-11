@@ -18,6 +18,7 @@ export interface MenuItem {
 
 export const adminMenuConfig: MenuItem[] = [
   { path: '/admin/dashboard',     label: '控制台',   icon: Home },
+  { path: '/admin/search',        label: '全局搜索', icon: Search },
   { path: '/admin/members',       label: '会员管理', icon: Building2, permission: 'member:unit:list' },
   { path: '/admin/members/audit', label: '会员审核', icon: CheckCircle2, permission: 'member:unit:audit' },
   { path: '/admin/articles',      label: '文章管理', icon: FileText, permission: 'portal:article:list' },
