@@ -165,7 +165,7 @@ function ResourceCard({ resource, isFavorited, onFavorite }: ResourceCardProps) 
           type="button"
           aria-label={isFavorited ? '取消收藏' : '收藏'}
           onClick={() => onFavorite(resource.id, isFavorited)}
-          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
+          className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200 ${
             isFavorited
               ? 'text-rose-500 bg-rose-50 hover:bg-rose-100'
               : 'text-stone-400 hover:text-rose-400 hover:bg-rose-50'
@@ -602,7 +602,7 @@ export default function SupplyListPage() {
             <div>
               <div className="flex items-center gap-2">
                 <Icon icon={Handshake} size={24} className="text-white/70" />
-                <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
               </div>
               <p className="mt-1 text-sm text-white/70">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
             </div>
@@ -725,7 +725,7 @@ export default function SupplyListPage() {
                 <button
                   type="button"
                   onClick={() => setDrawerOpen(true)}
-                  className="lg:hidden flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
+                  className="lg:hidden flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200 min-h-[44px]"
                 >
                   <Icon icon={SlidersHorizontal} size={16} />
                   筛选

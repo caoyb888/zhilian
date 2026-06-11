@@ -4,10 +4,13 @@ import { MemberSidebar } from '@/business/MemberSidebar'
 
 export default function MemberLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-theme-bg">
       <PortalNav />
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 flex gap-6 items-start">
-        <MemberSidebar />
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex gap-6 items-start">
+        {/* Sidebar: hidden on mobile, visible md+ */}
+        <div className="hidden md:block">
+          <MemberSidebar />
+        </div>
         <main className="flex-1 min-w-0">
           <Outlet />
         </main>

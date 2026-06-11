@@ -143,9 +143,9 @@ export function PortalNav() {
               </>
             )}
 
-            {/* Mobile hamburger */}
+            {/* Mobile hamburger — 44px touch target */}
             <button
-              className="md:hidden rounded-lg p-2 text-stone-500 hover:bg-stone-100"
+              className="md:hidden flex h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100"
               onClick={() => setMobileOpen(true)}
               aria-label="打开菜单"
             >
@@ -164,7 +164,7 @@ export function PortalNav() {
               <span className="font-bold text-stone-900">菜单</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg p-2 text-stone-500 hover:bg-stone-100"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100"
                 aria-label="关闭菜单"
               >
                 <Icon icon={X} size={20} />

@@ -949,7 +949,7 @@ export default function MatchChatPage() {
               type="button"
               disabled={attachPending}
               onClick={() => fileInputRef.current?.click()}
-              className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-40"
+              className="shrink-0 h-11 w-11 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-40"
               aria-label="发送附件"
             >
               {attachPending ? (
@@ -980,7 +980,7 @@ export default function MatchChatPage() {
                 'focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent',
                 'max-h-32 overflow-y-auto',
               )}
-              style={{ height: 'auto', minHeight: '36px' }}
+              style={{ height: 'auto', minHeight: '44px' }}
               onInput={(e) => {
                 const el = e.currentTarget
                 el.style.height = 'auto'
@@ -994,7 +994,7 @@ export default function MatchChatPage() {
               disabled={!text.trim() || sendMutation.isPending}
               onClick={handleSendText}
               className={clsx(
-                'shrink-0 h-9 w-9 flex items-center justify-center rounded-lg transition-colors',
+                'shrink-0 h-11 w-11 flex items-center justify-center rounded-lg transition-colors',
                 text.trim()
                   ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                   : 'bg-stone-100 text-stone-300 cursor-not-allowed',

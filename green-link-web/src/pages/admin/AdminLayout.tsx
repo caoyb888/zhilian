@@ -96,7 +96,7 @@ export default function AdminLayout() {
                 <span className="text-sm font-semibold text-brand-700">绿产智链管理端</span>
               </div>
               <button
-                className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100"
                 onClick={() => setSidebarOpen(false)}
                 aria-label="关闭菜单"
               >
@@ -113,7 +113,7 @@ export default function AdminLayout() {
         {/* 顶部导航 */}
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-stone-200 bg-white px-4">
           <button
-            className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 md:hidden"
             onClick={() => setSidebarOpen(true)}
             aria-label="打开菜单"
           >
