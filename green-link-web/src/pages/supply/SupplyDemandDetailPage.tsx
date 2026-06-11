@@ -545,12 +545,8 @@ export default function SupplyDemandDetailPage() {
                     {demand.deadline && (
                       <MetaTag icon={Clock} label="截止日期" value={`至 ${formatDate(demand.deadline)}`} />
                     )}
-                    {(demand.province || demand.city) && (
-                      <MetaTag
-                        icon={MapPin}
-                        label="地区"
-                        value={`${demand.province ?? ''}${demand.city ? ` · ${demand.city}` : ''}`}
-                      />
+                    {demand.province && (
+                      <MetaTag icon={MapPin} label="地区" value={demand.province} />
                     )}
                     {memberPublic?.industry && (
                       <MetaTag icon={Tag} label="行业" value={memberPublic.industry} />
