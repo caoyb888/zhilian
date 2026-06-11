@@ -41,7 +41,8 @@ const MemberAuditPage      = lazy(() => import('@/pages/admin/MemberAuditPage'))
 const ArticleListPage      = lazy(() => import('@/pages/admin/ArticleListPage'))
 const ActivityListPage     = lazy(() => import('@/pages/admin/ActivityListPage'))
 const TagListPage          = lazy(() => import('@/pages/admin/TagListPage'))
-const SupplyAuditPage      = lazy(() => import('@/pages/admin/SupplyAuditPage'))
+const SupplyAuditPage          = lazy(() => import('@/pages/admin/SupplyAuditPage'))
+const AdminGlobalSearchPage    = lazy(() => import('@/pages/admin/AdminGlobalSearchPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -172,6 +173,7 @@ export default function App() {
                   </PrivateRoute>
                 }
               />
+              <Route path="search" element={<AdminGlobalSearchPage />} />
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />
