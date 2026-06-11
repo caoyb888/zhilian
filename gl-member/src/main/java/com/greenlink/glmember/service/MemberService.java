@@ -9,6 +9,7 @@ import com.greenlink.glmember.dto.response.MemberBriefVO;
 import com.greenlink.glmember.dto.response.MemberDetailVO;
 import com.greenlink.glmember.dto.response.MemberMeVO;
 import com.greenlink.glmember.dto.response.MemberVO;
+import com.greenlink.glmember.dto.response.MemberDetailStatsVO;
 import com.greenlink.glmember.dto.response.MemberStatsVO;
 import com.greenlink.glmember.dto.response.RegisterResponse;
 
@@ -48,4 +49,7 @@ public interface MemberService {
 
     /** 内部统计：总会员数（status=1）与本月新增数，供 gl-admin 看板聚合调用 */
     MemberStatsVO getStats();
+
+    /** 内部详细统计：总会员数 + 本月新增 + 行业分布（TOP-20），供 gl-admin S7-04 调用 */
+    MemberDetailStatsVO getMemberDetailStats();
 }

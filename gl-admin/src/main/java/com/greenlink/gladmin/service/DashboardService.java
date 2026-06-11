@@ -3,6 +3,7 @@ package com.greenlink.gladmin.service;
 import com.greenlink.gladmin.dto.response.AuditSummaryVO;
 import com.greenlink.gladmin.dto.response.DashboardOverviewVO;
 import com.greenlink.gladmin.dto.response.MatchDetailStatsVO;
+import com.greenlink.gladmin.dto.response.MemberDetailStatsVO;
 
 public interface DashboardService {
 
@@ -14,4 +15,7 @@ public interface DashboardService {
 
     /** 对接数据统计：总对接数 + 成功率 + 近30日趋势（S7-03） */
     MatchDetailStatsVO getMatchDetailStats();
+
+    /** 会员数据统计：总会员数 + 本月新增 + 行业分布（S7-04） */
+    MemberDetailStatsVO getMemberDetailStats();
 }
