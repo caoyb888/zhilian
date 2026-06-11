@@ -58,6 +58,13 @@ const TYPE_BADGE_CLASS: Record<string, string> = {
   TALENT: 'bg-purple-50 text-purple-700 border-purple-200',
 }
 
+const AUDIT_STATUS_MAP: Record<number, { label: string; className: string }> = {
+  0: { label: '待审核', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  1: { label: '可对接', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  2: { label: '已拒绝', className: 'bg-red-50 text-red-700 border-red-200' },
+  3: { label: '已下架', className: 'bg-stone-100 text-stone-600 border-stone-200' },
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function DemandSkeletonCard() {
@@ -98,9 +105,20 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
     <div className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center justify-between mb-2 gap-2">
-          <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold tracking-wide border flex-shrink-0 ${badgeClass}`}>
-            {typeLabel}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide border flex-shrink-0 ${badgeClass}`}>
+              {typeLabel}
+            </span>
+            {(() => {
+              const status = AUDIT_STATUS_MAP[demand.auditStatus]
+              if (!status) return null
+              return (
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border flex-shrink-0 ${status.className}`}>
+                  {status.label}
+                </span>
+              )
+            })()}
+          </div>
           {demand.province && (
             <span className="flex items-center gap-1 text-xs text-stone-400 truncate">
               <Icon icon={MapPin} size={12} />
@@ -260,16 +278,15 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
         )}
       </div>
 
-      {hasActive && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-200 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
-        >
-          <Icon icon={RefreshCw} size={14} />
-          重置筛选
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onReset}
+        disabled={!hasActive}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-200 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+      >
+        <Icon icon={RefreshCw} size={14} />
+        重置筛选
+      </button>
     </div>
   )
 }
@@ -602,7 +619,7 @@ export default function SupplyDemandListPage() {
       <div className="bg-white border-b border-theme-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center flex-wrap gap-2">
               <Link
                 to="/supply"
                 className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
@@ -615,6 +632,11 @@ export default function SupplyDemandListPage() {
               >
                 需求列表
               </Link>
+              {!isLoading && (
+                <span className="hidden sm:inline text-sm text-stone-400 ml-2">
+                  共 <span className="font-semibold text-stone-600">{total}</span> 条需求
+                </span>
+              )}
             </div>
             <Link
               to="/supply/demands/publish"
@@ -626,16 +648,16 @@ export default function SupplyDemandListPage() {
         </div>
       </div>
 
-      <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex gap-6">
-          <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0">
-            <div className="sticky top-20 rounded-xl border border-stone-100 bg-white p-5 shadow-card">
+          <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0 self-start">
+            <div className="sticky top-[4.5rem] rounded-xl border border-stone-100 bg-white p-5 shadow-card">
               <FilterPanel {...filterPanelProps} />
             </div>
           </aside>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="flex items-center justify-between mb-4 gap-3 lg:hidden">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -651,7 +673,7 @@ export default function SupplyDemandListPage() {
                   )}
                 </button>
                 {!isLoading && (
-                  <span className="text-sm text-stone-500">
+                  <span className="text-sm text-stone-500 lg:hidden">
                     共 <span className="font-semibold text-stone-800">{total}</span> 条需求
                   </span>
                 )}
