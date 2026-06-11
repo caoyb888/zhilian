@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Spinner } from '@/components/Spinner'
 import { RequireAuth } from '@/components/RequireAuth'
 import { PrivateRoute } from '@/components/PrivateRoute'
 import { useThemeStore } from '@/stores/themeStore'
+import { MobileTabBar } from '@/business/MobileTabBar'
 
 const LoginPage                = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
@@ -66,12 +67,28 @@ function ThemeInitializer() {
   return null
 }
 
+const TABBAR_HIDDEN_PREFIXES = ['/admin', '/login', '/register']
+
+function AppShell({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation()
+  const showTabBar = !TABBAR_HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))
+  return (
+    <>
+      <div className={showTabBar ? 'pb-16 md:pb-0' : undefined}>
+        {children}
+      </div>
+      {showTabBar && <MobileTabBar />}
+    </>
+  )
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <ThemeInitializer />
+          <AppShell>
           <Routes>
             {/* 公开路由 */}
             <Route path="/" element={<Navigate to="/portal" replace />} />
@@ -178,6 +195,7 @@ export default function App() {
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </AppShell>
         </Suspense>
       </BrowserRouter>
     </QueryClientProvider>
