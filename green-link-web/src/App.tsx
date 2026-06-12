@@ -6,6 +6,8 @@ import { RequireAuth } from '@/components/RequireAuth'
 import { PrivateRoute } from '@/components/PrivateRoute'
 import { useThemeStore } from '@/stores/themeStore'
 import { MobileTabBar } from '@/business/MobileTabBar'
+import { PwaInstallBanner } from '@/components/PwaInstallBanner'
+import { OfflineBanner } from '@/components/OfflineBanner'
 
 const LoginPage                = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
@@ -78,6 +80,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       {showTabBar && <MobileTabBar />}
+      <PwaInstallBanner />
+      <OfflineBanner />
     </>
   )
 }
