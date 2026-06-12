@@ -40,6 +40,17 @@ export function PortalNav() {
   }, [])
 
   useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        navigate('/search')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navigate])
+
+  useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false)
@@ -127,11 +138,13 @@ export function PortalNav() {
             {accountInfo ? (
               <>
                 <Link
-                  to="/supply"
-                  className="hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
-                  aria-label="搜索供需"
+                  to="/search"
+                  className="hidden lg:flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50/80 px-3 py-1.5 text-xs text-stone-500 transition-all hover:bg-white hover:border-emerald-300 hover:text-emerald-700"
+                  aria-label="全局搜索"
                 >
-                  <Icon icon={Search} size={18} />
+                  <Icon icon={Search} size={13} />
+                  <span>搜索</span>
+                  <kbd className="rounded bg-stone-200 px-1 py-0.5 text-stone-400" style={{ fontSize: 10 }}>⌘K</kbd>
                 </Link>
 
                 <Link

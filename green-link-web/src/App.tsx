@@ -46,6 +46,7 @@ const ArticleListPage      = lazy(() => import('@/pages/admin/ArticleListPage'))
 const ActivityListPage     = lazy(() => import('@/pages/admin/ActivityListPage'))
 const TagListPage          = lazy(() => import('@/pages/admin/TagListPage'))
 const SupplyAuditPage          = lazy(() => import('@/pages/admin/SupplyAuditPage'))
+const GlobalSearchPage         = lazy(() => import('@/pages/portal/GlobalSearchPage'))
 const AdminGlobalSearchPage    = lazy(() => import('@/pages/admin/AdminGlobalSearchPage'))
 
 const queryClient = new QueryClient({
@@ -105,6 +106,7 @@ export default function App() {
             <Route path="/portal/articles/:id" element={<PortalArticleDetailPage />} />
             <Route path="/portal/activities" element={<PortalActivityListPage />} />
             <Route path="/portal/activities/:id" element={<PortalActivityDetailPage />} />
+            <Route path="/search" element={<GlobalSearchPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
             {/* 供需对接（公开浏览，收藏/对接需登录） */}
