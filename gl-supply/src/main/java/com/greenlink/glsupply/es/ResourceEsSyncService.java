@@ -95,6 +95,7 @@ public class ResourceEsSyncService {
                         .query(keyword)
                         .fields(List.of("title^2", "summary", "tagNames"))
                         .analyzer("ik_smart")
+                        .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
                 )._toQuery())
                 .filter(filterQueries)
         )._toQuery();
