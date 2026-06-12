@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── 动态视口高度 CSS 变量（JS 同步写入，解决微信键盘弹起错位）── */
+:root {
+  --app-height: 100vh;
+}
+
+/* ── 微信 & 移动端全局兼容 ── */
+* {
+  /* 消除点击蓝色闪光（微信/Android WebView）*/
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+[role='button'],
+[type='button'],
+[type='submit'] {
+  /* 防止双击缩放 */
+  touch-action: manipulation;
+}
+
+/* ── backdrop-filter 降级（Android 微信低版本不支持）── */
+/* JS 检测后在 <html> 挂 .no-backdrop-blur，此处做样式兜底 */
+.no-backdrop-blur .backdrop-blur-sm,
+.no-backdrop-blur .backdrop-blur,
+.no-backdrop-blur .backdrop-blur-md {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  /* 半透明背景提升不透明度，防止穿底 */
+  --tw-bg-opacity: 0.97 !important;
+}
+
 @layer base {
   /* 默认：清新北欧绿 */
   :root,
