@@ -8,6 +8,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import { MobileTabBar } from '@/business/MobileTabBar'
 import { PwaInstallBanner } from '@/components/PwaInstallBanner'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { isWeChat } from '@/utils/ua'
 
 const LoginPage                = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
@@ -73,7 +74,8 @@ const TABBAR_HIDDEN_PREFIXES = ['/admin', '/login', '/register']
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
-  const showTabBar = !TABBAR_HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))
+  // 微信内置浏览器不显示 TabBar，也不需要底部 padding
+  const showTabBar = !isWeChat && !TABBAR_HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))
   return (
     <>
       <div className={showTabBar ? 'pb-16 md:pb-0' : undefined}>

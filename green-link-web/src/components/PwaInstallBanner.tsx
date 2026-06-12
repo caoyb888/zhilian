@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Download, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
+import { isWeChat } from '@/utils/ua'
 
 const STORAGE_KEY = 'pwa-install-dismissed'
 
@@ -14,6 +15,8 @@ export function PwaInstallBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    // 微信内置浏览器不支持 PWA，跳过
+    if (isWeChat) return
     // 用户已关闭过，不再弹出
     if (localStorage.getItem(STORAGE_KEY)) return
 

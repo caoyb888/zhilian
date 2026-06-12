@@ -3,6 +3,7 @@ import { Bell, Handshake, Home, Layers, User } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 import { useUnreadCount } from '@/services/messageService'
+import { isWeChat } from '@/utils/ua'
 
 const TABS = [
   {
@@ -58,6 +59,9 @@ export function MobileTabBar() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const { data: unreadData } = useUnreadCount(!!accountInfo)
   const totalUnread = unreadData?.total ?? 0
+
+  // 微信内置浏览器底部有原生导航栏，自定义 TabBar 会重叠
+  if (isWeChat) return null
 
   function handleTab(path: string, requireAuth: boolean) {
     if (requireAuth && !accountInfo) {
