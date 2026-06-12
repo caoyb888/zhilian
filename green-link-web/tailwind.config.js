@@ -72,10 +72,15 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(30px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateX(-50%) translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateX(-50%) translateY(0)' },
+        },
       },
       animation: {
         float: 'float 6s ease-in-out infinite',
         'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+        'slide-up': 'slideUp 0.3s ease-out forwards',
       },
     },
   },
