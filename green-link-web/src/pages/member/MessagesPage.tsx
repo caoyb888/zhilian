@@ -11,7 +11,6 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
-import { Button } from '@/components/Button'
 import { Pagination } from '@/components/Pagination'
 import { EmptyState } from '@/components/states/EmptyState'
 import { SkeletonList } from '@/components/states/SkeletonList'
@@ -207,29 +206,39 @@ export default function MessagesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── 页头 ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-[3px] h-6 rounded-full bg-theme-accent" />
-          <div>
-            <h1 className="text-lg font-bold text-stone-900 leading-tight">消息中心</h1>
-            <p className="text-xs text-stone-400 mt-0.5">
-              {totalUnread > 0 ? `${totalUnread} 条未读` : '暂无未读消息'}
-            </p>
+      {/* ── 英雄页头 ── */}
+      <div className="relative overflow-hidden rounded-2xl shadow-lg">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%)' }} />
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #c4b5fd, transparent)' }} />
+        <div className="relative flex items-center justify-between gap-4 px-6 py-5">
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
+              <Icon icon={Bell} size={22} className="text-white" />
+              {totalUnread > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none">
+                  {totalUnread > 99 ? '99+' : totalUnread}
+                </span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-white">消息中心</h1>
+              <p className="mt-0.5 text-sm text-violet-100/75">
+                {totalUnread > 0 ? `${totalUnread} 条未读消息` : '暂无未读消息'}
+              </p>
+            </div>
           </div>
+          {hasUnread && (
+            <button
+              onClick={handleMarkAll}
+              disabled={markAllMutation.isPending}
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+            >
+              <Icon icon={CheckCheck} size={15} />
+              {activeBizType ? `全部已读（${BIZ_LABEL[activeBizType]}）` : '全部已读'}
+            </button>
+          )}
         </div>
-
-        {hasUnread && (
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={markAllMutation.isPending}
-            onClick={handleMarkAll}
-          >
-            <Icon icon={CheckCheck} size={14} className="mr-1.5" />
-            {activeBizType ? `全部已读（${BIZ_LABEL[activeBizType]}）` : '全部已读'}
-          </Button>
-        )}
       </div>
 
       {/* ── 分类 Tab ── */}

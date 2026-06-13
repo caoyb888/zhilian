@@ -155,7 +155,7 @@ function DemandCard({ item, index }: { item: DemandItem; index: number }) {
         item.auditStatus === 2 ? 'border-red-100' : 'border-stone-100',
       )}>
         {/* 左侧状态色条 */}
-        <div className={clsx('w-1 flex-shrink-0 rounded-l-xl', status.bar)} />
+        <div className={clsx('w-1 flex-shrink-0 rounded-l-xl transition-all duration-200 group-hover:w-[5px]', status.bar)} />
 
         {/* 主内容 */}
         <div className="flex flex-1 items-center gap-4 px-4 py-3.5 min-w-0">
@@ -342,23 +342,30 @@ export default function MyDemandsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── 页头 ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-[3px] h-6 rounded-full bg-theme-accent" />
-          <div>
-            <h1 className="text-lg font-bold text-stone-900 leading-tight">我的需求</h1>
-            {total > 0 && (
-              <p className="text-xs text-stone-400 mt-0.5">共 {total} 条</p>
-            )}
+      {/* ── 英雄页头 ── */}
+      <div className="relative overflow-hidden rounded-2xl shadow-lg">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #312e81 0%, #1d4ed8 100%)' }} />
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #93c5fd, transparent)' }} />
+        <div className="relative flex items-center justify-between gap-4 px-6 py-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
+              <Icon icon={FileText} size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-white">我的需求</h1>
+              <p className="mt-0.5 text-sm text-blue-100/75">
+                {total > 0 ? `共 ${total} 条需求` : '管理已发布的采购需求'}
+              </p>
+            </div>
           </div>
+          <Link to="/supply/demands/publish">
+            <button className="flex shrink-0 items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/25 transition-all duration-150 active:scale-[0.97]">
+              <Icon icon={Plus} size={15} />
+              发布需求
+            </button>
+          </Link>
         </div>
-        <Link to="/supply/demands/publish">
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 transition-all duration-200 shadow-sm active:scale-[0.98]">
-            <Icon icon={Plus} size={14} />
-            发布需求
-          </button>
-        </Link>
       </div>
 
       {/* ── 状态 Tab + 筛选 ── */}

@@ -223,24 +223,31 @@ export default function MyMatchRecordsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── 页头 ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-[3px] h-6 rounded-full bg-theme-accent" />
-          <div>
-            <h1 className="text-lg font-bold text-stone-900 leading-tight">我的对接记录</h1>
-            {total > 0 && (
-              <p className="text-xs text-stone-400 mt-0.5">共 {total} 条</p>
-            )}
+      {/* ── 英雄页头 ── */}
+      <div className="relative overflow-hidden rounded-2xl shadow-lg">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0f4c75 0%, #0d9488 100%)' }} />
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #67e8f9, transparent)' }} />
+        <div className="relative flex items-center justify-between gap-4 px-6 py-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
+              <Icon icon={Handshake} size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-white">我的对接记录</h1>
+              <p className="mt-0.5 text-sm text-cyan-100/75">
+                {total > 0 ? `共 ${total} 条对接` : '发起或接收的供需对接申请'}
+              </p>
+            </div>
           </div>
+          <Link
+            to="/supply/recommend"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/25 transition-all duration-150 active:scale-[0.97]"
+          >
+            <Icon icon={FileText} size={15} />
+            去发现匹配
+          </Link>
         </div>
-        <Link
-          to="/supply/recommend"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 transition-all duration-200 shadow-sm active:scale-[0.98]"
-        >
-          <Icon icon={FileText} size={14} />
-          去发现匹配
-        </Link>
       </div>
 
       {/* ── 状态 Tab ── */}
