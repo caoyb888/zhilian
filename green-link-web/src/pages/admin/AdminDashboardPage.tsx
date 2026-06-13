@@ -1,12 +1,10 @@
-import React, { useCallback } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import React from 'react'
 import {
   Users,
   UserPlus,
   ClipboardCheck,
   Handshake,
   TrendingUp,
-  RefreshCw,
   MessageSquare,
   type LucideIcon,
 } from 'lucide-react'
@@ -146,24 +144,11 @@ const CHART_STYLE = {
 const formatDate = (dateStr: string) => dateStr.slice(5)
 
 export default function AdminDashboardPage() {
-  const qc = useQueryClient()
-
   const overview    = useDashboardOverview(REFETCH_INTERVAL)
   const auditSummary = useAuditSummary(REFETCH_INTERVAL)
   const matchStats   = useMatchDetailStats(REFETCH_INTERVAL)
   const memberStats  = useMemberDetailStats(REFETCH_INTERVAL)
   const messageStats = useMessageStats(REFETCH_INTERVAL)
-
-  const isAnyLoading =
-    overview.isLoading ||
-    auditSummary.isLoading ||
-    matchStats.isLoading ||
-    memberStats.isLoading ||
-    messageStats.isLoading
-
-  const handleRefresh = useCallback(() => {
-    qc.invalidateQueries({ queryKey: ['admin', 'dashboard'] })
-  }, [qc])
 
   const ov    = overview.data
   const ms    = matchStats.data
@@ -173,18 +158,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-
-      {/* ── Refresh button row ── */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleRefresh}
-          disabled={isAnyLoading}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-700/60 bg-slate-800/60 px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-emerald-500/30 hover:text-slate-200 disabled:opacity-40"
-        >
-          <Icon icon={RefreshCw} size={12} className={isAnyLoading ? 'animate-spin' : ''} />
-          刷新
-        </button>
-      </div>
 
       {/* ── 5 KPI cards ── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
