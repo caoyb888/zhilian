@@ -39,10 +39,13 @@ export function MemberSidebar() {
     <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 sticky top-16 lg:top-[4.5rem] max-h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4.5rem)] overflow-y-auto self-start gap-3">
 
       {/* ── 用户信息卡 ── */}
-      <div className="rounded-xl border border-stone-100 bg-white shadow-card p-4">
-        <div className="flex flex-col items-center text-center gap-2.5">
-          {/* 头像 */}
-          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-brand-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl ring-2 ring-white ring-offset-2 ring-offset-stone-50 select-none">
+      <div className="rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
+        {/* 封面渐变条 */}
+        <div className="h-10 bg-gradient-to-r from-emerald-500 to-emerald-400" />
+
+        {/* 内容区：头像压住封面条下沿 */}
+        <div className="flex flex-col items-center text-center gap-2 px-4 pb-4">
+          <div className="-mt-7 h-14 w-14 rounded-full bg-gradient-to-br from-brand-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl ring-2 ring-white select-none">
             {avatarChar}
           </div>
 
