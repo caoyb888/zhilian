@@ -36,35 +36,45 @@ export function MemberSidebar() {
   const avatarChar = accountInfo?.realName?.charAt(0) ?? accountInfo?.username?.charAt(0) ?? '?'
 
   return (
-    <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 sticky top-16 lg:top-[4.5rem] max-h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4.5rem)] overflow-y-auto self-start gap-2">
+    <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 sticky top-16 lg:top-[4.5rem] max-h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4.5rem)] overflow-y-auto self-start gap-3">
 
-      {/* ── 单张卡：用户信息 + 导航 + 退出 ── */}
+      {/* ── 用户信息卡 ── */}
       <div className="rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
+        {/* 封面渐变条 */}
+        <div className="h-7 bg-gradient-to-r from-emerald-500 to-emerald-400" />
 
-        {/* 紧凑用户行头 */}
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-brand-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm select-none">
+        {/* 内容区：头像压住封面条下沿 */}
+        <div className="flex flex-col items-center text-center gap-2 px-4 pb-4">
+          <div className="-mt-7 h-14 w-14 rounded-full bg-gradient-to-br from-brand-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xl ring-2 ring-white select-none">
             {avatarChar}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-stone-900 truncate leading-tight">
+
+          {/* 姓名 + 公司 */}
+          <div className="space-y-0.5 min-w-0 w-full">
+            <p className="text-sm font-semibold text-stone-900 truncate">
               {accountInfo?.realName ?? accountInfo?.username}
             </p>
-            {levelConf && (
-              <span className={clsx(
-                'inline-flex items-center rounded-full border px-2 py-[1px] text-[9px] font-semibold tracking-wide mt-0.5',
-                levelConf.cls,
-              )}>
-                {levelConf.label}
-              </span>
+            {accountInfo?.memberName && (
+              <p className="text-[11px] text-stone-400 truncate leading-tight">
+                {accountInfo.memberName}
+              </p>
             )}
           </div>
+
+          {/* 会员等级 chip */}
+          {levelConf && (
+            <span className={clsx(
+              'inline-flex items-center rounded-full border px-2.5 py-[3px] text-[10px] font-semibold tracking-wide',
+              levelConf.cls,
+            )}>
+              {levelConf.label}
+            </span>
+          )}
         </div>
+      </div>
 
-        {/* 分隔线 */}
-        <div className="h-px bg-stone-100" />
-
-        {/* 导航项 */}
+      {/* ── 导航菜单 ── */}
+      <nav className="rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
         {NAV_ITEMS.map(({ label, path, icon }) => {
           const isMessages = path === '/member/messages'
           const msgUnread  = isMessages ? (unreadCount?.total ?? 0) : 0
@@ -74,7 +84,7 @@ export function MemberSidebar() {
               key={path}
               to={path}
               className={({ isActive }) => clsx(
-                'flex items-center gap-2.5 py-[10px] pr-4 text-sm font-medium transition-all duration-150',
+                'flex items-center gap-2.5 py-[11px] pr-4 text-sm font-medium transition-all duration-150',
                 'border-l-[3px] pl-[13px]',
                 isActive
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
@@ -96,12 +106,13 @@ export function MemberSidebar() {
         <div className="h-px bg-stone-100" />
         <button
           onClick={() => logoutMutation.mutate(undefined, { onSettled: () => navigate('/login') })}
-          className="flex w-full items-center gap-2 border-l-[3px] border-transparent pl-[13px] pr-4 py-[10px] text-sm font-medium text-stone-400 hover:bg-stone-50 hover:text-red-500 transition-colors"
+          className="flex w-full items-center gap-2.5 border-l-[3px] border-transparent pl-[13px] pr-4 py-[11px] text-sm font-medium text-stone-400 hover:bg-stone-50 hover:text-red-500 transition-colors"
         >
           <Icon icon={LogOut} size={16} />
           退出登录
         </button>
-      </div>
+      </nav>
+
     </aside>
   )
 }
