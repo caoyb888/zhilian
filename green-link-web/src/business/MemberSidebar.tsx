@@ -41,7 +41,7 @@ export function MemberSidebar() {
       {/* ── 用户信息卡 ── */}
       <div className="rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
         {/* 封面渐变条 */}
-        <div className="h-10 bg-gradient-to-r from-emerald-500 to-emerald-400" />
+        <div className="h-9 bg-gradient-to-r from-emerald-500 to-emerald-400" />
 
         {/* 内容区：头像压住封面条下沿 */}
         <div className="flex flex-col items-center text-center gap-2 px-4 pb-4">
