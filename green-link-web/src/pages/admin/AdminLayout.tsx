@@ -180,7 +180,6 @@ export default function AdminLayout() {
       ? location.pathname === item.path
       : location.pathname.startsWith(item.path),
   )
-  const isDashboard = location.pathname === '/admin/dashboard'
 
   // Ctrl+K / Cmd+K → global search
   useEffect(() => {
@@ -271,14 +270,6 @@ export default function AdminLayout() {
                   </>
                 )}
               </div>
-              {isDashboard && (
-                <p className="pl-[13px] text-[10px] leading-tight text-slate-600">
-                  欢迎回来，
-                  <span className="text-emerald-400/80">
-                    {accountInfo?.realName ?? accountInfo?.username}
-                  </span>
-                </p>
-              )}
             </div>
           </div>
 
