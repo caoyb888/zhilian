@@ -15,6 +15,7 @@ import { SkeletonList } from '@/components/states/SkeletonList'
 import { EmptyState } from '@/components/states/EmptyState'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
+import { Pagination } from '@/components/Pagination'
 import {
   fetchTagCategories,
   fetchTags,
@@ -32,9 +33,12 @@ import {
   type UpdateTagRequest,
 } from '@/services/tagService'
 
+const PAGE_SIZE = 10
+
 export default function TagListPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | 'all'>('all')
   const [keyword, setKeyword] = useState('')
+  const [page, setPage] = useState(1)
   const [categoryModalOpen, setCategoryModalOpen] = useState(false)
   const [tagModalOpen, setTagModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<TagCategory | null>(null)
@@ -46,11 +50,11 @@ export default function TagListPage() {
   })
 
   const { data: tagPage, refetch: refetchTags } = useQuery({
-    queryKey: ['tags', selectedCategoryId, keyword],
+    queryKey: ['tags', selectedCategoryId, keyword, page],
     queryFn: () =>
       fetchTags({
-        page: 1,
-        size: 50,
+        page,
+        size: PAGE_SIZE,
         categoryId: selectedCategoryId === 'all' ? undefined : selectedCategoryId,
         keyword: keyword || undefined,
       }),
@@ -114,7 +118,7 @@ export default function TagListPage() {
         <ul className="space-y-1">
           <li>
             <button
-              onClick={() => setSelectedCategoryId('all')}
+              onClick={() => { setSelectedCategoryId('all'); setPage(1) }}
               className={
                 'flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-200 ' +
                 (selectedCategoryId === 'all'
@@ -131,7 +135,7 @@ export default function TagListPage() {
           {categories?.map((cat) => (
             <li key={cat.id}>
               <button
-                onClick={() => setSelectedCategoryId(cat.id)}
+                onClick={() => { setSelectedCategoryId(cat.id); setPage(1) }}
                 className={
                   'flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-200 ' +
                   (selectedCategoryId === cat.id
@@ -179,7 +183,7 @@ export default function TagListPage() {
               <Input
                 placeholder="搜索标签名称"
                 value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
+                onChange={(e) => { setKeyword(e.target.value); setPage(1) }}
                 inputClassName="w-48 pl-9"
               />
             </div>
@@ -252,6 +256,11 @@ export default function TagListPage() {
             </table>
           )}
         </div>
+        {tagPage && tagPage.total > PAGE_SIZE && (
+          <div className="border-t border-slate-800/60 px-4 py-4">
+            <Pagination page={page} total={tagPage.total} size={PAGE_SIZE} onChange={setPage} />
+          </div>
+        )}
       </section>
 
       {/* 分类弹窗 */}
