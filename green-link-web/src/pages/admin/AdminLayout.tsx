@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { Menu, X, Search, LogOut } from 'lucide-react'
 import { Icon } from '@/components/Icon'
@@ -173,6 +173,14 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const navigate    = useNavigate()
+  const location    = useLocation()
+
+  const currentPage = adminMenuConfig.find((item) =>
+    item.path === '/admin/dashboard'
+      ? location.pathname === item.path
+      : location.pathname.startsWith(item.path),
+  )
+  const isDashboard = location.pathname === '/admin/dashboard'
 
   // Ctrl+K / Cmd+K → global search
   useEffect(() => {
@@ -247,12 +255,30 @@ export default function AdminLayout() {
               <Icon icon={Menu} size={20} />
             </button>
 
-            {/* Desktop breadcrumb hint */}
-            <div className="hidden items-center gap-2 md:flex">
-              <span className="h-[14px] w-px rounded-full bg-emerald-400/50" />
-              <span className="text-[11px] font-medium text-slate-500 tracking-wide">绿产智链</span>
-              <span className="text-[11px] text-slate-700">/</span>
-              <span className="text-[11px] font-medium text-slate-300">管理控制台</span>
+            {/* Desktop breadcrumb + page title + welcome */}
+            <div className="hidden flex-col justify-center gap-0.5 md:flex">
+              <div className="flex items-center gap-1.5">
+                <span className="h-[13px] w-px rounded-full bg-emerald-400/50" />
+                <span className="text-[11px] text-slate-500">绿产智链</span>
+                <span className="text-[11px] text-slate-700">/</span>
+                <span className="text-[11px] text-slate-400">管理控制台</span>
+                {currentPage && (
+                  <>
+                    <span className="text-[11px] text-slate-700">/</span>
+                    <span className="text-[11px] font-semibold text-slate-200">
+                      {currentPage.label}
+                    </span>
+                  </>
+                )}
+              </div>
+              {isDashboard && (
+                <p className="pl-[13px] text-[10px] leading-tight text-slate-600">
+                  欢迎回来，
+                  <span className="text-emerald-400/80">
+                    {accountInfo?.realName ?? accountInfo?.username}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 

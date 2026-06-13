@@ -26,7 +26,6 @@ import {
   Bar,
 } from 'recharts'
 import { Icon } from '@/components/Icon'
-import { useAuthStore } from '@/stores/authStore'
 import {
   useDashboardOverview,
   useAuditSummary,
@@ -147,7 +146,6 @@ const CHART_STYLE = {
 const formatDate = (dateStr: string) => dateStr.slice(5)
 
 export default function AdminDashboardPage() {
-  const accountInfo = useAuthStore((s) => s.accountInfo)
   const qc = useQueryClient()
 
   const overview    = useDashboardOverview(REFETCH_INTERVAL)
@@ -176,17 +174,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Page header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-100">数据看板</h1>
-          <p className="mt-0.5 text-[13px] text-slate-500">
-            欢迎回来，
-            <span className="text-emerald-400">
-              {accountInfo?.realName ?? accountInfo?.username}
-            </span>
-          </p>
-        </div>
+      {/* ── Refresh button row ── */}
+      <div className="flex justify-end">
         <button
           onClick={handleRefresh}
           disabled={isAnyLoading}
