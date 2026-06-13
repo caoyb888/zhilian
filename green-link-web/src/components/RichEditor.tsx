@@ -93,7 +93,7 @@ export function RichEditor({ defaultValue = '', onChange, minHeight = 360, readO
   return (
     <div
       ref={wrapperRef}
-      className="rich-editor-wrapper overflow-hidden rounded-lg border border-gray-200"
+      className="rich-editor-wrapper overflow-hidden rounded-lg border border-slate-700/60"
       style={{ minHeight }}
     />
   )
