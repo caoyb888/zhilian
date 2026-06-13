@@ -191,7 +191,7 @@ export default function AdminLayout() {
     .toUpperCase()
 
   return (
-    <div className="flex min-h-screen bg-stone-50">
+    <div className="flex min-h-screen" style={{ background: '#080e1a' }}>
 
       {/* ── Desktop sidebar ── */}
       <aside
@@ -208,7 +208,7 @@ export default function AdminLayout() {
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
           <aside
@@ -228,13 +228,19 @@ export default function AdminLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
 
         {/* Top header */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-stone-200/80 bg-white px-4 shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]">
-
+        <header
+          className="flex h-14 shrink-0 items-center justify-between px-4"
+          style={{
+            background: 'rgba(15,23,42,0.95)',
+            borderBottom: '1px solid rgba(16,185,129,0.10)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
           {/* Left */}
           <div className="flex items-center gap-3">
             {/* Mobile menu toggle */}
             <button
-              className="rounded-lg p-1.5 text-stone-500 transition-colors hover:bg-stone-100 md:hidden"
+              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 md:hidden"
               onClick={() => setSidebarOpen(true)}
               aria-label="打开菜单"
             >
@@ -244,9 +250,9 @@ export default function AdminLayout() {
             {/* Desktop breadcrumb hint */}
             <div className="hidden items-center gap-2 md:flex">
               <span className="h-[14px] w-px rounded-full bg-emerald-400/50" />
-              <span className="text-[11px] font-medium text-stone-400 tracking-wide">绿产智链</span>
-              <span className="text-[11px] text-stone-300">/</span>
-              <span className="text-[11px] font-medium text-stone-600">管理控制台</span>
+              <span className="text-[11px] font-medium text-slate-500 tracking-wide">绿产智链</span>
+              <span className="text-[11px] text-slate-700">/</span>
+              <span className="text-[11px] font-medium text-slate-300">管理控制台</span>
             </div>
           </div>
 
@@ -255,12 +261,12 @@ export default function AdminLayout() {
             {/* Search shortcut */}
             <button
               onClick={() => navigate('/admin/search')}
-              className="hidden items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-400 transition-all hover:border-emerald-300/60 hover:bg-white hover:text-stone-600 hover:shadow-sm md:flex"
+              className="hidden items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-800/60 px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-emerald-500/30 hover:bg-slate-800 hover:text-slate-200 md:flex"
             >
               <Icon icon={Search} size={12} />
               <span>搜索…</span>
               <kbd
-                className="ml-1 rounded bg-stone-100 px-1.5 py-0.5 text-stone-400"
+                className="ml-1 rounded bg-slate-700/80 px-1.5 py-0.5 text-slate-500"
                 style={{ fontSize: 9 }}
               >
                 ⌘K
@@ -268,14 +274,14 @@ export default function AdminLayout() {
             </button>
 
             {/* Divider */}
-            <div className="hidden h-5 w-px bg-stone-200 md:block" />
+            <div className="hidden h-5 w-px bg-slate-700/60 md:block" />
 
             {/* User avatar + name */}
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200/80">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-[11px] font-bold text-emerald-400 ring-1 ring-emerald-500/25">
                 {initials}
               </div>
-              <span className="hidden text-[13px] font-medium text-stone-700 md:block">
+              <span className="hidden text-[13px] font-medium text-slate-300 md:block">
                 {accountInfo?.realName ?? accountInfo?.username}
               </span>
             </div>
@@ -283,8 +289,15 @@ export default function AdminLayout() {
 
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-auto p-6">
+        {/* Page content — subtle tech-grid background */}
+        <main
+          className="flex-1 overflow-auto p-6"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(16,185,129,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.025) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        >
           <Outlet />
         </main>
 

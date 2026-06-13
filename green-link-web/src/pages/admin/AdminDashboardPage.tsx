@@ -44,29 +44,50 @@ const PIE_COLORS = [
   '#8b5cf6', '#7c3aed', '#a78bfa', '#ec4899', '#f43f5e',
 ]
 
+// Shared dark card base
+const CARD_BASE =
+  'rounded-xl border border-slate-800/70 bg-slate-900/80 transition-all duration-200'
+
 function StatCard({
   label,
   value,
   sub,
   icon: IconComp,
-  colorClass,
+  iconBg,
+  iconColor,
+  glowColor,
 }: {
   label: string
   value: string | number
   sub?: string
   icon: LucideIcon
-  colorClass: string
+  iconBg: string
+  iconColor: string
+  glowColor: string
 }) {
   return (
-    <div className="rounded-2xl border border-stone-100 bg-white p-5 shadow-card transition-all duration-200 hover:shadow-card-hover">
-      <div className="flex items-start justify-between">
+    <div
+      className={`${CARD_BASE} group relative overflow-hidden p-5 hover:border-slate-700`}
+      style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.3)' }}
+    >
+      {/* Subtle corner glow */}
+      <div
+        className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: glowColor }}
+      />
+      <div className="relative flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm text-stone-500">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-stone-800">{value}</p>
-          {sub && <p className="mt-0.5 text-xs text-stone-400">{sub}</p>}
+          <p className="truncate text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500">
+            {label}
+          </p>
+          <p className="mt-1.5 text-2xl font-bold tabular-nums text-slate-100">{value}</p>
+          {sub && <p className="mt-0.5 text-[11px] text-slate-600">{sub}</p>}
         </div>
-        <div className={`ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${colorClass}`}>
-          <Icon icon={IconComp} size={20} />
+        <div
+          className={`ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg} border`}
+          style={{ borderColor: `${iconColor}20` }}
+        >
+          <Icon icon={IconComp} size={18} className={iconColor} />
         </div>
       </div>
     </div>
@@ -75,14 +96,21 @@ function StatCard({
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-4 text-sm font-semibold text-stone-700">{children}</h3>
+    <h3 className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+      <span className="h-px flex-1 bg-slate-800" />
+      <span>{children}</span>
+      <span className="h-px flex-1 bg-slate-800" />
+    </h3>
   )
 }
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-card">
-      <SectionTitle>{title}</SectionTitle>
+    <div
+      className={`${CARD_BASE} p-5`}
+      style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.3)' }}
+    >
+      <p className="mb-4 text-[13px] font-semibold text-slate-300">{title}</p>
       {children}
     </div>
   )
@@ -90,18 +118,30 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 
 function LoadingChart() {
   return (
-    <div className="flex h-56 items-center justify-center rounded-lg bg-stone-50">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+    <div className="flex h-56 items-center justify-center rounded-lg bg-slate-800/40">
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
     </div>
   )
 }
 
 function EmptyChart() {
   return (
-    <div className="flex h-56 items-center justify-center rounded-lg bg-stone-50 text-sm text-stone-400">
+    <div className="flex h-56 items-center justify-center rounded-lg bg-slate-800/30 text-sm text-slate-600">
       暂无数据
     </div>
   )
+}
+
+const CHART_STYLE = {
+  grid: '#1e2d45',
+  tick: '#475569',
+  tooltip: {
+    backgroundColor: '#0f172a',
+    border: '1px solid rgba(16,185,129,0.2)',
+    borderRadius: 8,
+    fontSize: 12,
+    color: '#cbd5e1',
+  },
 }
 
 const formatDate = (dateStr: string) => dateStr.slice(5)
@@ -110,10 +150,10 @@ export default function AdminDashboardPage() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const qc = useQueryClient()
 
-  const overview = useDashboardOverview(REFETCH_INTERVAL)
+  const overview    = useDashboardOverview(REFETCH_INTERVAL)
   const auditSummary = useAuditSummary(REFETCH_INTERVAL)
-  const matchStats = useMatchDetailStats(REFETCH_INTERVAL)
-  const memberStats = useMemberDetailStats(REFETCH_INTERVAL)
+  const matchStats   = useMatchDetailStats(REFETCH_INTERVAL)
+  const memberStats  = useMemberDetailStats(REFETCH_INTERVAL)
   const messageStats = useMessageStats(REFETCH_INTERVAL)
 
   const isAnyLoading =
@@ -127,71 +167,85 @@ export default function AdminDashboardPage() {
     qc.invalidateQueries({ queryKey: ['admin', 'dashboard'] })
   }, [qc])
 
-  const ov = overview.data
-  const ms = matchStats.data
-  const mem = memberStats.data
+  const ov    = overview.data
+  const ms    = matchStats.data
+  const mem   = memberStats.data
   const audit = auditSummary.data
-  const msg = messageStats.data
+  const msg   = messageStats.data
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 页头 */}
+
+      {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-theme-text-main">数据看板</h1>
-          <p className="mt-1 text-sm text-theme-text-muted">
-            欢迎回来，{accountInfo?.realName ?? accountInfo?.username}
+          <h1 className="text-xl font-bold tracking-tight text-slate-100">数据看板</h1>
+          <p className="mt-0.5 text-[13px] text-slate-500">
+            欢迎回来，
+            <span className="text-emerald-400">
+              {accountInfo?.realName ?? accountInfo?.username}
+            </span>
           </p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={isAnyLoading}
-          className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs text-stone-600 shadow-card transition-colors hover:bg-stone-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-700/60 bg-slate-800/60 px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-emerald-500/30 hover:text-slate-200 disabled:opacity-40"
         >
-          <Icon icon={RefreshCw} size={13} className={isAnyLoading ? 'animate-spin' : ''} />
+          <Icon icon={RefreshCw} size={12} className={isAnyLoading ? 'animate-spin' : ''} />
           刷新
         </button>
       </div>
 
-      {/* 5 个指标卡：PC 3列，手机单列 */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {/* ── 5 KPI cards ── */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="总会员数"
           value={ov ? ov.totalMembers.toLocaleString() : '—'}
           icon={Users}
-          colorClass="bg-emerald-50 text-emerald-600"
+          iconBg="bg-emerald-950/60"
+          iconColor="text-emerald-400"
+          glowColor="rgba(16,185,129,0.25)"
         />
         <StatCard
           label="本月新增"
           value={ov ? ov.newMembersThisMonth.toLocaleString() : '—'}
           sub="本月新增会员"
           icon={UserPlus}
-          colorClass="bg-sky-50 text-sky-600"
+          iconBg="bg-sky-950/60"
+          iconColor="text-sky-400"
+          glowColor="rgba(56,189,248,0.25)"
         />
         <StatCard
           label="待审核"
           value={ov ? ov.pendingAuditCount.toLocaleString() : '—'}
           sub="资源 + 需求"
           icon={ClipboardCheck}
-          colorClass="bg-amber-50 text-amber-600"
+          iconBg="bg-amber-950/60"
+          iconColor="text-amber-400"
+          glowColor="rgba(245,158,11,0.25)"
         />
         <StatCard
           label="总对接数"
           value={ov ? ov.totalMatchCount.toLocaleString() : '—'}
           icon={Handshake}
-          colorClass="bg-violet-50 text-violet-600"
+          iconBg="bg-violet-950/60"
+          iconColor="text-violet-400"
+          glowColor="rgba(167,139,250,0.25)"
         />
         <StatCard
           label="对接成功率"
           value={ov ? `${Number(ov.matchSuccessRate).toFixed(1)}%` : '—'}
           icon={TrendingUp}
-          colorClass="bg-rose-50 text-rose-600"
+          iconBg="bg-rose-950/60"
+          iconColor="text-rose-400"
+          glowColor="rgba(244,63,94,0.25)"
         />
       </div>
 
-      {/* 图表区：折线图 + 饼图 */}
+      {/* ── Charts row 1: line + pie ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* 近30日对接趋势 */}
+
         <ChartCard title="近 30 日对接趋势">
           {matchStats.isLoading ? (
             <LoadingChart />
@@ -199,17 +253,28 @@ export default function AdminDashboardPage() {
             <EmptyChart />
           ) : (
             <ResponsiveContainer width="100%" height={224}>
-              <LineChart data={ms.last30DaysTrend} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f4" />
+              <LineChart
+                data={ms.last30DaysTrend}
+                margin={{ top: 4, right: 8, bottom: 0, left: -16 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDate}
-                  tick={{ fontSize: 11, fill: '#a8a29e' }}
+                  tick={{ fontSize: 11, fill: CHART_STYLE.tick }}
                   interval={4}
+                  axisLine={{ stroke: CHART_STYLE.grid }}
+                  tickLine={false}
                 />
-                <YAxis tick={{ fontSize: 11, fill: '#a8a29e' }} allowDecimals={false} />
+                <YAxis
+                  tick={{ fontSize: 11, fill: CHART_STYLE.tick }}
+                  allowDecimals={false}
+                  axisLine={{ stroke: CHART_STYLE.grid }}
+                  tickLine={false}
+                />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                  contentStyle={CHART_STYLE.tooltip}
+                  labelStyle={{ color: '#94a3b8' }}
                   formatter={(v) => [v, '新增对接'] as [React.ReactNode, React.ReactNode]}
                   labelFormatter={(l) => `日期：${String(l)}`}
                 />
@@ -219,14 +284,13 @@ export default function AdminDashboardPage() {
                   stroke="#10b981"
                   strokeWidth={2}
                   dot={false}
-                  activeDot={{ r: 4, fill: '#10b981' }}
+                  activeDot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
 
-        {/* 行业分布饼图 */}
         <ChartCard title="行业分布（TOP 20）">
           {memberStats.isLoading ? (
             <LoadingChart />
@@ -249,66 +313,90 @@ export default function AdminDashboardPage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                  contentStyle={CHART_STYLE.tooltip}
+                  labelStyle={{ color: '#94a3b8' }}
                   formatter={(v, name) => [v, name] as [React.ReactNode, React.ReactNode]}
                 />
                 <Legend
                   layout="vertical"
                   align="right"
                   verticalAlign="middle"
-                  iconSize={10}
+                  iconSize={8}
                   iconType="circle"
                   formatter={(value: string) =>
                     value.length > 6 ? value.slice(0, 6) + '…' : value
                   }
-                  wrapperStyle={{ fontSize: 11 }}
+                  wrapperStyle={{ fontSize: 11, color: '#64748b' }}
                 />
               </PieChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
+
       </div>
 
-      {/* 近7日审核效率 + 消息发送统计 */}
+      {/* ── Charts row 2: bar + message stats ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* 近7日审核柱状图 */}
+
         <ChartCard title="近 7 日审核量">
           {auditSummary.isLoading ? (
             <LoadingChart />
           ) : !audit?.last7DaysAudit?.length ? (
             <EmptyChart />
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={audit.last7DaysAudit}
-                margin={{ top: 4, right: 8, bottom: 0, left: -16 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f4" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={formatDate}
-                  tick={{ fontSize: 11, fill: '#a8a29e' }}
-                />
-                <YAxis tick={{ fontSize: 11, fill: '#a8a29e' }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 8 }}
-                  formatter={(v) => [v, '审核量'] as [React.ReactNode, React.ReactNode]}
-                  labelFormatter={(l) => `日期：${String(l)}`}
-                />
-                <Bar dataKey="auditedCount" fill="#059669" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-          {audit && (
-            <div className="mt-3 flex gap-4 border-t border-stone-100 pt-3 text-xs text-stone-500">
-              <span>待审资源：<span className="font-medium text-amber-600">{audit.pendingResourceCount}</span></span>
-              <span>待审需求：<span className="font-medium text-amber-600">{audit.pendingDemandCount}</span></span>
-              <span>合计待审：<span className="font-medium text-amber-600">{audit.totalPendingAudit}</span></span>
-            </div>
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={audit.last7DaysAudit}
+                  margin={{ top: 4, right: 8, bottom: 0, left: -16 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={formatDate}
+                    tick={{ fontSize: 11, fill: CHART_STYLE.tick }}
+                    axisLine={{ stroke: CHART_STYLE.grid }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: CHART_STYLE.tick }}
+                    allowDecimals={false}
+                    axisLine={{ stroke: CHART_STYLE.grid }}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={CHART_STYLE.tooltip}
+                    labelStyle={{ color: '#94a3b8' }}
+                    formatter={(v) => [v, '审核量'] as [React.ReactNode, React.ReactNode]}
+                    labelFormatter={(l) => `日期：${String(l)}`}
+                  />
+                  <Bar
+                    dataKey="auditedCount"
+                    fill="#059669"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              {audit && (
+                <div className="mt-3 flex gap-4 border-t border-slate-800/60 pt-3 text-[11px] text-slate-500">
+                  <span>
+                    待审资源：
+                    <span className="font-semibold text-amber-400">{audit.pendingResourceCount}</span>
+                  </span>
+                  <span>
+                    待审需求：
+                    <span className="font-semibold text-amber-400">{audit.pendingDemandCount}</span>
+                  </span>
+                  <span>
+                    合计：
+                    <span className="font-semibold text-amber-400">{audit.totalPendingAudit}</span>
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </ChartCard>
 
-        {/* 消息发送统计 */}
         <ChartCard title="消息发送统计">
           {messageStats.isLoading ? (
             <LoadingChart />
@@ -318,36 +406,73 @@ export default function AdminDashboardPage() {
             <div className="flex flex-col gap-4">
               {(
                 [
-                  { label: '站内信', data: msg.site, icon: MessageSquare, color: 'bg-sky-50 text-sky-600', bar: 'bg-sky-500' },
-                  { label: '微信推送', data: msg.wechat, icon: MessageSquare, color: 'bg-emerald-50 text-emerald-600', bar: 'bg-emerald-500' },
+                  {
+                    label: '站内信',
+                    data: msg.site,
+                    icon: MessageSquare,
+                    iconBg: 'bg-sky-950/60',
+                    iconColor: 'text-sky-400',
+                    barColor: '#0ea5e9',
+                    barBg: 'rgba(14,165,233,0.12)',
+                  },
+                  {
+                    label: '微信推送',
+                    data: msg.wechat,
+                    icon: MessageSquare,
+                    iconBg: 'bg-emerald-950/60',
+                    iconColor: 'text-emerald-400',
+                    barColor: '#10b981',
+                    barBg: 'rgba(16,185,129,0.12)',
+                  },
                 ] as const
-              ).map(({ label, data, icon, color, bar }) => (
-                <div key={label} className="rounded-xl border border-stone-100 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${color}`}>
-                      <Icon icon={icon} size={14} />
+              ).map(({ label, data, icon, iconBg, iconColor, barColor, barBg }) => (
+                <div
+                  key={label}
+                  className="rounded-xl border border-slate-800/50 bg-slate-800/30 p-4"
+                >
+                  <div className="mb-3 flex items-center gap-2.5">
+                    <div
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${iconBg} border`}
+                      style={{ borderColor: `${barColor}20` }}
+                    >
+                      <Icon icon={icon} size={13} className={iconColor} />
                     </div>
-                    <span className="text-sm font-medium text-stone-700">{label}</span>
-                    <span className="ml-auto text-lg font-bold text-stone-800">
+                    <span className="text-[13px] font-medium text-slate-300">{label}</span>
+                    <span className="ml-auto text-lg font-bold tabular-nums text-slate-100">
                       {Number(data.successRate).toFixed(1)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
+
+                  {/* Progress track */}
+                  <div
+                    className="h-1.5 w-full overflow-hidden rounded-full"
+                    style={{ background: barBg }}
+                  >
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${bar}`}
-                      style={{ width: `${Math.min(Number(data.successRate), 100)}%` }}
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${Math.min(Number(data.successRate), 100)}%`,
+                        background: `linear-gradient(90deg, ${barColor}cc, ${barColor})`,
+                        boxShadow: `0 0 8px ${barColor}60`,
+                      }}
                     />
                   </div>
-                  <div className="mt-2 flex gap-4 text-xs text-stone-400">
+
+                  <div className="mt-2 flex gap-4 text-[11px] text-slate-600">
                     <span>发送 {data.totalProcessed.toLocaleString()}</span>
-                    <span className="text-emerald-600">成功 {data.successCount.toLocaleString()}</span>
-                    <span className="text-red-500">失败 {data.failedCount.toLocaleString()}</span>
+                    <span style={{ color: barColor }}>
+                      成功 {data.successCount.toLocaleString()}
+                    </span>
+                    <span className="text-rose-500/70">
+                      失败 {data.failedCount.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </ChartCard>
+
       </div>
     </div>
   )
