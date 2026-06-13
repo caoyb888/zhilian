@@ -46,43 +46,52 @@ const STATUS_CONFIG: Record<number, { label: string; topBar: string; badge: stri
 // ─── Record Card ──────────────────────────────────────────────────────────────
 
 function RecordCard({ record }: { record: MatchRecordItem }) {
-  const hasUnread = record.unreadCount > 0
-  const matchTypeLabel = record.matchType === 1 ? '系统推荐' : '主动申请'
-  const status = STATUS_CONFIG[record.status] ?? STATUS_CONFIG[7]
-  const score = record.matchScore !== null ? Math.round(Number(record.matchScore)) : null
-  const avatarChar = record.counterparty?.name?.charAt(0) ?? '?'
+  const hasUnread    = record.unreadCount > 0
+  const isSystemRec  = record.matchType === 1
+  const status       = STATUS_CONFIG[record.status] ?? STATUS_CONFIG[7]
+  const score        = record.matchScore !== null ? Math.round(Number(record.matchScore)) : null
+  const avatarChar   = record.counterparty?.name?.charAt(0) ?? '?'
 
   return (
     <Link
       to={`/member/my-records/${record.recordId}`}
       state={{ record }}
       className={clsx(
-        'group flex flex-col rounded-xl border border-stone-100 bg-white overflow-hidden',
-        'border-t-2', status.topBar,
-        'hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-[1px] transition-all duration-200',
+        'group relative flex flex-col rounded-xl border bg-white overflow-hidden',
+        'border-stone-100 border-t-2', status.topBar,
+        'hover:shadow-[0_6px_24px_-6px_rgba(0,0,0,0.10)] hover:-translate-y-[1px]',
+        'hover:border-stone-200/70 transition-all duration-200',
       )}
     >
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-4 pt-3.5 pb-2 gap-2">
+      <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5 gap-2">
         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+          {/* 状态徽标 */}
           <span className={clsx(
-            'inline-flex items-center px-2 py-[2px] rounded-full text-[11px] font-semibold border shrink-0',
+            'inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold border shrink-0',
             status.badge,
           )}>
             {status.label}
           </span>
-          <span className="inline-flex items-center rounded-full bg-stone-100 px-2 py-[2px] text-[10px] font-medium text-stone-500 shrink-0">
-            {matchTypeLabel}
+          {/* 申请方式 — 系统推荐 vs 主动申请分色 */}
+          <span className={clsx(
+            'inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-semibold border shrink-0',
+            isSystemRec
+              ? 'bg-violet-50 text-violet-600 border-violet-200'
+              : 'bg-sky-50 text-sky-600 border-sky-200',
+          )}>
+            {isSystemRec ? '系统推荐' : '主动申请'}
           </span>
           {!record.isInitiator && (
-            <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2 py-[2px] text-[10px] font-medium text-blue-600 shrink-0">
+            <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-[2px] text-[10px] font-semibold text-amber-600 shrink-0">
               收到申请
             </span>
           )}
         </div>
+
         <div className="flex items-center gap-2 shrink-0">
           {hasUnread && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-red-500 px-1.5 py-[2px] text-[10px] font-bold text-white">
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-[3px] text-[10px] font-bold text-white shadow-sm shadow-red-200">
               <Icon icon={MessageCircle} size={9} />
               {record.unreadCount}
             </span>
@@ -95,12 +104,18 @@ function RecordCard({ record }: { record: MatchRecordItem }) {
 
       {/* ── Counterparty ── */}
       {record.counterparty ? (
-        <div className="flex items-center gap-2 px-4 pb-2.5">
-          <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold flex items-center justify-center shrink-0 select-none">
-            {avatarChar}
+        <div className="flex items-center gap-2.5 px-4 pb-3">
+          {/* 升级头像：渐变底色 + 白色首字 + 状态 ring */}
+          <div className="relative shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white text-[13px] font-bold flex items-center justify-center ring-2 ring-white shadow-sm select-none">
+              {avatarChar}
+            </div>
+            {hasUnread && (
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-1 ring-white" />
+            )}
           </div>
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <span className="text-sm font-semibold text-stone-800 truncate">
+            <span className="text-sm font-semibold text-stone-900 truncate">
               {record.counterparty.name}
             </span>
             {record.counterparty.province && (
@@ -110,45 +125,44 @@ function RecordCard({ record }: { record: MatchRecordItem }) {
               </span>
             )}
             {record.counterparty.memberLevel === 2 && (
-              <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded px-1 shrink-0">VIP</span>
+              <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 shrink-0">VIP</span>
             )}
             {record.counterparty.memberLevel === 3 && (
-              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1 shrink-0">理事</span>
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 shrink-0">理事</span>
             )}
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-4 pb-2.5">
-          <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
-            <Icon icon={Building2} size={12} className="text-stone-400" />
+        <div className="flex items-center gap-2.5 px-4 pb-3">
+          <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center shrink-0">
+            <Icon icon={Building2} size={14} className="text-stone-400" />
           </div>
-          <span className="text-sm text-stone-400">对方信息不可见</span>
+          <span className="text-sm text-stone-400 italic">对方信息不可见</span>
         </div>
       )}
 
       {/* ── Resource ↔ Demand pair ── */}
-      <div className="px-4 pb-3 space-y-1">
+      <div className="px-4 pb-3">
         <div className="flex items-start gap-2">
-          <span className="mt-0.5 shrink-0 rounded bg-emerald-50 border border-emerald-200 px-1.5 py-[2px] text-[10px] font-semibold text-emerald-700 leading-tight">资源</span>
-          <p className="text-xs text-stone-700 line-clamp-1 leading-snug min-w-0">
-            {record.resourceTitle ?? '（资源已下架）'}
+          <span className="mt-0.5 shrink-0 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-[2px] text-[10px] font-semibold text-emerald-700 leading-tight">资源</span>
+          <p className="text-xs text-stone-700 line-clamp-1 leading-snug min-w-0 pt-0.5">
+            {record.resourceTitle ?? <span className="italic text-stone-400">资源已下架</span>}
           </p>
         </div>
-        <div className="pl-[3px]">
-          <div className="w-px h-3 bg-stone-200 ml-[9px]" />
-        </div>
+        {/* 渐变连接线：emerald → blue */}
+        <div className="ml-[11px] my-1 w-px h-3 rounded-full" style={{ background: 'linear-gradient(to bottom, #6ee7b7, #93c5fd)' }} />
         <div className="flex items-start gap-2">
-          <span className="mt-0.5 shrink-0 rounded bg-blue-50 border border-blue-200 px-1.5 py-[2px] text-[10px] font-semibold text-blue-700 leading-tight">需求</span>
-          <p className="text-xs text-stone-700 line-clamp-1 leading-snug min-w-0">
-            {record.demandTitle ?? '（需求已关闭）'}
+          <span className="mt-0.5 shrink-0 rounded-full bg-blue-50 border border-blue-200 px-2 py-[2px] text-[10px] font-semibold text-blue-700 leading-tight">需求</span>
+          <p className="text-xs text-stone-700 line-clamp-1 leading-snug min-w-0 pt-0.5">
+            {record.demandTitle ?? <span className="italic text-stone-400">需求已关闭</span>}
           </p>
         </div>
       </div>
 
       {/* ── Apply message ── */}
       {record.applyMessage && (
-        <div className="mx-4 mb-3 rounded-lg bg-stone-50 border border-stone-100 px-3 py-2 text-[11px] text-stone-500 italic line-clamp-2 leading-relaxed">
-          <span className="not-italic text-stone-300 mr-1 font-serif text-base leading-none">"</span>
+        <div className="mx-4 mb-3 rounded-xl bg-stone-50 border border-stone-100 px-3 py-2.5 text-[11px] text-stone-500 line-clamp-2 leading-relaxed">
+          <span className="text-stone-300 mr-1 font-serif text-base leading-none not-italic">"</span>
           {record.applyMessage}
         </div>
       )}
@@ -156,23 +170,29 @@ function RecordCard({ record }: { record: MatchRecordItem }) {
       {/* ── Footer ── */}
       <div className="mt-auto flex items-center justify-between border-t border-stone-100 px-4 py-3">
         {score !== null ? (
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] text-stone-400">
-              匹配度 <span className="font-semibold text-emerald-600">{score} 分</span>
-            </span>
-            <div className="w-16 h-1 rounded-full bg-stone-100 overflow-hidden">
+          <div className="flex items-center gap-2.5">
+            <div className="w-14 h-1.5 rounded-full bg-stone-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-emerald-400 transition-all"
-                style={{ width: `${Math.min(score, 100)}%` }}
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.min(score, 100)}%`,
+                  background: 'linear-gradient(to right, #34d399, #2dd4bf)',
+                }}
               />
             </div>
+            <span className="text-[11px] font-bold tabular-nums text-emerald-600">{score}<span className="font-normal text-stone-400 ml-0.5">分</span></span>
           </div>
         ) : (
           <span />
         )}
-        <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 group-hover:bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors shrink-0">
+        {/* ghost → solid hover */}
+        <span className={clsx(
+          'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-150 shrink-0',
+          'border border-emerald-200 bg-emerald-50 text-emerald-600',
+          'group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white',
+        )}>
           查看详情
-          <Icon icon={ArrowRight} size={11} />
+          <Icon icon={ArrowRight} size={11} className="transition-transform duration-150 group-hover:translate-x-0.5" />
         </span>
       </div>
     </Link>
