@@ -35,7 +35,7 @@ const AUDIT_COLORS: Record<number, string> = {
   0: 'text-amber-600 bg-amber-50',
   1: 'text-emerald-600 bg-emerald-50',
   2: 'text-red-600 bg-red-50',
-  3: 'text-stone-500 bg-stone-100',
+  3: 'text-slate-400 bg-slate-800/60',
 }
 
 const MEMBER_LEVEL_LABELS: Record<number, string> = {
@@ -112,9 +112,9 @@ function SectionHeader({
   return (
     <div className="mb-2 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Icon icon={IconComp} size={16} className="text-stone-500" />
-        <span className="text-sm font-semibold text-stone-700">{title}</span>
-        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">{total}</span>
+        <Icon icon={IconComp} size={16} className="text-slate-400" />
+        <span className="text-sm font-semibold text-slate-200">{title}</span>
+        <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-xs text-slate-400">{total}</span>
       </div>
       {onViewAll && total > OVERVIEW_SIZE && (
         <button
@@ -131,7 +131,7 @@ function SectionHeader({
 function MemberCard({ item, navigate }: { item: MemberItem; navigate: (path: string) => void }) {
   return (
     <button
-      className="flex w-full items-center gap-3 rounded-xl border border-stone-100 bg-white p-4 text-left shadow-card transition-all hover:border-emerald-200 hover:shadow-card-hover"
+      className="flex w-full items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-900/80 p-4 text-left transition-all hover:border-emerald-200 hover:shadow-card-hover"
       onClick={() => navigate(`/admin/members`)}
     >
       {item.logoUrl ? (
@@ -143,7 +143,7 @@ function MemberCard({ item, navigate }: { item: MemberItem; navigate: (path: str
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-stone-800">{item.name}</span>
+          <span className="truncate text-sm font-medium text-slate-100">{item.name}</span>
           {item.memberLevel > 1 && (
             <Badge
               label={MEMBER_LEVEL_LABELS[item.memberLevel] ?? ''}
@@ -151,9 +151,9 @@ function MemberCard({ item, navigate }: { item: MemberItem; navigate: (path: str
             />
           )}
         </div>
-        <p className="mt-0.5 truncate text-xs text-stone-500">{item.industry}</p>
+        <p className="mt-0.5 truncate text-xs text-slate-400">{item.industry}</p>
       </div>
-      <div className="shrink-0 text-xs text-stone-400">
+      <div className="shrink-0 text-xs text-slate-500">
         {item.province ?? '—'}
       </div>
     </button>
@@ -163,7 +163,7 @@ function MemberCard({ item, navigate }: { item: MemberItem; navigate: (path: str
 function ResourceCard({ item, navigate }: { item: ResourceItem; navigate: (path: string) => void }) {
   return (
     <button
-      className="flex w-full items-center gap-3 rounded-xl border border-stone-100 bg-white p-4 text-left shadow-card transition-all hover:border-emerald-200 hover:shadow-card-hover"
+      className="flex w-full items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-900/80 p-4 text-left transition-all hover:border-emerald-200 hover:shadow-card-hover"
       onClick={() => navigate(`/supply/resources/${item.id}`)}
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
@@ -172,7 +172,7 @@ function ResourceCard({ item, navigate }: { item: ResourceItem; navigate: (path:
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span
-            className="truncate text-sm font-medium text-stone-800"
+            className="truncate text-sm font-medium text-slate-100"
             dangerouslySetInnerHTML={{ __html: item.highlightTitle ?? item.title }}
           />
           <Badge
@@ -182,7 +182,7 @@ function ResourceCard({ item, navigate }: { item: ResourceItem; navigate: (path:
         </div>
         {(item.highlightSummary ?? item.summary) && (
           <p
-            className="mt-0.5 truncate text-xs text-stone-500"
+            className="mt-0.5 truncate text-xs text-slate-400"
             dangerouslySetInnerHTML={{ __html: item.highlightSummary ?? item.summary ?? '' }}
           />
         )}
@@ -200,7 +200,7 @@ function ResourceCard({ item, navigate }: { item: ResourceItem; navigate: (path:
 function DemandCard({ item, navigate }: { item: DemandItem; navigate: (path: string) => void }) {
   return (
     <button
-      className="flex w-full items-center gap-3 rounded-xl border border-stone-100 bg-white p-4 text-left shadow-card transition-all hover:border-emerald-200 hover:shadow-card-hover"
+      className="flex w-full items-center gap-3 rounded-xl border border-slate-800/60 bg-slate-900/80 p-4 text-left transition-all hover:border-emerald-200 hover:shadow-card-hover"
       onClick={() => navigate(`/supply/demands/${item.id}`)}
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
@@ -209,7 +209,7 @@ function DemandCard({ item, navigate }: { item: DemandItem; navigate: (path: str
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span
-            className="truncate text-sm font-medium text-stone-800"
+            className="truncate text-sm font-medium text-slate-100"
             dangerouslySetInnerHTML={{ __html: item.highlightTitle ?? item.title }}
           />
           <Badge
@@ -219,7 +219,7 @@ function DemandCard({ item, navigate }: { item: DemandItem; navigate: (path: str
         </div>
         {(item.highlightSummary ?? item.summary) && (
           <p
-            className="mt-0.5 truncate text-xs text-stone-500"
+            className="mt-0.5 truncate text-xs text-slate-400"
             dangerouslySetInnerHTML={{ __html: item.highlightSummary ?? item.summary ?? '' }}
           />
         )}
@@ -236,7 +236,7 @@ function DemandCard({ item, navigate }: { item: DemandItem; navigate: (path: str
 
 function EmptyResults({ keyword }: { keyword: string }) {
   return (
-    <div className="flex flex-col items-center gap-3 py-16 text-stone-400">
+    <div className="flex flex-col items-center gap-3 py-16 text-slate-500">
       <Icon icon={Search} size={40} className="opacity-30" />
       <p className="text-sm">未找到与「{keyword}」相关的结果</p>
     </div>
@@ -312,7 +312,7 @@ export default function AdminGlobalSearchPage() {
         <Icon
           icon={Search}
           size={18}
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
         />
         <input
           type="search"
@@ -320,12 +320,12 @@ export default function AdminGlobalSearchPage() {
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="输入关键词搜索（至少 2 个字）"
           autoFocus
-          className="w-full rounded-xl border border-stone-200 bg-white py-3 pl-10 pr-10 text-sm text-stone-800 shadow-card outline-none transition-colors placeholder:text-stone-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+          className="w-full rounded-xl border border-slate-700/60 bg-slate-900/80 py-3 pl-10 pr-10 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
         />
         {inputValue && (
           <button
             onClick={() => { setInputValue(''); setKeyword('') }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-500 hover:bg-slate-700/60 hover:text-slate-200"
             aria-label="清空"
           >
             <Icon icon={X} size={15} />
@@ -335,7 +335,7 @@ export default function AdminGlobalSearchPage() {
 
       {/* Tab 切换 */}
       {searched && (
-        <div className="flex gap-1 border-b border-stone-200">
+        <div className="flex gap-1 border-b border-slate-700/60">
           {TABS.map((t) => {
             const count =
               t.key === 'member'   ? memberTotal :
@@ -350,12 +350,12 @@ export default function AdminGlobalSearchPage() {
                   'flex items-center gap-1.5 border-b-2 px-4 py-2 text-sm font-medium transition-colors ' +
                   (activeTab === t.key
                     ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-stone-500 hover:text-stone-800')
+                    : 'border-transparent text-slate-400 hover:text-slate-100')
                 }
               >
                 {t.label}
                 {count > 0 && (
-                  <span className="rounded-full bg-stone-100 px-1.5 py-0.5 text-xs leading-none text-stone-500">
+                  <span className="rounded-full bg-slate-800/60 px-1.5 py-0.5 text-xs leading-none text-slate-400">
                     {count > 999 ? '999+' : count}
                   </span>
                 )}
@@ -367,7 +367,7 @@ export default function AdminGlobalSearchPage() {
 
       {/* 结果区 */}
       {!searched ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-stone-400">
+        <div className="flex flex-col items-center gap-3 py-16 text-slate-500">
           <Icon icon={Search} size={48} className="opacity-20" />
           <p className="text-sm">请输入至少 2 个字开始搜索</p>
         </div>
@@ -440,7 +440,7 @@ export default function AdminGlobalSearchPage() {
             activeTab === 'resource' ? resourceTotal : demandTotal
           if (total > detailSize) {
             return (
-              <p className="text-center text-xs text-stone-400">
+              <p className="text-center text-xs text-slate-500">
                 共 {total} 条，当前显示前 {detailSize} 条，请缩短关键词以获取更精确结果
               </p>
             )

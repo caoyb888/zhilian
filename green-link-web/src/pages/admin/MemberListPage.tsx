@@ -45,8 +45,8 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   if (!value) return null
   return (
     <div className="grid grid-cols-3 gap-2 py-2 text-sm">
-      <span className="text-stone-500">{label}</span>
-      <span className="col-span-2 text-stone-800">{value}</span>
+      <span className="text-slate-400">{label}</span>
+      <span className="col-span-2 text-slate-100">{value}</span>
     </div>
   )
 }
@@ -58,11 +58,11 @@ function DetailModal({ memberId, onClose }: { memberId: number; onClose: () => v
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-lg overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-            <DialogTitle className="text-base font-semibold text-stone-800">会员详情</DialogTitle>
+        <DialogPanel className="w-full max-w-lg overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
+          <div className="flex items-center justify-between border-b border-slate-800/60 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-slate-100">会员详情</DialogTitle>
             <button
-              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
               onClick={onClose}
               aria-label="关闭"
             >
@@ -78,7 +78,7 @@ function DetailModal({ memberId, onClose }: { memberId: number; onClose: () => v
               <EmptyState title="加载失败" description="无法获取会员详情，请稍后重试" />
             )}
           </div>
-          <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
+          <div className="flex justify-end gap-2 border-t border-slate-800/60 px-6 py-4">
             <Button variant="secondary" size="sm" onClick={onClose}>关闭</Button>
           </div>
         </DialogPanel>
@@ -89,15 +89,15 @@ function DetailModal({ memberId, onClose }: { memberId: number; onClose: () => v
 
 function DetailContent({ detail }: { detail: MemberDetailItem }) {
   return (
-    <div className="divide-y divide-stone-50">
+    <div className="divide-y divide-slate-800/60">
       <div className="pb-4">
         <div className="flex items-center gap-3">
           {detail.logoUrl && (
             <img src={detail.logoUrl} alt="logo" className="h-12 w-12 rounded-lg object-cover" />
           )}
           <div>
-            <h3 className="font-semibold text-stone-800">{detail.name}</h3>
-            {detail.shortName && <p className="text-xs text-stone-400">{detail.shortName}</p>}
+            <h3 className="font-semibold text-slate-100">{detail.name}</h3>
+            {detail.shortName && <p className="text-xs text-slate-500">{detail.shortName}</p>}
           </div>
         </div>
       </div>
@@ -116,8 +116,8 @@ function DetailContent({ detail }: { detail: MemberDetailItem }) {
       </div>
       {detail.introduction && (
         <div className="py-3">
-          <p className="mb-1 text-xs text-stone-500">简介</p>
-          <p className="text-sm leading-relaxed text-stone-700">{detail.introduction}</p>
+          <p className="mb-1 text-xs text-slate-400">简介</p>
+          <p className="text-sm leading-relaxed text-slate-200">{detail.introduction}</p>
         </div>
       )}
       <div className="py-1">
@@ -127,10 +127,10 @@ function DetailContent({ detail }: { detail: MemberDetailItem }) {
       </div>
       {detail.tags.length > 0 && (
         <div className="pt-3">
-          <p className="mb-2 text-xs text-stone-500">标签</p>
+          <p className="mb-2 text-xs text-slate-400">标签</p>
           <div className="flex flex-wrap gap-1">
             {detail.tags.map((t) => (
-              <span key={t.id} className="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+              <span key={t.id} className="rounded bg-emerald-950/50 px-2 py-0.5 text-xs text-emerald-400">
                 {t.name}
               </span>
             ))}
@@ -165,13 +165,13 @@ function ToggleStatusModal({
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-sm overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-            <DialogTitle className="text-base font-semibold text-stone-800">
+        <DialogPanel className="w-full max-w-sm overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
+          <div className="flex items-center justify-between border-b border-slate-800/60 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-slate-100">
               确认{actionLabel}
             </DialogTitle>
             <button
-              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
               onClick={onClose}
               aria-label="关闭"
             >
@@ -179,7 +179,7 @@ function ToggleStatusModal({
             </button>
           </div>
           <div className="px-6 py-5">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-slate-300">
               确认要
               <span className={targetStatus === 0 ? 'text-red-600' : 'text-emerald-600'}>
                 {actionLabel}
@@ -190,7 +190,7 @@ function ToggleStatusModal({
               <p className="mt-2 text-xs text-red-500">操作失败，请重试</p>
             )}
           </div>
-          <div className="flex justify-end gap-2 border-t border-stone-100 px-6 py-4">
+          <div className="flex justify-end gap-2 border-t border-slate-800/60 px-6 py-4">
             <Button variant="secondary" size="sm" onClick={onClose}>取消</Button>
             <Button
               variant={targetStatus === 0 ? 'danger' : 'primary'}
@@ -261,21 +261,21 @@ export default function MemberListPage() {
           <p className="mt-0.5 text-sm text-theme-text-muted">管理协会全部会员单位</p>
         </div>
         {total > 0 && (
-          <span className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-600">
+          <span className="rounded-full bg-slate-800/60 px-3 py-1 text-sm text-slate-300">
             共 {total} 家
           </span>
         )}
       </div>
 
       {/* filter bar */}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-stone-100 bg-white p-4 shadow-card">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-800/60 bg-slate-900/80 p-4">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-stone-500">关键词</label>
+          <label className="text-xs text-slate-400">关键词</label>
           <div className="relative">
             <Icon
               icon={Search}
               size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
             />
             <input
               type="text"
@@ -283,16 +283,16 @@ export default function MemberListPage() {
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="单位名称 / 行业"
-              className="w-48 rounded-lg border border-stone-200 bg-theme-surface py-1.5 pl-9 pr-3 text-sm text-theme-text-main transition-all duration-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+              className="w-48 rounded-lg border border-slate-700/60 bg-slate-800/60 py-1.5 pl-9 pr-3 text-sm text-slate-200 transition-all duration-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
             />
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-stone-500">状态</label>
+          <label className="text-xs text-slate-400">状态</label>
           <select
             value={filterStatus ?? ''}
             onChange={(e) => setFilterStatus(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+            className="rounded-lg border border-slate-700/60 bg-slate-800/60 px-3 py-1.5 text-sm text-slate-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
           >
             <option value="">全部状态</option>
             <option value="1">正常</option>
@@ -301,11 +301,11 @@ export default function MemberListPage() {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-stone-500">会员等级</label>
+          <label className="text-xs text-slate-400">会员等级</label>
           <select
             value={filterLevel ?? ''}
             onChange={(e) => setFilterLevel(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="rounded-lg border border-stone-200 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+            className="rounded-lg border border-slate-700/60 bg-slate-800/60 px-3 py-1.5 text-sm text-slate-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
           >
             <option value="">全部等级</option>
             <option value="1">普通会员</option>
@@ -327,7 +327,7 @@ export default function MemberListPage() {
       </div>
 
       {/* table */}
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80">
         {isLoading ? (
           <div className="p-4">
             <SkeletonList count={5} />
@@ -341,7 +341,7 @@ export default function MemberListPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-stone-600">
+              <thead className="bg-slate-800/60 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <tr>
                   <th className="px-4 py-3">序号</th>
                   <th className="px-4 py-3">单位名称</th>
@@ -349,7 +349,7 @@ export default function MemberListPage() {
                   <th className="px-4 py-3">
                     <span className="inline-flex items-center gap-1">
                       等级
-                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                      <Icon icon={ArrowUpDown} size={12} className="text-slate-500" />
                     </span>
                   </th>
                   <th className="px-4 py-3">省/市</th>
@@ -357,13 +357,13 @@ export default function MemberListPage() {
                   <th className="px-4 py-3">
                     <span className="inline-flex items-center gap-1">
                       状态
-                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                      <Icon icon={ArrowUpDown} size={12} className="text-slate-500" />
                     </span>
                   </th>
                   <th className="px-4 py-3">
                     <span className="inline-flex items-center gap-1">
                       注册时间
-                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                      <Icon icon={ArrowUpDown} size={12} className="text-slate-500" />
                     </span>
                   </th>
                   <th className="px-4 py-3 text-right">操作</th>
@@ -373,9 +373,9 @@ export default function MemberListPage() {
                 {records.map((m, idx) => (
                   <tr
                     key={m.id}
-                    className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                    className="border-t border-slate-800/60 transition-colors hover:bg-slate-800/40/80"
                   >
-                    <td className="px-4 py-3 text-sm text-stone-400">
+                    <td className="px-4 py-3 text-sm text-slate-500">
                       {(page - 1) * 20 + idx + 1}
                     </td>
                     <td className="px-4 py-3">
@@ -383,21 +383,21 @@ export default function MemberListPage() {
                         {m.logoUrl ? (
                           <img src={m.logoUrl} alt="" className="h-7 w-7 shrink-0 rounded object-cover" />
                         ) : (
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-emerald-50 text-xs font-bold text-emerald-600">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-emerald-950/50 text-xs font-bold text-emerald-400">
                             {m.name.charAt(0)}
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-stone-800">{m.name}</p>
-                          {m.shortName && <p className="text-xs text-stone-400">{m.shortName}</p>}
+                          <p className="font-medium text-slate-100">{m.name}</p>
+                          {m.shortName && <p className="text-xs text-slate-500">{m.shortName}</p>}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-stone-700">{m.industry || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-200">{m.industry || '—'}</td>
                     <td className="px-4 py-3">
                       <LevelBadge level={m.memberLevel} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-stone-500">
+                    <td className="px-4 py-3 text-sm text-slate-400">
                       {[m.province, m.city].filter(Boolean).join(' · ') || '—'}
                     </td>
                     <td className="px-4 py-3">
@@ -407,19 +407,19 @@ export default function MemberListPage() {
                           已认证
                         </span>
                       ) : (
-                        <span className="text-xs text-stone-300">—</span>
+                        <span className="text-xs text-slate-600">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={m.status} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-stone-500">
+                    <td className="px-4 py-3 text-sm text-slate-400">
                       {m.createdAt?.slice(0, 10) ?? '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-1 rounded-lg border border-stone-200 p-0.5">
+                      <div className="inline-flex items-center gap-1 rounded-lg border border-slate-700/60 p-0.5">
                         <button
-                          className="rounded p-1.5 text-stone-500 transition-all duration-200 hover:bg-stone-100 hover:text-theme-accent"
+                          className="rounded p-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-700/60 hover:text-emerald-400"
                           onClick={() => setDetailId(m.id)}
                           title="详情"
                         >
@@ -428,7 +428,7 @@ export default function MemberListPage() {
                         {isSuperAdmin && m.status !== 2 && (
                           <button
                             className={clsx(
-                              'rounded p-1.5 transition-all duration-200 hover:bg-stone-100',
+                              'rounded p-1.5 transition-all duration-200 hover:bg-slate-800/60',
                               m.status === 1 ? 'text-red-500 hover:text-red-600' : 'text-emerald-600 hover:text-emerald-700'
                             )}
                             onClick={() => setToggleMember(m)}
@@ -452,7 +452,7 @@ export default function MemberListPage() {
 
         {/* pagination */}
         {total > 0 && (
-          <div className="border-t border-stone-100 px-4 py-4">
+          <div className="border-t border-slate-800/60 px-4 py-4">
             <Pagination page={page} total={total} size={20} onChange={setPage} />
           </div>
         )}

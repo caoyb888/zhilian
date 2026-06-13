@@ -45,13 +45,13 @@ function AuditModal({ member, onClose }: { member: MemberItem; onClose: () => vo
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-            <DialogTitle className="text-base font-semibold text-stone-800">
+        <DialogPanel className="w-full max-w-md overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
+          <div className="flex items-center justify-between border-b border-slate-800/60 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-slate-100">
               审核会员
             </DialogTitle>
             <button
-              className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
+              className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
               onClick={onClose}
               aria-label="关闭"
             >
@@ -61,9 +61,9 @@ function AuditModal({ member, onClose }: { member: MemberItem; onClose: () => vo
 
           <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5">
             {/* member info */}
-            <div className="mb-5 rounded-lg bg-stone-50 p-4">
-              <p className="text-sm font-medium text-stone-800">{member.name}</p>
-              <div className="mt-1 flex flex-wrap gap-3 text-xs text-stone-500">
+            <div className="mb-5 rounded-lg bg-slate-800/40 p-4">
+              <p className="text-sm font-medium text-slate-100">{member.name}</p>
+              <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-400">
                 <span>行业：{member.industry || '—'}</span>
                 {member.province && <span>省份：{member.province}</span>}
                 <span>注册时间：{member.createdAt?.slice(0, 10) ?? '—'}</span>
@@ -72,13 +72,13 @@ function AuditModal({ member, onClose }: { member: MemberItem; onClose: () => vo
 
             {/* action radio */}
             <div className="mb-4">
-              <p className="mb-2 text-sm font-medium text-stone-700">审核结果</p>
+              <p className="mb-2 text-sm font-medium text-slate-300">审核结果</p>
               <div className="flex gap-4">
                 <label className={clsx(
                   'flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200',
                   action === 'APPROVE'
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                    : 'border-stone-200 text-stone-600 hover:border-stone-300'
+                    ? 'border-emerald-500/60 bg-emerald-950/40 text-emerald-400'
+                    : 'border-slate-700/60 text-slate-400 hover:border-slate-600'
                 )}>
                   <input
                     type="radio"
@@ -91,8 +91,8 @@ function AuditModal({ member, onClose }: { member: MemberItem; onClose: () => vo
                 <label className={clsx(
                   'flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200',
                   action === 'REJECT'
-                    ? 'border-red-400 bg-red-50 text-red-600'
-                    : 'border-stone-200 text-stone-600 hover:border-stone-300'
+                    ? 'border-red-500/60 bg-red-950/40 text-red-400'
+                    : 'border-slate-700/60 text-slate-400 hover:border-slate-600'
                 )}>
                   <input
                     type="radio"
@@ -115,9 +115,9 @@ function AuditModal({ member, onClose }: { member: MemberItem; onClose: () => vo
                 rows={3}
                 placeholder={action === 'REJECT' ? '拒绝原因（必填）' : '可选，填写说明'}
                 className={clsx(
-                  'w-full resize-none rounded-lg border px-3 py-2 text-sm placeholder-stone-400 bg-theme-surface transition-all duration-200',
+                  'w-full resize-none rounded-lg border px-3 py-2 text-sm placeholder-slate-600 bg-slate-800/60 text-slate-200 transition-all duration-200',
                   'focus:outline-none focus:ring-2 focus:ring-theme-accent/20',
-                  errors.remark ? 'border-red-300 focus:border-red-400' : 'border-stone-200 hover:border-stone-300 focus:border-theme-accent'
+                  errors.remark ? 'border-red-300 focus:border-red-400' : 'border-slate-700/60 hover:border-slate-600 focus:border-emerald-500/50'
                 )}
                 {...register('remark', {
                   validate: (val, fv) =>
@@ -179,7 +179,7 @@ export default function MemberAuditPage() {
       </div>
 
       {/* table */}
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80">
         {isLoading ? (
           <div className="p-4">
             <SkeletonList count={5} />
@@ -193,7 +193,7 @@ export default function MemberAuditPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-stone-600">
+              <thead className="bg-slate-800/60 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <tr>
                   <th className="px-4 py-3">序号</th>
                   <th className="px-4 py-3">单位名称</th>
@@ -202,13 +202,13 @@ export default function MemberAuditPage() {
                   <th className="px-4 py-3">
                     <span className="inline-flex items-center gap-1">
                       申请等级
-                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                      <Icon icon={ArrowUpDown} size={12} className="text-slate-500" />
                     </span>
                   </th>
                   <th className="px-4 py-3">
                     <span className="inline-flex items-center gap-1">
                       申请时间
-                      <Icon icon={ArrowUpDown} size={12} className="text-stone-400" />
+                      <Icon icon={ArrowUpDown} size={12} className="text-slate-500" />
                     </span>
                   </th>
                   <th className="px-4 py-3 text-right">操作</th>
@@ -218,23 +218,23 @@ export default function MemberAuditPage() {
                 {records.map((m, idx) => (
                   <tr
                     key={m.id}
-                    className="border-t border-stone-100 transition-colors hover:bg-stone-50/80"
+                    className="border-t border-slate-800/60 transition-colors hover:bg-slate-800/40/80"
                   >
-                    <td className="px-4 py-3 text-sm text-stone-400">{(page - 1) * 20 + idx + 1}</td>
+                    <td className="px-4 py-3 text-sm text-slate-500">{(page - 1) * 20 + idx + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {m.logoUrl ? (
                           <img src={m.logoUrl} alt="" className="h-7 w-7 shrink-0 rounded object-cover" />
                         ) : (
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-amber-50 text-xs font-bold text-amber-600">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-amber-950/50 text-xs font-bold text-amber-400">
                             {m.name.charAt(0)}
                           </div>
                         )}
-                        <span className="font-medium text-stone-800">{m.name}</span>
+                        <span className="font-medium text-slate-100">{m.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-stone-700">{m.industry || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-stone-500">{m.province ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-200">{m.industry || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-400">{m.province ?? '—'}</td>
                     <td className="px-4 py-3">
                       {m.memberLevel === 3 ? (
                         <Badge variant="news">理事</Badge>
@@ -244,12 +244,12 @@ export default function MemberAuditPage() {
                         <Badge variant="default">普通</Badge>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-stone-500">{m.createdAt?.slice(0, 10) ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm text-slate-400">{m.createdAt?.slice(0, 10) ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                        className="border-amber-700/50 bg-amber-950/40 text-amber-400 hover:bg-amber-900/50"
                         onClick={() => setAuditMember(m)}
                       >
                         审核
@@ -263,7 +263,7 @@ export default function MemberAuditPage() {
         )}
 
         {total > 0 && (
-          <div className="border-t border-stone-100 px-4 py-4">
+          <div className="border-t border-slate-800/60 px-4 py-4">
             <Pagination page={page} total={total} size={20} onChange={setPage} />
           </div>
         )}
