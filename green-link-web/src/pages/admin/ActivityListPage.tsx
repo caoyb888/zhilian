@@ -197,7 +197,7 @@ export default function ActivityListPage() {
                     <td className="px-4 py-3 text-sm text-slate-400">{activity.location ?? '-'}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-400">{formatDateTime(activity.startTime)}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-400">{formatDateTime(activity.regDeadline)}</td>
-                    <td className="px-4 py-3">
+                    <td className="whitespace-nowrap px-4 py-3">
                       <ActivityStatusBadge status={activity.status} />
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-400">
@@ -229,7 +229,7 @@ export default function ActivityListPage() {
                               statusMutation.mutate({ id: activity.id, status: newStatus })
                             }
                           }}
-                          className="rounded border border-slate-700/60 bg-white px-1.5 py-0.5 text-xs text-slate-300 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-theme-accent"
+                          className="rounded border border-slate-700/60 bg-slate-800 px-1.5 py-0.5 text-xs text-slate-200 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                         >
                           {Object.entries(ACTIVITY_STATUS_MAP).map(([val, info]) => (
                             <option key={val} value={val}>
