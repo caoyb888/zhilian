@@ -78,8 +78,9 @@ button,
   /* Profile page — hero identity panel */
   .profile-hero-left {
     background:
-      radial-gradient(ellipse at 50% 42%, rgba(16, 185, 129, 0.2) 0%, transparent 62%),
-      linear-gradient(155deg, #082316 0%, #0d2d1a 55%, #061910 100%);
+      radial-gradient(ellipse at 50% 30%, rgba(16, 185, 129, 0.28) 0%, transparent 58%),
+      radial-gradient(ellipse at 80% 90%, rgba(20, 184, 166, 0.15) 0%, transparent 45%),
+      linear-gradient(155deg, #061a10 0%, #0a2418 55%, #041208 100%);
   }
 
   /* Rich-text article content rendered via DOMPurify */

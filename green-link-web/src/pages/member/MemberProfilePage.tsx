@@ -77,11 +77,17 @@ function AccountItem({
   mono?: boolean
 }) {
   return (
-    <div className="flex items-start gap-2.5 px-4 py-3">
-      <span className="mt-0.5 shrink-0 text-theme-accent/60">{icon}</span>
+    <div className="group relative flex items-start gap-2.5 px-4 py-3 hover:bg-stone-50/60 transition-colors duration-150">
+      {/* 左侧微色条，hover 时显现 */}
+      <span className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-sky-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+      <span className="mt-0.5 shrink-0 text-sky-500/70">{icon}</span>
       <div className="min-w-0">
-        <p className="text-[11px] text-stone-400 mb-0.5">{label}</p>
-        <p className={clsx('text-sm font-medium text-stone-800 truncate', mono && 'font-mono')}>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-0.5">{label}</p>
+        <p className={clsx(
+          'text-sm font-medium truncate',
+          value ? 'text-stone-800' : 'text-stone-300',
+          mono && 'font-mono tabular-nums',
+        )}>
           {value || '—'}
         </p>
       </div>
@@ -283,7 +289,7 @@ export default function MemberProfilePage() {
             {/* 六边形网格纹理 */}
             <svg
               aria-hidden="true"
-              className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.11]"
+              className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.16]"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
@@ -332,7 +338,12 @@ export default function MemberProfilePage() {
           </div>
 
           {/* 右侧：企业信息 */}
-          <div className="flex-1 bg-white px-6 py-5 flex flex-col justify-between border-t border-stone-100/80 sm:border-t-0 sm:border-l border-stone-100/60">
+          <div className="relative flex-1 bg-white px-6 py-5 flex flex-col justify-between border-t border-stone-100/80 sm:border-t-0 sm:border-l border-stone-100/60 overflow-hidden">
+            {/* 右上角装饰光晕 */}
+            <div
+              className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-[0.07]"
+              style={{ background: 'radial-gradient(circle, #10b981, transparent)' }}
+            />
             <div>
               <h2 className="text-xl font-bold text-stone-900 leading-snug">{detail.name}</h2>
               {detail.shortName && (
@@ -368,20 +379,28 @@ export default function MemberProfilePage() {
             {/* 统计行 */}
             <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-3 gap-4">
               <div>
-                <p className="text-[11px] text-stone-400 mb-0.5">会员等级</p>
-                <p className="text-sm font-semibold text-stone-800">
-                  {levelInfo?.label ?? '—'}
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">会员等级</p>
+                <p className="text-sm font-bold text-stone-800">{levelInfo?.label ?? '—'}</p>
               </div>
               <div className="border-l border-stone-100 pl-4">
-                <p className="text-[11px] text-stone-400 mb-0.5">信用评分</p>
-                <p className="text-sm font-semibold font-mono text-stone-800">
-                  {creditScore !== undefined ? creditScore.toFixed(2) : '—'}
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">信用评分</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold font-mono tabular-nums text-emerald-700">
+                    {creditScore !== undefined ? creditScore.toFixed(2) : '—'}
+                  </p>
+                  {creditScore !== undefined && (
+                    <div className="h-1 flex-1 rounded-full bg-stone-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+                        style={{ width: `${Math.min(100, creditScore)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="border-l border-stone-100 pl-4">
-                <p className="text-[11px] text-stone-400 mb-0.5">入会日期</p>
-                <p className="text-sm font-semibold font-mono text-stone-800">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400 mb-1">入会日期</p>
+                <p className="text-sm font-bold font-mono tabular-nums text-stone-800">
                   {detail.joinDate ?? '—'}
                 </p>
               </div>
