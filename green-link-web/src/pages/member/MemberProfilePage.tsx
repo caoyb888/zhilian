@@ -13,6 +13,9 @@ import {
   User,
   Tag,
   FileText,
+  Clock,
+  Shield,
+  Award,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Spinner } from '@/components/Spinner'
@@ -40,12 +43,50 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const MEMBER_LEVEL_MAP: Record<number, string> = {
-  1: '普通会员',
-  2: 'VIP 会员',
-  3: '理事单位',
+const MEMBER_LEVEL_MAP: Record<number, { label: string; className: string }> = {
+  1: { label: '普通会员', className: 'bg-stone-100 text-stone-600 border-stone-200' },
+  2: { label: 'VIP 会员', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  3: { label: '理事单位', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SectionDivider({ label, icon }: { label: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 uppercase tracking-widest whitespace-nowrap">
+        <span className="text-theme-accent/80">{icon}</span>
+        {label}
+      </div>
+      <div className="flex-1 h-px bg-stone-100" />
+    </div>
+  )
+}
+
+function AccountItem({
+  icon,
+  label,
+  value,
+  mono = false,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  mono?: boolean
+}) {
+  return (
+    <div className="flex items-start gap-2.5 px-4 py-3">
+      <span className="mt-0.5 shrink-0 text-theme-accent/60">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[11px] text-stone-400 mb-0.5">{label}</p>
+        <p className={clsx('text-sm font-medium text-stone-800 truncate', mono && 'font-mono')}>
+          {value || '—'}
+        </p>
+      </div>
+    </div>
+  )
 }
 
 // ─── Logo Uploader ────────────────────────────────────────────────────────────
@@ -62,7 +103,6 @@ function LogoUploader({
   const inputRef = useRef<HTMLInputElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  // Revoke previous object URL when a new one is created or on unmount
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl)
@@ -74,7 +114,6 @@ function LogoUploader({
     if (!file) return
     setPreviewUrl(URL.createObjectURL(file))
     onFileSelected(file)
-    // reset input so same file can be re-selected
     e.target.value = ''
   }
 
@@ -83,7 +122,7 @@ function LogoUploader({
   return (
     <div className="flex items-center gap-4">
       <div
-        className="relative h-24 w-24 rounded-full border-2 border-dashed border-stone-200 bg-stone-50 overflow-hidden flex items-center justify-center cursor-pointer hover:border-theme-accent transition-all duration-200 group shrink-0"
+        className="relative h-20 w-20 rounded-xl border-2 border-dashed border-stone-200 bg-stone-50 overflow-hidden flex items-center justify-center cursor-pointer group shrink-0 transition-all duration-200 hover:border-theme-accent hover:shadow-[0_0_0_4px_rgba(4,120,87,0.08)]"
         onClick={() => !isUploading && inputRef.current?.click()}
         role="button"
         tabIndex={0}
@@ -99,15 +138,15 @@ function LogoUploader({
           <img src={displayUrl} alt="企业 Logo" className="h-full w-full object-cover" />
         ) : (
           <div className="flex flex-col items-center text-stone-300">
-            <Icon icon={Building2} size={24} />
-            <span className="text-[10px] mt-1">上传Logo</span>
+            <Icon icon={Building2} size={22} />
+            <span className="text-[9px] mt-1 tracking-widest font-medium">LOGO</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-[2px]">
           {isUploading ? (
             <Spinner size="sm" className="text-white" />
           ) : (
-            <Icon icon={Camera} size={20} className="text-white" />
+            <Icon icon={Camera} size={18} className="text-white" />
           )}
         </div>
       </div>
@@ -121,7 +160,11 @@ function LogoUploader({
         >
           更换 Logo
         </Button>
-        <p className="mt-1.5 text-xs text-stone-400">支持 JPG/PNG/WebP，建议正方形，≤ 20MB</p>
+        <p className="mt-1.5 text-[11px] text-stone-400 leading-relaxed">
+          JPG / PNG / WebP
+          <br />
+          建议正方形 · ≤ 20MB
+        </p>
       </div>
       <input
         ref={inputRef}
@@ -134,7 +177,7 @@ function LogoUploader({
   )
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MemberProfilePage() {
   const { data: me, isLoading: meLoading } = useMemberMe()
@@ -156,7 +199,6 @@ export default function MemberProfilePage() {
     defaultValues: {},
   })
 
-  // Populate form when detail data arrives
   useEffect(() => {
     if (!detail) return
     reset({
@@ -173,6 +215,7 @@ export default function MemberProfilePage() {
 
   const isLoading = meLoading || detailLoading
   const isSaving = updateMember.isPending || uploadFile.isPending
+  const hasChanges = isDirty || !!pendingLogoFile
 
   async function onSubmit(values: FormValues) {
     if (!memberId) return
@@ -225,125 +268,195 @@ export default function MemberProfilePage() {
   }
 
   const creditScore = (detail as unknown as { creditScore?: number }).creditScore
+  const levelInfo = MEMBER_LEVEL_MAP[detail.memberLevel]
 
   return (
-    <div className="space-y-5">
-      {/* ─── Page header ─── */}
-      <div>
-        <h1 className="text-xl font-bold text-stone-900">企业资料</h1>
-        <p className="text-sm text-stone-500 mt-0.5">管理您的会员账号与单位信息</p>
+    <div className="space-y-4 pb-6">
+      {/* ── 页头 ── */}
+      <div className="flex items-center gap-3 animate-fade-in-up">
+        <div className="w-[3px] h-6 rounded-full bg-theme-accent" />
+        <div>
+          <h1 className="text-lg font-bold text-stone-900 leading-tight">企业资料</h1>
+          <p className="text-xs text-stone-500 mt-0.5">管理您的会员账号与单位信息</p>
+        </div>
       </div>
 
-      {/* ─── 企业名片区 ─── */}
-      <section className="rounded-xl border border-stone-100 bg-stone-50/80 overflow-hidden">
-        <div className="px-6 py-5">
-          <div className="flex items-center gap-3">
-            {detail.logoUrl ? (
-              <img
-                src={detail.logoUrl}
-                alt="企业 Logo"
-                className="h-14 w-14 rounded-lg object-cover border border-stone-200 bg-white"
-              />
-            ) : (
-              <div className="h-14 w-14 rounded-lg bg-stone-200 flex items-center justify-center text-stone-400">
-                <Icon icon={Building2} size={24} />
-              </div>
-            )}
-            <div className="min-w-0">
-              <h2 className="text-lg font-bold text-stone-900 truncate">{detail.name}</h2>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {detail.memberLevelName && (
-                  <Badge variant="success" className="text-[11px]">
-                    {MEMBER_LEVEL_MAP[detail.memberLevel] ?? detail.memberLevelName}
-                  </Badge>
+      {/* ── 企业身份牌 ── */}
+      <div
+        className="rounded-2xl overflow-hidden shadow-[0_4px_24px_-4px_rgba(6,30,15,0.16)] animate-fade-in-up"
+        style={{ animationDelay: '60ms' }}
+      >
+        <div className="flex flex-col sm:flex-row">
+          {/* 左侧：暗绿凭证面板 */}
+          <div className="profile-hero-left relative sm:w-52 flex-shrink-0 flex flex-col items-center justify-center gap-3 py-8 px-6 min-h-[148px] sm:min-h-0 overflow-hidden">
+            {/* 六边形网格纹理 */}
+            <svg
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.11]"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <pattern
+                  id="profileHex"
+                  x="0"
+                  y="0"
+                  width="40"
+                  height="46"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M20 3L37 12.5V31.5L20 41L3 31.5V12.5Z"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="1"
+                  />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#profileHex)" />
+            </svg>
+
+            {/* 徽标 */}
+            <div className="relative z-10">
+              {detail.logoUrl ? (
+                <div className="h-[72px] w-[72px] rounded-2xl overflow-hidden ring-2 ring-emerald-400/25 ring-offset-2 ring-offset-transparent shadow-[0_0_28px_rgba(16,185,129,0.28)]">
+                  <img
+                    src={detail.logoUrl}
+                    alt="企业 Logo"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="h-[72px] w-[72px] rounded-2xl bg-emerald-900/50 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_28px_rgba(16,185,129,0.18)]">
+                  <Icon icon={Building2} size={30} className="text-emerald-400/70" />
+                </div>
+              )}
+            </div>
+
+            {/* 平台水印 */}
+            <div className="relative z-10 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] uppercase text-emerald-400/50">
+              <span className="inline-block w-4 h-px bg-emerald-500/30" />
+              绿产智链
+              <span className="inline-block w-4 h-px bg-emerald-500/30" />
+            </div>
+          </div>
+
+          {/* 右侧：企业信息 */}
+          <div className="flex-1 bg-white px-6 py-5 flex flex-col justify-between border-t border-stone-100/80 sm:border-t-0 sm:border-l border-stone-100/60">
+            <div>
+              <h2 className="text-xl font-bold text-stone-900 leading-snug">{detail.name}</h2>
+              {detail.shortName && (
+                <p className="text-sm text-stone-400 mt-0.5 font-medium">{detail.shortName}</p>
+              )}
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                {levelInfo && (
+                  <span
+                    className={clsx(
+                      'inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[11px] font-semibold border',
+                      levelInfo.className,
+                    )}
+                  >
+                    <Icon icon={Award} size={11} />
+                    {levelInfo.label}
+                  </span>
                 )}
                 {detail.isCertified && (
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                    <Icon icon={CheckCircle2} size={13} />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <Icon icon={CheckCircle2} size={11} />
                     绿色认证
                   </span>
                 )}
                 {me.isMainAccount && (
-                  <Badge variant="default" className="text-[11px]">主账号</Badge>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                    <Icon icon={Shield} size={11} />
+                    主账号
+                  </span>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* 指标行 */}
-          <div className="mt-4 pt-4 border-t border-stone-200/60 grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-xs text-stone-500">会员等级</p>
-              <p className="text-sm font-semibold text-stone-800 mt-0.5">
-                {MEMBER_LEVEL_MAP[detail.memberLevel] ?? detail.memberLevelName ?? '—'}
-              </p>
-            </div>
-            <div className="border-l border-stone-200/60 pl-4">
-              <p className="text-xs text-stone-500">信用评分</p>
-              <p className="text-sm font-semibold text-stone-800 mt-0.5">
-                {creditScore !== undefined ? creditScore.toFixed(2) : '—'}
-              </p>
-            </div>
-            <div className="border-l border-stone-200/60 pl-4">
-              <p className="text-xs text-stone-500">入会日期</p>
-              <p className="text-sm font-semibold text-stone-800 mt-0.5">
-                {detail.joinDate ?? '—'}
-              </p>
+            {/* 统计行 */}
+            <div className="mt-5 pt-4 border-t border-stone-100 grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-[11px] text-stone-400 mb-0.5">会员等级</p>
+                <p className="text-sm font-semibold text-stone-800">
+                  {levelInfo?.label ?? '—'}
+                </p>
+              </div>
+              <div className="border-l border-stone-100 pl-4">
+                <p className="text-[11px] text-stone-400 mb-0.5">信用评分</p>
+                <p className="text-sm font-semibold font-mono text-stone-800">
+                  {creditScore !== undefined ? creditScore.toFixed(2) : '—'}
+                </p>
+              </div>
+              <div className="border-l border-stone-100 pl-4">
+                <p className="text-[11px] text-stone-400 mb-0.5">入会日期</p>
+                <p className="text-sm font-semibold font-mono text-stone-800">
+                  {detail.joinDate ?? '—'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ─── 账号信息（精简） ─── */}
-      <section className="rounded-xl border border-stone-100 bg-white">
-        <div className="px-6 py-3 border-b border-stone-100">
+      {/* ── 账号信息 ── */}
+      <section
+        className="rounded-xl border border-stone-100 bg-white overflow-hidden animate-fade-in-up"
+        style={{ animationDelay: '120ms' }}
+      >
+        <div className="px-5 py-3 border-b border-stone-100 flex items-center gap-2">
+          <Icon icon={User} size={13} className="text-theme-accent" />
           <h2 className="text-sm font-semibold text-stone-700">账号信息</h2>
         </div>
-        <div className="px-6 py-4 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
-          <div>
-            <p className="text-xs text-stone-500">用户名</p>
-            <p className="text-sm text-stone-800 mt-0.5">{me.username}</p>
-          </div>
-          <div>
-            <p className="text-xs text-stone-500">真实姓名</p>
-            <p className="text-sm text-stone-800 mt-0.5">{me.realName || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-stone-500">角色</p>
-            <p className="text-sm text-stone-800 mt-0.5">{me.roles.join('、') || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-stone-500">手机号</p>
-            <p className="text-sm text-stone-800 mt-0.5">{me.phone || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-stone-500">邮箱</p>
-            <p className="text-sm text-stone-800 mt-0.5">{me.email || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-stone-500">最近登录</p>
-            <p className="text-sm text-stone-800 mt-0.5">
-              {me.lastLoginAt ? me.lastLoginAt.slice(0, 16).replace('T', ' ') : '—'}
-            </p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-stone-100/80">
+          <AccountItem icon={<Icon icon={User} size={13} />} label="用户名" value={me.username} />
+          <AccountItem
+            icon={<Icon icon={User} size={13} />}
+            label="真实姓名"
+            value={me.realName ?? ''}
+          />
+          <AccountItem
+            icon={<Icon icon={Shield} size={13} />}
+            label="角色"
+            value={me.roles.join('、')}
+          />
+          <AccountItem
+            icon={<Icon icon={Phone} size={13} />}
+            label="手机号"
+            value={me.phone ?? ''}
+          />
+          <AccountItem
+            icon={<Icon icon={Mail} size={13} />}
+            label="邮箱"
+            value={me.email ?? ''}
+          />
+          <AccountItem
+            icon={<Icon icon={Clock} size={13} />}
+            label="最近登录"
+            value={me.lastLoginAt ? me.lastLoginAt.slice(0, 16).replace('T', ' ') : ''}
+            mono
+          />
         </div>
       </section>
 
-      {/* ─── 单位信息编辑表单 ─── */}
-      <section className="rounded-xl border border-stone-100 bg-white">
-        <div className="px-6 py-4 border-b border-stone-100">
-          <h2 className="text-base font-semibold text-stone-900">单位信息</h2>
+      {/* ── 单位信息表单 ── */}
+      <section
+        className="rounded-xl border border-stone-100 bg-white animate-fade-in-up"
+        style={{ animationDelay: '180ms' }}
+      >
+        <div className="px-6 py-4 border-b border-stone-100 flex items-center gap-2">
+          <Icon icon={Building2} size={13} className="text-theme-accent" />
+          <h2 className="text-sm font-semibold text-stone-700">单位信息</h2>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-7">
           {/* 基本信息 */}
-          <div className="mb-6">
-            <h3 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Icon icon={Building2} size={14} />
-              基本信息
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Logo */}
+          <div>
+            <SectionDivider
+              label="基本信息"
+              icon={<Icon icon={Building2} size={12} />}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
               <FormField label="企业 Logo">
                 <LogoUploader
                   currentUrl={detail.logoUrl}
@@ -352,31 +465,32 @@ export default function MemberProfilePage() {
                 />
               </FormField>
 
-              {/* 全称 */}
               <FormField label="单位全称">
-                <div className="rounded-lg border border-stone-100 bg-stone-50 px-3 py-2 text-sm text-stone-600 select-none flex items-center gap-2">
-                  <Icon icon={Building2} size={16} className="text-stone-400 shrink-0" />
+                <div className="flex items-center gap-2 rounded-lg border border-stone-100 bg-stone-50/60 px-3 py-2.5 text-sm text-stone-600 select-none">
+                  <Icon icon={Building2} size={14} className="text-stone-300 shrink-0" />
                   <span className="truncate">{detail.name}</span>
                 </div>
               </FormField>
 
-              {/* 简称 */}
-              <FormField label="简称" error={errors.shortName?.message} htmlFor="shortName">
+              <FormField
+                label="简称"
+                error={errors.shortName?.message}
+                htmlFor="shortName"
+              >
                 <div className="relative">
                   <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                    <Icon icon={FileText} size={16} />
+                    <Icon icon={FileText} size={15} />
                   </div>
                   <Input
                     id="shortName"
                     inputClassName="pl-9"
-                    placeholder="单位简称（选填，≤50字）"
+                    placeholder="单位简称（选填，≤ 50字）"
                     error={!!errors.shortName}
                     {...register('shortName')}
                   />
                 </div>
               </FormField>
 
-              {/* 所属行业 + 标签 */}
               <div>
                 <FormField
                   label="所属行业"
@@ -385,12 +499,12 @@ export default function MemberProfilePage() {
                 >
                   <div className="relative">
                     <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                      <Icon icon={Tag} size={16} />
+                      <Icon icon={Tag} size={15} />
                     </div>
                     <Input
                       id="industry"
                       inputClassName="pl-9"
-                      placeholder="例如：新能源、节能环保、绿色建筑…"
+                      placeholder="新能源 · 节能环保 · 绿色建筑…"
                       error={!!errors.industry}
                       {...register('industry')}
                     />
@@ -407,11 +521,10 @@ export default function MemberProfilePage() {
                 )}
               </div>
 
-              {/* 省份 */}
               <FormField label="省份" error={errors.province?.message} htmlFor="province">
                 <div className="relative">
                   <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                    <Icon icon={MapPin} size={16} />
+                    <Icon icon={MapPin} size={15} />
                   </div>
                   <Input
                     id="province"
@@ -423,11 +536,10 @@ export default function MemberProfilePage() {
                 </div>
               </FormField>
 
-              {/* 城市 */}
               <FormField label="城市" error={errors.city?.message} htmlFor="city">
                 <div className="relative">
                   <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                    <Icon icon={MapPin} size={16} />
+                    <Icon icon={MapPin} size={15} />
                   </div>
                   <Input
                     id="city"
@@ -439,7 +551,6 @@ export default function MemberProfilePage() {
                 </div>
               </FormField>
 
-              {/* 简介 */}
               <FormField
                 label="企业简介"
                 error={errors.introduction?.message}
@@ -450,24 +561,28 @@ export default function MemberProfilePage() {
                   id="introduction"
                   {...register('introduction')}
                   rows={4}
-                  placeholder="请输入企业简介（≤2000字）…"
-                  className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-theme-text-main placeholder-stone-400 bg-theme-surface outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent transition-all duration-200 resize-none"
+                  placeholder="请输入企业简介，突出核心业务、绿色低碳实践与核心竞争力（≤ 2000字）…"
+                  className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm text-theme-text-main placeholder-stone-400 bg-theme-surface outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent transition-all duration-200 resize-none leading-relaxed"
                 />
               </FormField>
             </div>
           </div>
 
           {/* 联系方式 */}
-          <div className="mb-6">
-            <h3 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Icon icon={Phone} size={14} />
-              联系方式
-            </h3>
+          <div>
+            <SectionDivider
+              label="联系方式"
+              icon={<Icon icon={Phone} size={12} />}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <FormField label="联系人" error={errors.contactName?.message} htmlFor="contactName">
+              <FormField
+                label="联系人"
+                error={errors.contactName?.message}
+                htmlFor="contactName"
+              >
                 <div className="relative">
                   <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                    <Icon icon={User} size={16} />
+                    <Icon icon={User} size={15} />
                   </div>
                   <Input
                     id="contactName"
@@ -478,10 +593,14 @@ export default function MemberProfilePage() {
                   />
                 </div>
               </FormField>
-              <FormField label="联系电话" error={errors.contactPhone?.message} htmlFor="contactPhone">
+              <FormField
+                label="联系电话"
+                error={errors.contactPhone?.message}
+                htmlFor="contactPhone"
+              >
                 <div className="relative">
                   <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                    <Icon icon={Phone} size={16} />
+                    <Icon icon={Phone} size={15} />
                   </div>
                   <Input
                     id="contactPhone"
@@ -492,10 +611,14 @@ export default function MemberProfilePage() {
                   />
                 </div>
               </FormField>
-              <FormField label="联系邮箱" error={errors.contactEmail?.message} htmlFor="contactEmail">
+              <FormField
+                label="联系邮箱"
+                error={errors.contactEmail?.message}
+                htmlFor="contactEmail"
+              >
                 <div className="relative">
                   <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-                    <Icon icon={Mail} size={16} />
+                    <Icon icon={Mail} size={15} />
                   </div>
                   <Input
                     id="contactEmail"
@@ -510,21 +633,34 @@ export default function MemberProfilePage() {
             </div>
           </div>
 
-          {/* 保存 */}
-          <div className="flex items-center justify-end gap-4 pt-4 border-t border-stone-100">
-            <Button type="submit" loading={isSaving} disabled={isSaving || (!isDirty && !pendingLogoFile)}>
-              保存修改
-            </Button>
-            {savedMsg && (
-              <span
-                className={clsx(
-                  'text-sm font-medium',
-                  savedMsg.startsWith('保存成功') ? 'text-emerald-600' : 'text-red-500'
-                )}
+          {/* 保存栏 */}
+          <div className="flex items-center justify-between pt-4 border-t border-stone-100">
+            <p className="text-xs text-stone-400">
+              {hasChanges ? (
+                <span className="text-amber-600 font-medium">· 有未保存的修改</span>
+              ) : (
+                '信息将在保存后对会员可见'
+              )}
+            </p>
+            <div className="flex items-center gap-3">
+              {savedMsg && (
+                <span
+                  className={clsx(
+                    'text-sm font-medium transition-all duration-300',
+                    savedMsg.startsWith('保存成功') ? 'text-emerald-600' : 'text-red-500',
+                  )}
+                >
+                  {savedMsg}
+                </span>
+              )}
+              <Button
+                type="submit"
+                loading={isSaving}
+                disabled={isSaving || !hasChanges}
               >
-                {savedMsg}
-              </span>
-            )}
+                保存修改
+              </Button>
+            </div>
           </div>
         </form>
       </section>

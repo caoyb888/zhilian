@@ -75,6 +75,13 @@ button,
 }
 
 @layer components {
+  /* Profile page — hero identity panel */
+  .profile-hero-left {
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(16, 185, 129, 0.2) 0%, transparent 62%),
+      linear-gradient(155deg, #082316 0%, #0d2d1a 55%, #061910 100%);
+  }
+
   /* Rich-text article content rendered via DOMPurify */
   .article-content {
     @apply text-gray-800 leading-relaxed text-base;
