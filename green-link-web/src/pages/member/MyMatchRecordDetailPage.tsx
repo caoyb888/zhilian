@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { clsx } from 'clsx'
 import {
   AlertTriangle, ArrowLeft, Building2, CalendarDays, CheckCircle2,
-  FileText, Handshake, MapPin, MessageCircle, MessageSquare, Sparkles, XCircle,
+  FileText, Handshake, MapPin, MessageCircle, Sparkles, XCircle,
 } from 'lucide-react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { Icon } from '@/components/Icon'
@@ -178,60 +178,68 @@ function ActionButtons({ record, onStatusChange }: { record: MatchRecordItem; on
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-2">
+        {/* 主操作：全宽显眼按钮 */}
         {status === 1 && !isInitiator && (
-          <>
-            <Button
-              variant="primary" size="sm"
-              loading={respondMutation.isPending && respondMutation.variables?.action === 'ACCEPT'}
-              disabled={isPending}
-              onClick={handleAccept}
-            >
-              <Icon icon={CheckCircle2} size={14} className="mr-1" />
-              接受申请
-            </Button>
-            <Button variant="danger" size="sm" disabled={isPending} onClick={() => setConfirm('reject')}>
-              <Icon icon={XCircle} size={14} className="mr-1" />
-              拒绝申请
-            </Button>
-          </>
-        )}
-        {status === 1 && isInitiator && (
-          <Button variant="secondary" size="sm" disabled={isPending} onClick={() => setConfirm('cancel')}>
-            撤回申请
+          <Button
+            variant="primary"
+            loading={respondMutation.isPending && respondMutation.variables?.action === 'ACCEPT'}
+            disabled={isPending}
+            onClick={handleAccept}
+            className="w-full justify-center py-2.5"
+          >
+            <Icon icon={CheckCircle2} size={15} className="mr-1.5" />
+            接受申请
           </Button>
         )}
         {status === 2 && (
-          <>
-            <Button
-              variant="primary" size="sm"
-              loading={statusMutation.isPending && statusMutation.variables?.action === 'NEGOTIATE'}
-              disabled={isPending}
-              onClick={() => handleStatusAction('NEGOTIATE')}
-            >
-              进入洽谈
-            </Button>
-            <Button variant="secondary" size="sm" disabled={isPending} onClick={() => setConfirm('cancel')}>
-              撤销对接
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            loading={statusMutation.isPending && statusMutation.variables?.action === 'NEGOTIATE'}
+            disabled={isPending}
+            onClick={() => handleStatusAction('NEGOTIATE')}
+            className="w-full justify-center py-2.5"
+          >
+            进入洽谈
+          </Button>
         )}
         {status === 3 && (
-          <>
-            <Button
-              variant="primary" size="sm"
-              loading={statusMutation.isPending && statusMutation.variables?.action === 'COMPLETE'}
-              disabled={isPending}
-              onClick={() => handleStatusAction('COMPLETE')}
-            >
-              <Icon icon={CheckCircle2} size={14} className="mr-1" />
-              标记完成
-            </Button>
-            <Button variant="secondary" size="sm" disabled={isPending} onClick={() => setConfirm('cancel')}>
-              撤销对接
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            loading={statusMutation.isPending && statusMutation.variables?.action === 'COMPLETE'}
+            disabled={isPending}
+            onClick={() => handleStatusAction('COMPLETE')}
+            className="w-full justify-center py-2.5"
+          >
+            <Icon icon={CheckCircle2} size={15} className="mr-1.5" />
+            标记完成
+          </Button>
         )}
+
+        {/* 次要操作：文字危险链接 */}
+        <div className="flex items-center gap-4 pt-1">
+          {status === 1 && !isInitiator && (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setConfirm('reject')}
+              className="text-xs text-red-500 hover:text-red-700 disabled:opacity-40 transition-colors flex items-center gap-1"
+            >
+              <Icon icon={XCircle} size={12} />
+              拒绝申请
+            </button>
+          )}
+          {(status === 1 && isInitiator) || status === 2 || status === 3 ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setConfirm('cancel')}
+              className="text-xs text-stone-400 hover:text-red-500 disabled:opacity-40 transition-colors"
+            >
+              {status === 1 ? '撤回申请' : '撤销对接'}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {confirm === 'reject' && (
@@ -315,9 +323,9 @@ export default function MyMatchRecordDetailPage() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-stone-500 hover:bg-stone-100 hover:text-stone-800 transition-colors -ml-2"
+        className="inline-flex w-fit items-center gap-2 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm font-medium text-stone-600 shadow-card hover:bg-stone-50 hover:text-stone-900 hover:border-stone-300 transition-all duration-150 active:scale-[0.98]"
       >
-        <Icon icon={ArrowLeft} size={14} />
+        <Icon icon={ArrowLeft} size={14} className="text-stone-400" />
         返回对接记录
       </button>
 
@@ -372,41 +380,58 @@ export default function MyMatchRecordDetailPage() {
           {record.counterparty && (
             <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card">
               <SectionLabel>对接方信息</SectionLabel>
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-200 text-sm font-bold text-emerald-700">
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* 升级头像：渐变 + 白字 + ring */}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white text-lg font-bold ring-2 ring-white shadow-md select-none">
                   {record.counterparty.name.charAt(0)}
                 </div>
-                <span className="text-base font-semibold text-stone-900">{record.counterparty.name}</span>
-                {record.counterparty.memberLevel === 2 && (
-                  <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">VIP</span>
-                )}
-                {record.counterparty.memberLevel === 3 && (
-                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">理事</span>
-                )}
-                {record.counterparty.province && (
-                  <span className="flex items-center gap-1 text-xs text-stone-400">
-                    <Icon icon={MapPin} size={12} />
-                    {record.counterparty.province}
-                  </span>
-                )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-base font-bold text-stone-900">{record.counterparty.name}</span>
+                    {record.counterparty.memberLevel === 2 && (
+                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">VIP 会员</span>
+                    )}
+                    {record.counterparty.memberLevel === 3 && (
+                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">理事单位</span>
+                    )}
+                  </div>
+                  {record.counterparty.province && (
+                    <span className="flex items-center gap-1 mt-0.5 text-xs text-stone-400">
+                      <Icon icon={MapPin} size={11} />
+                      {record.counterparty.province}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
           {/* Resource & demand */}
-          <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card space-y-3">
+          <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card">
             <SectionLabel>对接资源与需求</SectionLabel>
-            <div className="flex items-start gap-3 rounded-xl bg-emerald-50 border border-emerald-100 p-3.5">
-              <span className="shrink-0 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 mt-0.5">资源</span>
-              <p className="text-sm text-stone-800 leading-relaxed">
-                {record.resourceTitle ?? <span className="text-stone-400 italic">（资源已下架）</span>}
-              </p>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-100 p-3.5">
-              <span className="shrink-0 rounded-full bg-blue-100 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold text-blue-700 mt-0.5">需求</span>
-              <p className="text-sm text-stone-800 leading-relaxed">
-                {record.demandTitle ?? <span className="text-stone-400 italic">（需求已关闭）</span>}
-              </p>
+            <div className="space-y-2">
+              <div className="flex items-start gap-3 rounded-xl bg-emerald-50 border border-emerald-100 p-3.5">
+                <span className="shrink-0 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 mt-0.5 whitespace-nowrap">资源</span>
+                <p className="text-sm text-stone-800 leading-relaxed">
+                  {record.resourceTitle ?? <span className="text-stone-400 italic">资源已下架</span>}
+                </p>
+              </div>
+
+              {/* 连接分隔符 */}
+              <div className="flex items-center gap-2 px-1">
+                <div className="flex-1 h-px bg-gradient-to-r from-emerald-200 to-stone-200" />
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-100 shrink-0">
+                  <Icon icon={Handshake} size={12} className="text-stone-400" />
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-l from-blue-200 to-stone-200" />
+              </div>
+
+              <div className="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-100 p-3.5">
+                <span className="shrink-0 rounded-full bg-blue-100 border border-blue-200 px-2 py-0.5 text-[10px] font-semibold text-blue-700 mt-0.5 whitespace-nowrap">需求</span>
+                <p className="text-sm text-stone-800 leading-relaxed">
+                  {record.demandTitle ?? <span className="text-stone-400 italic">需求已关闭</span>}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -414,9 +439,12 @@ export default function MyMatchRecordDetailPage() {
           {record.applyMessage && (
             <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card">
               <SectionLabel>申请留言</SectionLabel>
-              <div className="flex gap-3">
-                <Icon icon={MessageSquare} size={16} className="text-stone-300 shrink-0 mt-0.5" />
-                <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{record.applyMessage}</p>
+              <div className="flex gap-3 pl-1">
+                {/* 左侧引用竖线 */}
+                <div className="w-[3px] rounded-full bg-gradient-to-b from-emerald-300 to-teal-300 shrink-0 self-stretch" />
+                <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap italic">
+                  {record.applyMessage}
+                </p>
               </div>
             </div>
           )}
@@ -484,27 +512,31 @@ export default function MyMatchRecordDetailPage() {
 
           {/* Quick links */}
           <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card">
-            <SectionLabel>快速跳转</SectionLabel>
-            <div className="space-y-1">
+            <SectionLabel>快速操作</SectionLabel>
+            <div className="space-y-2">
+              {/* 主 CTA：进入对接沟通 */}
               <Link
                 to={`/member/my-records/${record.recordId}/chat`}
                 state={{ record }}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-colors active:scale-[0.98] shadow-sm shadow-emerald-200"
               >
-                <Icon icon={MessageCircle} size={14} className="text-emerald-500 shrink-0" />
-                <span className="flex-1">进入对接沟通</span>
+                <Icon icon={MessageCircle} size={15} className="shrink-0" />
+                <span>进入对接沟通</span>
                 {record.unreadCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-white/20 border border-white/40 px-1 text-[10px] font-bold">
                     {record.unreadCount > 99 ? '99+' : record.unreadCount}
                   </span>
                 )}
               </Link>
 
+              {/* 次级链接 */}
+              <div className="h-px bg-stone-100" />
+
               {record.resourceId && (
                 <Link
                   to={`/supply/resources/${record.resourceId}`}
                   target="_blank"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-stone-600 hover:bg-emerald-50/60 hover:text-stone-800 transition-colors"
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-stone-600 hover:bg-emerald-50/60 hover:text-stone-800 transition-colors"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
                   <span className="flex-1">查看资源详情</span>
@@ -516,7 +548,7 @@ export default function MyMatchRecordDetailPage() {
                 <Link
                   to={`/supply/demands/${record.demandId}`}
                   target="_blank"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-stone-600 hover:bg-blue-50/60 hover:text-stone-800 transition-colors"
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-stone-600 hover:bg-blue-50/60 hover:text-stone-800 transition-colors"
                 >
                   <span className="h-2 w-2 rounded-full bg-blue-400 shrink-0" />
                   <span className="flex-1">查看需求详情</span>
