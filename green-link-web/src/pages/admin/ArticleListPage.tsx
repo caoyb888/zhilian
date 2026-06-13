@@ -57,11 +57,13 @@ function ListView({ onEdit, onNew }: ListViewProps) {
 
   const { data, isLoading } = useArticleList({
     page,
-    size: 20,
+    size: 10,
     keyword: appliedKeyword || undefined,
     categoryId: appliedCategoryId,
     published: appliedPublished,
   })
+  const { data: publishedData } = useArticleList({ page: 1, size: 1, published: true })
+  const { data: draftData } = useArticleList({ page: 1, size: 1, published: false })
   const { data: categories } = usePortalCategories()
   const flatCats = flattenCategories(categories ?? [])
 
@@ -94,14 +96,21 @@ function ListView({ onEdit, onNew }: ListViewProps) {
 
   const records = data?.records ?? []
   const total = data?.total ?? 0
+  const publishedTotal = publishedData?.total ?? 0
+  const draftTotal = draftData?.total ?? 0
 
   return (
     <div className="flex flex-col gap-4">
       {/* header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-theme-text-main">文章管理</h1>
-          <p className="mt-0.5 text-sm text-theme-text-muted">门户新闻、通知、政策文章 CMS</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-theme-text-muted">门户新闻、通知、政策文章 CMS</p>
+          {publishedTotal > 0 && (
+            <Badge variant="success">{publishedTotal} 已发布</Badge>
+          )}
+          {draftTotal > 0 && (
+            <Badge variant="default">{draftTotal} 草稿</Badge>
+          )}
         </div>
         <Button size="sm" onClick={onNew}>+ 新建文章</Button>
       </div>
@@ -278,7 +287,7 @@ function ListView({ onEdit, onNew }: ListViewProps) {
         )}
         {total > 0 && (
           <div className="border-t border-slate-800/60 px-4 py-4">
-            <Pagination page={page} total={total} size={20} onChange={setPage} />
+            <Pagination page={page} total={total} size={10} onChange={setPage} />
           </div>
         )}
       </div>

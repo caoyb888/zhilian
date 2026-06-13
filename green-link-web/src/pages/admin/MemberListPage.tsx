@@ -255,15 +255,10 @@ export default function MemberListPage() {
   return (
     <div className="flex flex-col gap-4">
       {/* header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-theme-text-main">会员管理</h1>
-          <p className="mt-0.5 text-sm text-theme-text-muted">管理协会全部会员单位</p>
-        </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-sm text-theme-text-muted">管理协会全部会员单位</p>
         {total > 0 && (
-          <span className="rounded-full bg-slate-800/60 px-3 py-1 text-sm text-slate-300">
-            共 {total} 家
-          </span>
+          <Badge variant="default">共 {total} 家</Badge>
         )}
       </div>
 

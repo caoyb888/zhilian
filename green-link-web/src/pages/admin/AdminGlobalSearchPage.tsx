@@ -301,11 +301,8 @@ export default function AdminGlobalSearchPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 页头 */}
-      <div>
-        <h1 className="text-xl font-semibold text-theme-text-main">全局搜索</h1>
-        <p className="mt-1 text-sm text-theme-text-muted">搜索会员单位、供给资源、需求信息</p>
-      </div>
+      {/* 页头描述 */}
+      <p className="text-sm text-theme-text-muted">搜索会员单位、供给资源、需求信息</p>
 
       {/* 搜索框 */}
       <div className="relative">

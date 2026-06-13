@@ -1,5 +1,7 @@
 package com.greenlink.glportal.dto.request;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -25,5 +27,8 @@ public class CreateActivityRequest {
     private LocalDateTime endTime;
     private LocalDateTime regDeadline;
     private Integer maxCapacity;
+
+    @Min(1)
+    @Max(5)
     private Integer status;
 }
