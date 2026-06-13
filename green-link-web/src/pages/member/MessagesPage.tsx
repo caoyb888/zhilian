@@ -51,11 +51,13 @@ const BIZ_CONFIG: Record<BizType, {
   icon: typeof Handshake
   readCls: string
   unreadCls: string
+  leftBar: string   // 未读左色条
+  chip: string      // 业务类型标签
 }> = {
-  MATCH:    { icon: Handshake,   readCls: 'bg-emerald-100 text-emerald-500', unreadCls: 'bg-emerald-500 text-white' },
-  AUDIT:    { icon: ShieldCheck, readCls: 'bg-orange-100 text-orange-500',   unreadCls: 'bg-orange-500 text-white' },
-  ACTIVITY: { icon: Activity,    readCls: 'bg-teal-100 text-teal-500',       unreadCls: 'bg-teal-500 text-white' },
-  SYSTEM:   { icon: Info,        readCls: 'bg-stone-100 text-stone-400',     unreadCls: 'bg-stone-500 text-white' },
+  MATCH:    { icon: Handshake,   readCls: 'bg-emerald-100 text-emerald-500', unreadCls: 'bg-emerald-500 text-white', leftBar: 'bg-emerald-500', chip: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  AUDIT:    { icon: ShieldCheck, readCls: 'bg-orange-100 text-orange-500',   unreadCls: 'bg-orange-500 text-white',  leftBar: 'bg-orange-400',  chip: 'bg-orange-50 text-orange-700 border-orange-200' },
+  ACTIVITY: { icon: Activity,    readCls: 'bg-teal-100 text-teal-500',       unreadCls: 'bg-teal-500 text-white',    leftBar: 'bg-teal-500',    chip: 'bg-teal-50 text-teal-700 border-teal-200' },
+  SYSTEM:   { icon: Info,        readCls: 'bg-stone-100 text-stone-400',     unreadCls: 'bg-stone-500 text-white',   leftBar: 'bg-stone-400',   chip: 'bg-stone-100 text-stone-600 border-stone-200' },
 }
 
 const BIZ_LABEL: Record<BizType, string> = {
@@ -89,9 +91,11 @@ function formatTime(iso: string): string {
 function NotificationRow({
   item,
   onRead,
+  isLast,
 }: {
   item: NotificationItem
   onRead: (id: number) => void
+  isLast: boolean
 }) {
   const navigate  = useNavigate()
   const linkPath  = getLinkPath(item)
@@ -108,47 +112,75 @@ function NotificationRow({
   return (
     <div
       className={clsx(
-        'group flex items-start gap-3.5 rounded-xl border bg-white transition-all duration-150 px-4 py-3.5',
-        isUnread
-          ? 'border-emerald-100 bg-emerald-50/25 hover:shadow-[0_2px_12px_-2px_rgba(16,185,129,0.12)]'
-          : 'border-stone-100 hover:border-stone-200 hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)]',
+        'group relative flex items-start gap-3.5 px-4 py-3.5 transition-all duration-150',
+        isUnread ? 'bg-violet-50/20 hover:bg-violet-50/40' : 'hover:bg-stone-50/60',
+        !isLast && 'border-b border-stone-100/80',
         clickable && 'cursor-pointer',
       )}
       onClick={clickable ? handleClick : undefined}
       role={clickable ? 'button' : undefined}
     >
-      {/* Icon circle — bright when unread, muted when read */}
+      {/* 未读左色条 */}
+      {isUnread && bizConf && (
+        <span className={clsx(
+          'absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full',
+          bizConf.leftBar,
+        )} />
+      )}
+
+      {/* Icon circle */}
       <div className={clsx(
-        'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
+        'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors shadow-sm',
         isUnread
-          ? (bizConf?.unreadCls ?? 'bg-emerald-500 text-white')
+          ? (bizConf?.unreadCls ?? 'bg-violet-500 text-white')
           : (bizConf?.readCls   ?? 'bg-stone-100 text-stone-400'),
       )}>
-        <Icon icon={BizIcon} size={15} />
+        <Icon icon={BizIcon} size={16} />
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className={clsx('flex-1 min-w-0', !isUnread && 'opacity-70')}>
+        {/* 标题行 */}
         <div className="flex items-start justify-between gap-3">
-          <p className={clsx(
-            'text-sm leading-snug',
-            isUnread ? 'text-stone-900 font-semibold' : 'text-stone-600 font-normal',
-          )}>
-            {item.title}
-          </p>
-          <span className="shrink-0 text-[11px] text-stone-400 font-mono tabular-nums whitespace-nowrap">
-            {formatTime(item.createdAt)}
-          </span>
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+            <p className={clsx(
+              'text-sm leading-snug',
+              isUnread ? 'text-stone-900 font-semibold' : 'text-stone-600',
+            )}>
+              {item.title}
+            </p>
+            {/* bizType chip */}
+            {bizConf && item.bizType && (
+              <span className={clsx(
+                'shrink-0 inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-semibold leading-tight',
+                bizConf.chip,
+              )}>
+                {BIZ_LABEL[item.bizType]}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* 未读圆点 */}
+            {isUnread && (
+              <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+            )}
+            <span className="text-[11px] text-stone-400 font-mono tabular-nums whitespace-nowrap">
+              {formatTime(item.createdAt)}
+            </span>
+          </div>
         </div>
 
+        {/* 内容摘要 */}
         {item.content && (
           <p className="mt-1 text-xs text-stone-500 leading-relaxed line-clamp-2">
             {item.content}
           </p>
         )}
 
+        {/* 跳转链接 */}
         {linkPath && (
-          <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-emerald-600 group-hover:text-emerald-700 transition-colors">
+          <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             <Icon icon={ExternalLink} size={10} />
             <span>{item.bizType === 'MATCH' ? '进入对接沟通' : '查看详情'}</span>
           </div>
@@ -293,9 +325,14 @@ export default function MessagesPage() {
           />
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {data.records.map((item) => (
-            <NotificationRow key={item.id} item={item} onRead={handleRead} />
+        <div className="rounded-xl border border-stone-100 bg-white overflow-hidden">
+          {data.records.map((item, idx) => (
+            <NotificationRow
+              key={item.id}
+              item={item}
+              onRead={handleRead}
+              isLast={idx === data.records.length - 1}
+            />
           ))}
         </div>
       )}
