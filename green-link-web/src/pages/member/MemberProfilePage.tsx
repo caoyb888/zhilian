@@ -272,15 +272,6 @@ export default function MemberProfilePage() {
 
   return (
     <div className="space-y-4 pb-6">
-      {/* ── 页头 ── */}
-      <div className="flex items-center gap-3 animate-fade-in-up">
-        <div className="w-[3px] h-6 rounded-full bg-theme-accent" />
-        <div>
-          <h1 className="text-lg font-bold text-stone-900 leading-tight">企业资料</h1>
-          <p className="text-xs text-stone-500 mt-0.5">管理您的会员账号与单位信息</p>
-        </div>
-      </div>
-
       {/* ── 企业身份牌 ── */}
       <div
         className="rounded-2xl overflow-hidden shadow-[0_4px_24px_-4px_rgba(6,30,15,0.16)] animate-fade-in-up"
@@ -404,9 +395,9 @@ export default function MemberProfilePage() {
         className="rounded-xl border border-stone-100 bg-white overflow-hidden animate-fade-in-up"
         style={{ animationDelay: '120ms' }}
       >
-        <div className="px-5 py-3 border-b border-stone-100 flex items-center gap-2">
-          <Icon icon={User} size={13} className="text-theme-accent" />
-          <h2 className="text-sm font-semibold text-stone-700">账号信息</h2>
+        <div className="px-5 py-3 border-b border-sky-100 border-l-[3px] border-l-sky-400 bg-sky-50/60 flex items-center gap-2">
+          <Icon icon={User} size={13} className="text-sky-500" />
+          <h2 className="text-sm font-semibold text-sky-700">账号信息</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-stone-100/80">
           <AccountItem icon={<Icon icon={User} size={13} />} label="用户名" value={me.username} />
@@ -444,9 +435,9 @@ export default function MemberProfilePage() {
         className="rounded-xl border border-stone-100 bg-white animate-fade-in-up"
         style={{ animationDelay: '180ms' }}
       >
-        <div className="px-6 py-4 border-b border-stone-100 flex items-center gap-2">
-          <Icon icon={Building2} size={13} className="text-theme-accent" />
-          <h2 className="text-sm font-semibold text-stone-700">单位信息</h2>
+        <div className="px-6 py-4 border-b border-emerald-100 border-l-[3px] border-l-emerald-500 bg-emerald-50/50 flex items-center gap-2">
+          <Icon icon={Building2} size={13} className="text-emerald-600" />
+          <h2 className="text-sm font-semibold text-emerald-800">单位信息</h2>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-7">
