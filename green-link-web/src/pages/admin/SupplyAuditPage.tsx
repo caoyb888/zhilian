@@ -18,12 +18,12 @@ import {
   useAdminDemandList,
   useAuditResource,
   useAuditDemand,
+  type AdminResourceVO,
+  type AdminDemandVO,
 } from '@/services/supplyAdminService'
 import {
   RESOURCE_TYPE_LABELS,
   DEMAND_TYPE_LABELS,
-  type ResourceItem,
-  type DemandItem,
 } from '@/services/supplyService'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -75,14 +75,7 @@ function TypeBadge({ type, isResource }: { type: string; isResource: boolean }) 
 
 // ─── Audit Modal ──────────────────────────────────────────────────────────────
 
-interface AuditItem {
-  id: number
-  title: string
-  type: string
-  memberName: string | null
-  summary: string | null
-  createdAt: string
-}
+type AuditItem = AdminResourceVO | AdminDemandVO
 
 interface AuditFormData {
   action: 'APPROVE' | 'REJECT'
@@ -139,7 +132,6 @@ function AuditModal({
               <p className="text-sm font-medium text-stone-800 line-clamp-2">{item.title}</p>
               <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-stone-500">
                 <span>类型：{isResource ? (RESOURCE_TYPE_LABELS[item.type] ?? item.type) : (DEMAND_TYPE_LABELS[item.type] ?? item.type)}</span>
-                {item.memberName && <span>发布方：{item.memberName}</span>}
                 <span>提交时间：{item.createdAt.slice(0, 10)}</span>
               </div>
               {item.summary && (
@@ -284,8 +276,8 @@ function ResourceTable({
   page: number
   onPageChange: (p: number) => void
 }) {
-  const [auditItem, setAuditItem] = useState<ResourceItem | null>(null)
-  const [quickAction, setQuickAction] = useState<{ item: ResourceItem; action: 'APPROVE' | 'REJECT' } | null>(null)
+  const [auditItem, setAuditItem] = useState<AdminResourceVO | null>(null)
+  const [quickAction, setQuickAction] = useState<{ item: AdminResourceVO; action: 'APPROVE' | 'REJECT' } | null>(null)
   const mutation = useAuditResource()
 
   const { data, isLoading } = useAdminResourceList({
@@ -322,7 +314,7 @@ function ResourceTable({
                   <th className="px-4 py-3 w-8 text-stone-400">#</th>
                   <th className="px-4 py-3">标题</th>
                   <th className="px-4 py-3">类型</th>
-                  <th className="px-4 py-3">发布单位</th>
+                  <th className="px-4 py-3">所在省份</th>
                   <th className="px-4 py-3">提交时间</th>
                   <th className="px-4 py-3">状态</th>
                   <th className="px-4 py-3 text-right">操作</th>
@@ -337,7 +329,7 @@ function ResourceTable({
                       {r.summary && <p className="text-xs text-stone-400 truncate mt-0.5">{r.summary}</p>}
                     </td>
                     <td className="px-4 py-3"><TypeBadge type={r.type} isResource /></td>
-                    <td className="px-4 py-3 text-sm text-stone-500">{r.memberName ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{r.province ?? '—'}</td>
                     <td className="px-4 py-3 text-sm text-stone-500">{r.createdAt.slice(0, 10)}</td>
                     <td className="px-4 py-3"><AuditStatusBadge status={r.auditStatus} /></td>
                     <td className="px-4 py-3 text-right">
@@ -410,8 +402,8 @@ function DemandTable({
   page: number
   onPageChange: (p: number) => void
 }) {
-  const [auditItem, setAuditItem] = useState<DemandItem | null>(null)
-  const [quickAction, setQuickAction] = useState<{ item: DemandItem; action: 'APPROVE' | 'REJECT' } | null>(null)
+  const [auditItem, setAuditItem] = useState<AdminDemandVO | null>(null)
+  const [quickAction, setQuickAction] = useState<{ item: AdminDemandVO; action: 'APPROVE' | 'REJECT' } | null>(null)
   const mutation = useAuditDemand()
 
   const { data, isLoading } = useAdminDemandList({
@@ -448,7 +440,7 @@ function DemandTable({
                   <th className="px-4 py-3 w-8 text-stone-400">#</th>
                   <th className="px-4 py-3">标题</th>
                   <th className="px-4 py-3">类型</th>
-                  <th className="px-4 py-3">发布单位</th>
+                  <th className="px-4 py-3">所在省份</th>
                   <th className="px-4 py-3">提交时间</th>
                   <th className="px-4 py-3">状态</th>
                   <th className="px-4 py-3 text-right">操作</th>
@@ -463,7 +455,7 @@ function DemandTable({
                       {r.summary && <p className="text-xs text-stone-400 truncate mt-0.5">{r.summary}</p>}
                     </td>
                     <td className="px-4 py-3"><TypeBadge type={r.type} isResource={false} /></td>
-                    <td className="px-4 py-3 text-sm text-stone-500">{r.memberName ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm text-stone-500">{r.province ?? '—'}</td>
                     <td className="px-4 py-3 text-sm text-stone-500">{r.createdAt.slice(0, 10)}</td>
                     <td className="px-4 py-3"><AuditStatusBadge status={r.auditStatus} /></td>
                     <td className="px-4 py-3 text-right">
