@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { clsx } from 'clsx'
 import { Bell, Boxes, ClipboardList, Handshake, LogOut, Menu, Search, Sparkles, User, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
@@ -78,7 +79,10 @@ export function PortalNav() {
       ].join(' ')}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative flex items-center" style={{ height: scrolled ? '52px' : '64px', transition: 'height 0.3s' }}>
+        <div className={clsx(
+          'relative flex items-center transition-[height] duration-300',
+          scrolled ? 'h-[52px]' : 'h-16',
+        )}>
 
           {/* Logo */}
           <Link to="/portal" className="relative z-10 flex items-center gap-3 flex-shrink-0">
