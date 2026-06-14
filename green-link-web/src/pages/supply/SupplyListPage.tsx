@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import DOMPurify from 'dompurify'
 import {
   Building2, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Calendar, RefreshCw, Handshake, ChevronRight,
-  Layers, Tag,
+  Layers, Tag as TagIcon,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -316,7 +316,7 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
       </FilterSection>
 
       {/* 行业标签 — 紫色 */}
-      <FilterSection icon={Tag} iconClass="bg-violet-100 text-violet-600" label="行业标签">
+      <FilterSection icon={TagIcon} iconClass="bg-violet-100 text-violet-600" label="行业标签">
         {tagsLoading ? (
           <div className="flex justify-center py-4">
             <Spinner size="sm" className="text-stone-300" />
