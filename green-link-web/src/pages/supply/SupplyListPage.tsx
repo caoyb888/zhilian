@@ -94,7 +94,7 @@ function ResourceCard({ resource, isFavorited, onFavorite }: ResourceCardProps) 
   const badgeClass = TYPE_BADGE_CLASS[resource.type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
 
   const cooperationChips = resource.cooperationMode
-    ? resource.cooperationMode.split(/[,，、\/]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+    ? resource.cooperationMode.split(/[,，、/]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
     : []
 
   return (

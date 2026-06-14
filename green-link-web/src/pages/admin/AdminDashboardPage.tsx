@@ -91,15 +91,6 @@ function StatCard({
   )
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-      <span className="h-px flex-1 bg-slate-800" />
-      <span>{children}</span>
-      <span className="h-px flex-1 bg-slate-800" />
-    </h3>
-  )
-}
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (

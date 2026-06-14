@@ -110,7 +110,7 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
   const urgent = isDeadlineUrgent(demand.deadline)
 
   const cooperationChips = demand.cooperationMode
-    ? demand.cooperationMode.split(/[,，、\/]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+    ? demand.cooperationMode.split(/[,，、/]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
     : []
 
   return (
