@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import DOMPurify from 'dompurify'
 import {
   Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Handshake, ChevronRight, Clock,
+  ClipboardList, Tag,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -269,10 +270,20 @@ const DEMAND_TYPE_PILL: Record<string, { active: string; dot: string }> = {
   TALENT:     { active: 'bg-purple-50 text-purple-700 border-purple-300',  dot: 'bg-purple-500' },
 }
 
-function FilterSection({ color, label, children }: { color: string; label: string; children: React.ReactNode }) {
+function FilterSection({
+  icon, iconClass, label, children,
+}: {
+  icon: React.ComponentType<{ size?: number }>
+  iconClass: string
+  label: string
+  children: React.ReactNode
+}) {
   return (
     <div>
-      <div className={`flex items-center gap-2 mb-3 pl-2 border-l-[3px] ${color}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`flex h-6 w-6 items-center justify-center rounded-md flex-shrink-0 ${iconClass}`}>
+          <Icon icon={icon} size={13} />
+        </span>
         <p className="text-xs font-semibold text-stone-700">{label}</p>
       </div>
       {children}
@@ -301,7 +312,7 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
       </div>
 
       {/* 需求类型 — 橙色 */}
-      <FilterSection color="border-orange-500" label="需求类型">
+      <FilterSection icon={ClipboardList} iconClass="bg-orange-100 text-orange-600" label="需求类型">
         <div className="flex flex-wrap gap-2">
           {DEMAND_TYPES.map((t) => {
             const isActive = filters.type === t
@@ -326,7 +337,7 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
       </FilterSection>
 
       {/* 期望省份 — 蓝色 */}
-      <FilterSection color="border-blue-500" label="期望省份">
+      <FilterSection icon={MapPin} iconClass="bg-blue-100 text-blue-600" label="期望省份">
         <select
           value={filters.province}
           onChange={(e) => onChange({ province: e.target.value })}
@@ -338,7 +349,7 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
       </FilterSection>
 
       {/* 行业标签 — 紫色 */}
-      <FilterSection color="border-violet-500" label="行业标签">
+      <FilterSection icon={Tag} iconClass="bg-violet-100 text-violet-600" label="行业标签">
         {tagsLoading ? (
           <div className="flex justify-center py-4">
             <Spinner size="sm" className="text-stone-300" />
