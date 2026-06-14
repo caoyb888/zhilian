@@ -71,88 +71,66 @@ export function PortalNav() {
   return (
     <header
       className={[
-        'sticky top-0 z-40 border-b transition-all duration-300',
+        'sticky top-0 z-40 border-b backdrop-blur-lg transition-all duration-300',
         scrolled
-          ? 'h-14 border-stone-200 bg-white/95 shadow-md backdrop-blur-sm'
-          : 'h-16 lg:h-[72px] border-stone-100/80 bg-gradient-to-b from-[#F8FAF9] to-white shadow-sm',
+          ? 'bg-white/92 border-emerald-100 shadow-[0_2px_24px_rgba(0,102,79,0.08)]'
+          : 'bg-white/80 border-emerald-100 shadow-none',
       ].join(' ')}
     >
-      <div className="mx-auto h-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative flex h-full items-center">
+      {/* ── Row 1: Logo + Right actions ── */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={[
+          'flex items-center transition-all duration-300',
+          scrolled ? 'h-11' : 'h-13',
+        ].join(' ')} style={{ height: scrolled ? '44px' : '52px' }}>
+
           {/* Logo */}
-          <Link to="/portal" className="relative z-10 flex items-center gap-2.5 flex-shrink-0">
+          <Link to="/portal" className="flex items-center gap-2.5 flex-shrink-0 group">
             <img
               src="/lsdt-logo.png"
               alt="山东省绿色低碳产业发展协会"
               className={[
-                'rounded-full object-contain ring-1 ring-stone-100 transition-all duration-300',
-                scrolled ? 'h-7 w-7' : 'h-9 w-9',
+                'rounded-full object-contain ring-1 ring-emerald-200/60 transition-all duration-300',
+                scrolled ? 'h-7 w-7' : 'h-8 w-8',
               ].join(' ')}
             />
-            <div className="hidden sm:flex flex-col justify-center">
-              <span className={['font-bold text-stone-900 leading-tight transition-all duration-300', scrolled ? 'text-base' : 'text-lg'].join(' ')}>
+            <div className="hidden sm:flex items-baseline gap-1.5">
+              <span className="font-bold text-stone-900 text-base leading-none tracking-tight">
                 绿产智链
               </span>
               {!scrolled && (
-                <span className="text-stone-300 text-[11px] leading-tight">山东绿色低碳产业智慧平台</span>
+                <>
+                  <span className="text-stone-300 text-xs select-none">·</span>
+                  <span className="text-stone-400 text-[11px] leading-none">
+                    山东绿色低碳产业智慧平台
+                  </span>
+                </>
               )}
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-2 pointer-events-auto">
-              {NAV_LINKS.map(({ label, path }) => (
-                <Link
-                  key={path}
-                  to={path}
-                  className={[
-                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    isActive(path)
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
-                  ].join(' ')}
-                >
-                  {label}
-                </Link>
-              ))}
-              {accountInfo && (
-                <Link
-                  to="/supply/recommend"
-                  className={[
-                    'inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
-                    isActive('/supply/recommend')
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'text-stone-600 hover:text-emerald-700 hover:bg-emerald-50/60',
-                  ].join(' ')}
-                >
-                  <Icon icon={Sparkles} size={14} />
-                  智能推荐
-                </Link>
-              )}
-            </div>
-          </nav>
-
           {/* Right actions */}
-          <div className="relative z-10 flex items-center gap-2 ml-auto flex-shrink-0">
+          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
             {accountInfo ? (
               <>
+                {/* Search */}
                 <Link
                   to="/search"
-                  className="hidden lg:flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50/80 px-3 py-1.5 text-xs text-stone-500 transition-all hover:bg-white hover:border-emerald-300 hover:text-emerald-700"
+                  className="hidden lg:flex items-center gap-2 rounded-full border border-stone-200 bg-transparent px-3 py-1.5 text-xs text-stone-400 transition-all duration-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/40"
                   aria-label="全局搜索"
                 >
-                  <Icon icon={Search} size={13} />
+                  <Icon icon={Search} size={12} />
                   <span>搜索</span>
-                  <kbd className="rounded bg-stone-200 px-1 py-0.5 text-stone-400" style={{ fontSize: 10 }}>⌘K</kbd>
+                  <kbd className="rounded bg-stone-100 px-1 py-0.5 text-stone-400 text-[10px]">⌘K</kbd>
                 </Link>
 
+                {/* Bell */}
                 <Link
                   to="/member/messages"
-                  className="relative hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all"
+                  className="relative hidden lg:flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:text-emerald-700 hover:bg-emerald-50/60 transition-all duration-200"
                   aria-label={totalUnread > 0 ? `${totalUnread} 条未读消息` : '消息中心'}
                 >
-                  <Icon icon={Bell} size={18} />
+                  <Icon icon={Bell} size={17} />
                   {totalUnread > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none">
                       {totalUnread > 99 ? '99+' : totalUnread}
@@ -160,36 +138,37 @@ export function PortalNav() {
                   )}
                 </Link>
 
+                {/* Publish */}
                 <Link
                   to="/supply/resources/publish"
-                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 px-4 py-1.5 text-sm font-medium hover:bg-emerald-100 transition-all"
+                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700 transition-all duration-200 shadow-sm shadow-emerald-200"
                 >
                   发布供需
                 </Link>
 
-                {/* 用户头像下拉菜单 */}
+                {/* User dropdown */}
                 <div ref={userMenuRef} className="relative">
                   <button
                     type="button"
                     onClick={() => setUserMenuOpen((v) => !v)}
-                    className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full hover:bg-stone-50 transition-all"
+                    className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full hover:bg-stone-50 transition-all duration-200"
                     aria-expanded={userMenuOpen}
                     aria-haspopup="true"
                   >
-                    <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden">
+                    <div className="h-7 w-7 rounded-full bg-emerald-100 ring-1 ring-emerald-200/60 flex items-center justify-center overflow-hidden">
                       {accountInfo.avatarUrl ? (
                         <img src={accountInfo.avatarUrl} alt="" className="h-full w-full object-cover" />
                       ) : (
                         <Icon icon={User} size={14} className="text-emerald-600" />
                       )}
                     </div>
-                    <span className="text-sm font-medium text-stone-700 hidden sm:block">
+                    <span className="text-sm font-medium text-stone-700 hidden sm:block max-w-[80px] truncate">
                       {accountInfo.realName ?? accountInfo.username}
                     </span>
                   </button>
 
                   {userMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-stone-100 bg-white py-1 shadow-lg ring-1 ring-black/5">
+                    <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-stone-100 bg-white/95 backdrop-blur-sm py-1 shadow-lg ring-1 ring-black/5">
                       <div className="border-b border-stone-100 px-4 py-2.5">
                         <p className="text-xs font-semibold text-stone-900 truncate">
                           {accountInfo.realName ?? accountInfo.username}
@@ -234,13 +213,13 @@ export function PortalNav() {
               <>
                 <Link
                   to="/login"
-                  className="text-sm text-stone-600 hover:text-stone-900 transition-colors hidden sm:block"
+                  className="text-sm text-stone-500 hover:text-stone-900 transition-colors hidden sm:block px-2"
                 >
                   登录
                 </Link>
                 <Link
                   to="/register"
-                  className="rounded-lg bg-brand-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-600 transition-colors"
+                  className="rounded-full bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700 transition-all duration-200 shadow-sm shadow-emerald-200"
                 >
                   注册会员
                 </Link>
@@ -249,7 +228,7 @@ export function PortalNav() {
 
             {/* Mobile hamburger */}
             <button
-              className="md:hidden rounded-lg p-2 text-stone-500 hover:bg-stone-100"
+              className="md:hidden rounded-lg p-2 text-stone-500 hover:bg-stone-100 transition-colors ml-1"
               onClick={() => setMobileOpen(true)}
               aria-label="打开菜单"
             >
@@ -259,16 +238,52 @@ export function PortalNav() {
         </div>
       </div>
 
-      {/* Mobile menu overlay */}
+      {/* ── Row 2: Nav links (desktop only) ── */}
+      <div className="hidden md:block border-t border-stone-100/70">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <nav className="flex justify-center items-end h-9 gap-0">
+            {NAV_LINKS.map(({ label, path }) => (
+              <Link
+                key={path}
+                to={path}
+                className={[
+                  'px-5 pb-2 text-sm transition-all duration-200 border-b-2 -mb-px leading-none pt-2',
+                  isActive(path)
+                    ? 'font-semibold text-emerald-700 border-emerald-500'
+                    : 'font-medium text-stone-500 border-transparent hover:text-emerald-700 hover:border-emerald-200',
+                ].join(' ')}
+              >
+                {label}
+              </Link>
+            ))}
+            {accountInfo && (
+              <Link
+                to="/supply/recommend"
+                className={[
+                  'inline-flex items-center gap-1 px-5 pb-2 pt-2 text-sm transition-all duration-200 border-b-2 -mb-px leading-none',
+                  isActive('/supply/recommend')
+                    ? 'font-semibold text-emerald-700 border-emerald-500'
+                    : 'font-medium text-stone-500 border-transparent hover:text-emerald-700 hover:border-emerald-200',
+                ].join(' ')}
+              >
+                <Icon icon={Sparkles} size={13} />
+                智能推荐
+              </Link>
+            )}
+          </nav>
+        </div>
+      </div>
+
+      {/* ── Mobile menu overlay ── */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <div className="absolute right-0 top-0 h-full w-64 bg-white shadow-xl p-4 flex flex-col">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-64 bg-white/95 backdrop-blur-md shadow-xl p-4 flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <span className="font-bold text-stone-900">菜单</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg p-2 text-stone-500 hover:bg-stone-100"
+                className="rounded-lg p-2 text-stone-500 hover:bg-stone-100 transition-colors"
                 aria-label="关闭菜单"
               >
                 <Icon icon={X} size={20} />
