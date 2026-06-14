@@ -71,6 +71,18 @@ button,
 
   body {
     @apply antialiased;
+    overflow-x: hidden;
+    /* WeChat built-in browser resets font size scaling */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* iOS safe-area insets for notch / home-bar */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
   }
 }
 
