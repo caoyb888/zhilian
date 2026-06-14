@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── 动态视口高度 CSS 变量（JS 同步写入，解决微信键盘弹起错位）── */
+:root {
+  --app-height: 100vh;
+}
+
+/* ── 微信 & 移动端全局兼容 ── */
+* {
+  /* 消除点击蓝色闪光（微信/Android WebView）*/
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+[role='button'],
+[type='button'],
+[type='submit'] {
+  /* 防止双击缩放 */
+  touch-action: manipulation;
+}
+
+/* ── backdrop-filter 降级（Android 微信低版本不支持）── */
+/* JS 检测后在 <html> 挂 .no-backdrop-blur，此处做样式兜底 */
+.no-backdrop-blur .backdrop-blur-sm,
+.no-backdrop-blur .backdrop-blur,
+.no-backdrop-blur .backdrop-blur-md {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  /* 半透明背景提升不透明度，防止穿底 */
+  --tw-bg-opacity: 0.97 !important;
+}
+
 @layer base {
   /* 默认：清新北欧绿 */
   :root,
@@ -56,6 +87,14 @@
 }
 
 @layer components {
+  /* Profile page — hero identity panel */
+  .profile-hero-left {
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(16, 185, 129, 0.28) 0%, transparent 58%),
+      radial-gradient(ellipse at 80% 90%, rgba(20, 184, 166, 0.15) 0%, transparent 45%),
+      linear-gradient(155deg, #061a10 0%, #0a2418 55%, #041208 100%);
+  }
+
   /* Rich-text article content rendered via DOMPurify */
   .article-content {
     @apply text-gray-800 leading-relaxed text-base;
@@ -123,5 +162,65 @@
   .article-content em,
   .highlight em {
     @apply not-italic font-semibold text-yellow-800 bg-yellow-100 rounded px-0.5;
+  }
+
+  /* ── Quill rich-editor dark-mode overrides (admin panel) ── */
+  .rich-editor-wrapper {
+    @apply border-slate-700/60;
+  }
+  .rich-editor-wrapper .ql-toolbar.ql-snow {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  .rich-editor-wrapper .ql-toolbar .ql-stroke {
+    stroke: #94a3b8;
+  }
+  .rich-editor-wrapper .ql-toolbar .ql-fill {
+    fill: #94a3b8;
+  }
+  .rich-editor-wrapper .ql-toolbar .ql-picker {
+    color: #94a3b8;
+  }
+  .rich-editor-wrapper .ql-toolbar .ql-picker-options {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+  }
+  .rich-editor-wrapper .ql-toolbar button:hover .ql-stroke,
+  .rich-editor-wrapper .ql-toolbar button.ql-active .ql-stroke {
+    stroke: #34d399;
+  }
+  .rich-editor-wrapper .ql-toolbar button:hover .ql-fill,
+  .rich-editor-wrapper .ql-toolbar button.ql-active .ql-fill {
+    fill: #34d399;
+  }
+  .rich-editor-wrapper .ql-toolbar .ql-picker-label:hover,
+  .rich-editor-wrapper .ql-toolbar .ql-picker-label.ql-active {
+    color: #34d399;
+  }
+  .rich-editor-wrapper .ql-container.ql-snow {
+    background: #0f172a;
+    border-color: #334155;
+  }
+  .rich-editor-wrapper .ql-editor {
+    background: #0f172a;
+    color: #e2e8f0;
+    caret-color: #34d399;
+  }
+  .rich-editor-wrapper .ql-editor.ql-blank::before {
+    color: #475569;
+  }
+  .rich-editor-wrapper .ql-editor a {
+    color: #34d399;
+  }
+  .rich-editor-wrapper .ql-snow .ql-tooltip {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+  }
+  .rich-editor-wrapper .ql-snow .ql-tooltip input[type='text'] {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
   }
 }

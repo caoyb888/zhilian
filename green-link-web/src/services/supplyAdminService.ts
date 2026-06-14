@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import http from './http'
 import type { ApiResult, PageData } from '@/types/api'
-import type { ResourceItem, DemandItem } from './supplyService'
+
+interface TagSimpleVO {
+  id: number
+  name: string
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,9 +17,43 @@ export interface AdminSupplyListParams {
   auditStatus?: number
 }
 
-export interface AuditAction {
-  action: 'APPROVE' | 'REJECT'
-  remark?: string
+export interface AdminResourceVO {
+  id: number
+  memberId: number
+  accountId: number
+  type: string
+  title: string
+  summary: string | null
+  province: string | null
+  city: string | null
+  validUntil: string | null
+  viewCount: number
+  auditStatus: number
+  auditRemark: string | null
+  auditorId: number | null
+  auditedAt: string | null
+  createdAt: string
+  tags: TagSimpleVO[]
+}
+
+export interface AdminDemandVO {
+  id: number
+  memberId: number
+  accountId: number
+  type: string
+  title: string
+  summary: string | null
+  province: string | null
+  budgetMin: number | null
+  budgetMax: number | null
+  deadline: string | null
+  viewCount: number
+  auditStatus: number
+  auditRemark: string | null
+  auditorId: number | null
+  auditedAt: string | null
+  createdAt: string
+  tags: TagSimpleVO[]
 }
 
 // ─── Resource admin hooks ─────────────────────────────────────────────────────
@@ -28,7 +66,7 @@ export function useAdminResourceList(params: AdminSupplyListParams) {
       for (const [k, v] of Object.entries(params)) {
         if (v !== undefined && v !== '' && v !== -1) clean[k] = v
       }
-      const res = await http.get<ApiResult<PageData<ResourceItem>>>('/supply/resources', { params: clean })
+      const res = await http.get<ApiResult<PageData<AdminResourceVO>>>('/admin/supply/resources', { params: clean })
       return res.data.data
     },
   })
@@ -37,8 +75,12 @@ export function useAdminResourceList(params: AdminSupplyListParams) {
 export function useAuditResource() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...body }: { id: number } & AuditAction) => {
-      await http.post(`/supply/resources/${id}/audit`, body)
+    mutationFn: async ({ id, action, remark }: { id: number; action: 'APPROVE' | 'REJECT'; remark?: string }) => {
+      if (action === 'APPROVE') {
+        await http.patch(`/admin/supply/resources/${id}/approve`)
+      } else {
+        await http.patch(`/admin/supply/resources/${id}/reject`, { remark })
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'supply', 'resources'] }),
   })
@@ -54,7 +96,7 @@ export function useAdminDemandList(params: AdminSupplyListParams) {
       for (const [k, v] of Object.entries(params)) {
         if (v !== undefined && v !== '' && v !== -1) clean[k] = v
       }
-      const res = await http.get<ApiResult<PageData<DemandItem>>>('/supply/demands', { params: clean })
+      const res = await http.get<ApiResult<PageData<AdminDemandVO>>>('/admin/supply/demands', { params: clean })
       return res.data.data
     },
   })
@@ -63,8 +105,12 @@ export function useAdminDemandList(params: AdminSupplyListParams) {
 export function useAuditDemand() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...body }: { id: number } & AuditAction) => {
-      await http.post(`/supply/demands/${id}/audit`, body)
+    mutationFn: async ({ id, action, remark }: { id: number; action: 'APPROVE' | 'REJECT'; remark?: string }) => {
+      if (action === 'APPROVE') {
+        await http.patch(`/admin/supply/demands/${id}/approve`)
+      } else {
+        await http.patch(`/admin/supply/demands/${id}/reject`, { remark })
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'supply', 'demands'] }),
   })

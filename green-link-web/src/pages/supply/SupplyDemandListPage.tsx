@@ -1,8 +1,9 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
-  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin,
+  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Handshake, ChevronRight, Clock,
+  ClipboardList, Tag as TagIcon, type LucideIcon,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -15,6 +16,7 @@ import {
   useDemandList,
   useFavoriteDemand,
   useUnfavoriteDemand,
+  useFavoriteIds,
   DEMAND_TYPE_LABELS,
   DEMAND_TYPES,
   PROVINCES,
@@ -50,6 +52,12 @@ function formatBudget(min: number | null, max: number | null): string {
   return `≤ ${max} 万元`
 }
 
+function isDeadlineUrgent(deadline: string | null | undefined): boolean {
+  if (!deadline) return false
+  const ms = new Date(deadline).getTime() - Date.now()
+  return ms > 0 && ms < 7 * 24 * 60 * 60 * 1000
+}
+
 // ─── Type badge colors ────────────────────────────────────────────────────────
 
 const TYPE_BADGE_CLASS: Record<string, string> = {
@@ -58,21 +66,35 @@ const TYPE_BADGE_CLASS: Record<string, string> = {
   TALENT: 'bg-purple-50 text-purple-700 border-purple-200',
 }
 
+const TYPE_ACCENT_BAR: Record<string, string> = {
+  PRODUCT: 'bg-orange-500',
+  TECHNOLOGY: 'bg-blue-500',
+  TALENT: 'bg-purple-500',
+}
+
+const AUDIT_STATUS_MAP: Record<number, { label: string; className: string }> = {
+  0: { label: '待审核', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  1: { label: '可对接', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  2: { label: '已拒绝', className: 'bg-red-50 text-red-700 border-red-200' },
+  3: { label: '已下架', className: 'bg-stone-100 text-stone-600 border-stone-200' },
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function DemandSkeletonCard() {
   return (
-    <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card animate-pulse">
+    <div className="relative rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm animate-pulse overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-stone-100" />
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-5 w-16 rounded bg-stone-100" />
-        <div className="h-4 w-20 rounded bg-stone-100" />
+        <div className="h-5 w-16 rounded-full bg-stone-100" />
+        <div className="h-4 w-20 rounded-full bg-stone-100" />
       </div>
       <div className="h-4 w-full rounded bg-stone-100 mb-2" />
       <div className="h-4 w-4/5 rounded bg-stone-100 mb-3" />
       <div className="h-3 w-3/5 rounded bg-stone-100 mb-4" />
       <div className="flex gap-1 mb-4">
-        <div className="h-5 w-12 rounded bg-stone-100" />
-        <div className="h-5 w-14 rounded bg-stone-100" />
+        <div className="h-5 w-12 rounded-full bg-stone-100" />
+        <div className="h-5 w-14 rounded-full bg-stone-100" />
       </div>
       <div className="flex items-center justify-between border-t border-stone-100 pt-3">
         <div className="h-3 w-24 rounded bg-stone-100" />
@@ -93,16 +115,35 @@ interface DemandCardProps {
 function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
   const typeLabel = DEMAND_TYPE_LABELS[demand.type] ?? demand.type
   const badgeClass = TYPE_BADGE_CLASS[demand.type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
+  const urgent = isDeadlineUrgent(demand.deadline)
+
+  const cooperationChips = demand.cooperationMode
+    ? demand.cooperationMode.split(/[,，、/]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+    : []
 
   return (
-    <div className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+    <div className="group relative flex flex-col rounded-2xl border border-stone-200/80 bg-white shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+      {/* Left accent bar — color matches demand type */}
+      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${TYPE_ACCENT_BAR[demand.type] ?? 'bg-stone-400'}`} />
+
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center justify-between mb-2 gap-2">
-          <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold tracking-wide border flex-shrink-0 ${badgeClass}`}>
-            {typeLabel}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide border flex-shrink-0 ${badgeClass}`}>
+              {typeLabel}
+            </span>
+            {(() => {
+              const status = AUDIT_STATUS_MAP[demand.auditStatus]
+              if (!status) return null
+              return (
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border flex-shrink-0 ${status.className}`}>
+                  {status.label}
+                </span>
+              )
+            })()}
+          </div>
           {demand.province && (
-            <span className="flex items-center gap-1 text-xs text-stone-400 truncate">
+            <span className="flex items-center gap-1 text-xs text-stone-400 truncate flex-shrink-0">
               <Icon icon={MapPin} size={12} />
               {demand.province}
             </span>
@@ -111,7 +152,7 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
 
         <Link
           to={`/supply/demands/${demand.id}`}
-          className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200 mb-2"
+          className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-orange-600 transition-colors duration-200 mb-2"
         >
           <Highlight html={demand.highlightTitle} fallback={demand.title} />
         </Link>
@@ -122,26 +163,44 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
           </p>
         )}
 
-        {/* Budget */}
-        <p className="flex items-center gap-1.5 text-xs text-stone-600 font-medium mb-2">
+        {/* Budget — highlighted */}
+        <div className="flex items-center gap-1.5 mb-2">
           <Icon icon={Banknote} size={13} className="text-stone-400 flex-shrink-0" />
-          预算：{formatBudget(demand.budgetMin, demand.budgetMax)}
-        </p>
+          <span className="text-xs text-stone-500">预算：</span>
+          <span className="text-xs font-mono font-semibold text-orange-600">
+            {formatBudget(demand.budgetMin, demand.budgetMax)}
+          </span>
+        </div>
 
+        {/* Deadline — urgent highlight */}
         {demand.deadline && (
-          <p className="flex items-center gap-1.5 text-xs text-stone-500 mb-2">
-            <Icon icon={Calendar} size={12} className="text-stone-400 flex-shrink-0" />
-            截止：{formatDate(demand.deadline)}
-          </p>
+          <div className={`flex items-center gap-1.5 mb-2 ${urgent ? 'text-red-600' : 'text-stone-500'}`}>
+            <Icon icon={urgent ? Clock : Calendar} size={12} className="flex-shrink-0" />
+            <span className="text-xs">截止：{formatDate(demand.deadline)}</span>
+            {urgent && (
+              <span className="text-[10px] font-bold bg-red-50 border border-red-200 text-red-600 px-1.5 py-0.5 rounded-full">
+                急
+              </span>
+            )}
+          </div>
         )}
 
+        {/* Cooperation mode chips */}
+        {cooperationChips.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {cooperationChips.map((mode, i) => (
+              <span key={i} className="text-[10px] bg-stone-50 text-stone-500 border border-stone-200 px-2 py-0.5 rounded-full">
+                {mode}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Tags */}
         {demand.tags && demand.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {demand.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag.id}
-                className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-medium"
-              >
+              <span key={tag.id} className="text-[10px] bg-orange-50 text-orange-700 border border-orange-100 px-1.5 py-0.5 rounded font-medium">
                 {tag.name}
               </span>
             ))}
@@ -170,18 +229,27 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
             {formatDate(demand.createdAt)}
           </span>
         </div>
-        <button
-          type="button"
-          aria-label={isFavorited ? '取消收藏' : '收藏'}
-          onClick={() => onFavorite(demand.id, isFavorited)}
-          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
-            isFavorited
-              ? 'text-rose-500 bg-rose-50 hover:bg-rose-100'
-              : 'text-stone-400 hover:text-rose-400 hover:bg-rose-50'
-          }`}
-        >
-          <Icon icon={Heart} size={16} className={isFavorited ? 'fill-rose-500' : ''} />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/supply/demands/${demand.id}`}
+            className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-medium text-orange-700 hover:bg-orange-100 transition-all duration-200"
+          >
+            申请合作
+            <Icon icon={ChevronRight} size={11} />
+          </Link>
+          <button
+            type="button"
+            aria-label={isFavorited ? '取消收藏' : '收藏'}
+            onClick={() => onFavorite(demand.id, isFavorited)}
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
+              isFavorited
+                ? 'text-rose-500 bg-rose-50 hover:bg-rose-100'
+                : 'text-stone-400 hover:text-rose-400 hover:bg-rose-50'
+            }`}
+          >
+            <Icon icon={Heart} size={16} className={isFavorited ? 'fill-rose-500' : ''} />
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -203,73 +271,120 @@ interface FilterPanelProps {
   onReset: () => void
 }
 
+const DEMAND_TYPE_PILL: Record<string, { active: string; dot: string }> = {
+  PRODUCT:    { active: 'bg-orange-50 text-orange-700 border-orange-300', dot: 'bg-orange-500' },
+  TECHNOLOGY: { active: 'bg-blue-50 text-blue-700 border-blue-300',       dot: 'bg-blue-500' },
+  TALENT:     { active: 'bg-purple-50 text-purple-700 border-purple-300',  dot: 'bg-purple-500' },
+}
+
+function FilterSection({
+  icon, iconClass, label, children,
+}: {
+  icon: LucideIcon
+  iconClass: string
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`flex h-6 w-6 items-center justify-center rounded-md flex-shrink-0 ${iconClass}`}>
+          <Icon icon={icon} size={13} />
+        </span>
+        <p className="text-xs font-semibold text-stone-700">{label}</p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
 function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPanelProps) {
   const hasActive = !!(filters.type || filters.province || filters.tagId)
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">需求类型</h3>
-        <div className="space-y-2">
-          {DEMAND_TYPES.map((t) => (
-            <label key={t} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
-              <input
-                type="checkbox"
-                className="accent-theme-accent h-4 w-4 cursor-pointer rounded border-stone-300"
-                checked={filters.type === t}
-                onChange={() => onChange({ type: filters.type === t ? '' : t })}
-              />
-              <span className="text-sm text-stone-700">{DEMAND_TYPE_LABELS[t]}</span>
-            </label>
-          ))}
-        </div>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+        <span className="text-xs font-bold text-stone-600 tracking-wide">筛选器</span>
+        {hasActive && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-xs text-orange-600 hover:text-orange-700 font-medium transition-colors flex items-center gap-1"
+          >
+            <Icon icon={RefreshCw} size={12} />
+            重置
+          </button>
+        )}
       </div>
 
-      <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">期望省份</h3>
+      {/* 需求类型 — 橙色 */}
+      <FilterSection icon={ClipboardList} iconClass="bg-orange-100 text-orange-600" label="需求类型">
+        <div className="flex flex-wrap gap-2">
+          {DEMAND_TYPES.map((t) => {
+            const isActive = filters.type === t
+            const style = DEMAND_TYPE_PILL[t]
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onChange({ type: isActive ? '' : t })}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-all duration-200 ${
+                  isActive
+                    ? (style?.active ?? 'bg-orange-50 text-orange-700 border-orange-400')
+                    : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-orange-300 hover:text-orange-700 hover:bg-orange-50'
+                }`}
+              >
+                <span className={`h-2 w-2 rounded-full flex-shrink-0 ${isActive ? (style?.dot ?? 'bg-orange-500') : 'bg-stone-300'}`} />
+                {DEMAND_TYPE_LABELS[t]}
+              </button>
+            )
+          })}
+        </div>
+      </FilterSection>
+
+      {/* 期望省份 — 蓝色 */}
+      <FilterSection icon={MapPin} iconClass="bg-blue-100 text-blue-600" label="期望省份">
         <select
           value={filters.province}
           onChange={(e) => onChange({ province: e.target.value })}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-400 transition-all duration-200"
         >
           <option value="">全部省份</option>
           {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
-      </div>
+      </FilterSection>
 
-      <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">标签筛选</h3>
+      {/* 行业标签 — 紫色 */}
+      <FilterSection icon={TagIcon} iconClass="bg-violet-100 text-violet-600" label="行业标签">
         {tagsLoading ? (
-          <div className="flex justify-center py-4"><Spinner size="sm" className="text-stone-300" /></div>
+          <div className="flex justify-center py-4">
+            <Spinner size="sm" className="text-stone-300" />
+          </div>
         ) : tags.length === 0 ? (
           <p className="text-xs text-stone-400">暂无可用标签</p>
         ) : (
-          <div className="space-y-1.5">
-            {tags.map((tag) => (
-              <label key={tag.id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
-                <input
-                  type="checkbox"
-                  className="accent-theme-accent h-4 w-4 cursor-pointer rounded border-stone-300"
-                  checked={filters.tagId === tag.id}
-                  onChange={() => onChange({ tagId: filters.tagId === tag.id ? 0 : tag.id })}
-                />
-                <span className="text-sm text-stone-700">{tag.name}</span>
-              </label>
-            ))}
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((tag) => {
+              const isActive = filters.tagId === tag.id
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => onChange({ tagId: isActive ? 0 : tag.id })}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-all duration-200 ${
+                    isActive
+                      ? 'bg-violet-500 text-white border-violet-500'
+                      : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50'
+                  }`}
+                >
+                  #{tag.name}
+                </button>
+              )
+            })}
           </div>
         )}
-      </div>
-
-      {hasActive && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-200 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
-        >
-          <Icon icon={RefreshCw} size={14} />
-          重置筛选
-        </button>
-      )}
+      </FilterSection>
     </div>
   )
 }
@@ -380,6 +495,13 @@ export default function SupplyDemandListPage() {
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
+
+  // 登录后从服务端加载已收藏 ID 初始化 Set
+  const { data: favoriteIds } = useFavoriteIds('DEMAND', !!accountInfo)
+  useEffect(() => {
+    if (!favoriteIds) return
+    setFavorites(new Set(favoriteIds))
+  }, [favoriteIds])
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -515,18 +637,21 @@ export default function SupplyDemandListPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* 左侧：标题 + 副标题 */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
-              <p className="mt-2 text-sm text-white/80">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
+              <div className="flex items-center gap-2">
+                <Icon icon={Handshake} size={24} className="text-white/70" />
+                <h1 className="text-3xl font-bold text-white tracking-tight">供需对接平台</h1>
+              </div>
+              <p className="mt-1 text-sm text-white/70">绿色低碳供需资源汇聚 · 精准对接 · 共赢合作</p>
             </div>
 
             {/* 右侧：搜索组件（玻璃拟态） */}
             <form
               onSubmit={handleSearchSubmit}
-              className="flex gap-2 w-full max-w-md lg:w-auto lg:min-w-[360px]"
+              className="flex gap-2 w-full max-w-sm"
             >
               <div className="relative flex-1">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
@@ -537,12 +662,12 @@ export default function SupplyDemandListPage() {
                   value={inputValue}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   placeholder="搜索需求名称、技术领域…"
-                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-3 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 transition-all duration-200"
+                  className="w-full rounded-[30px] bg-white/20 backdrop-blur-md border border-white/30 pl-10 pr-4 py-2 text-sm text-white placeholder-white/60 outline-none focus:bg-white/30 focus:border-white/50 shadow-md shadow-black/10 transition-all duration-200"
                 />
               </div>
               <button
                 type="submit"
-                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-6 py-3 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
+                className="flex-shrink-0 rounded-[30px] bg-stone-800 px-5 py-2 text-sm font-medium text-white hover:bg-stone-700 transition-all duration-200"
               >
                 搜索
               </button>
@@ -550,7 +675,7 @@ export default function SupplyDemandListPage() {
                 <button
                   type="button"
                   onClick={() => { setInputValue(''); setParam({ keyword: undefined, page: undefined }) }}
-                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
+                  className="flex-shrink-0 rounded-[30px] border border-white/30 px-3 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-200"
                 >
                   清除
                 </button>
@@ -560,11 +685,46 @@ export default function SupplyDemandListPage() {
         </div>
       </div>
 
+      {/* Ticker bar */}
+      <div className="relative overflow-hidden" style={{ background: 'rgba(0, 60, 45, 0.85)' }}>
+        <style>{`
+          @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .ticker-animate {
+            animation: ticker-scroll 20s linear infinite;
+          }
+        `}</style>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className="flex-shrink-0 text-[10px] font-bold text-emerald-200 uppercase tracking-wider bg-emerald-500/20 rounded px-1.5 py-0.5">
+              最新供需
+            </span>
+            <div className="flex-1 overflow-hidden relative">
+              <div className="ticker-animate flex gap-8 whitespace-nowrap w-max">
+                {[
+                  { type: '需求', text: '某企业求购光伏组件供应商' },
+                  { type: '资源', text: '新能源储能技术专利寻求合作' },
+                  { type: '对接', text: '碳中和服务商招募合作伙伴' },
+                  { type: '需求', text: '绿色建筑节能改造方案征集' },
+                ].map((item, i) => (
+                  <span key={i} className="inline-flex items-center gap-2 text-sm text-white/90">
+                    <span className="bg-emerald-500/25 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">{item.type}</span>
+                    {item.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Tabs + 发布按钮 */}
       <div className="bg-white border-b border-theme-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center flex-wrap gap-2">
               <Link
                 to="/supply"
                 className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
@@ -577,6 +737,11 @@ export default function SupplyDemandListPage() {
               >
                 需求列表
               </Link>
+              {!isLoading && (
+                <span className="hidden sm:inline text-sm text-stone-400 ml-2">
+                  共 <span className="font-semibold text-stone-600">{total}</span> 条需求
+                </span>
+              )}
             </div>
             <Link
               to="/supply/demands/publish"
@@ -588,16 +753,16 @@ export default function SupplyDemandListPage() {
         </div>
       </div>
 
-      <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex gap-6">
-          <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0">
-            <div className="sticky top-20 rounded-xl border border-stone-100 bg-white p-5 shadow-card">
+          <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0 self-start">
+            <div className="sticky top-[4.5rem] rounded-2xl border border-stone-200/60 bg-white p-5 shadow-sm">
               <FilterPanel {...filterPanelProps} />
             </div>
           </aside>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="flex items-center justify-between mb-4 gap-3 lg:hidden">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -613,7 +778,7 @@ export default function SupplyDemandListPage() {
                   )}
                 </button>
                 {!isLoading && (
-                  <span className="text-sm text-stone-500">
+                  <span className="text-sm text-stone-500 lg:hidden">
                     共 <span className="font-semibold text-stone-800">{total}</span> 条需求
                   </span>
                 )}

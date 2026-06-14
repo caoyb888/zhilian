@@ -1,10 +1,14 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Spinner } from '@/components/Spinner'
 import { RequireAuth } from '@/components/RequireAuth'
 import { PrivateRoute } from '@/components/PrivateRoute'
 import { useThemeStore } from '@/stores/themeStore'
+import { MobileTabBar } from '@/business/MobileTabBar'
+import { PwaInstallBanner } from '@/components/PwaInstallBanner'
+import { OfflineBanner } from '@/components/OfflineBanner'
+import { isWeChat } from '@/utils/ua'
 
 const LoginPage                = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage             = lazy(() => import('@/pages/auth/RegisterPage'))
@@ -42,6 +46,7 @@ const ArticleListPage      = lazy(() => import('@/pages/admin/ArticleListPage'))
 const ActivityListPage     = lazy(() => import('@/pages/admin/ActivityListPage'))
 const TagListPage          = lazy(() => import('@/pages/admin/TagListPage'))
 const SupplyAuditPage          = lazy(() => import('@/pages/admin/SupplyAuditPage'))
+const GlobalSearchPage         = lazy(() => import('@/pages/portal/GlobalSearchPage'))
 const AdminGlobalSearchPage    = lazy(() => import('@/pages/admin/AdminGlobalSearchPage'))
 
 const queryClient = new QueryClient({
@@ -66,12 +71,31 @@ function ThemeInitializer() {
   return null
 }
 
+const TABBAR_HIDDEN_PREFIXES = ['/admin', '/login', '/register']
+
+function AppShell({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation()
+  // 微信内置浏览器不显示 TabBar，也不需要底部 padding
+  const showTabBar = !isWeChat && !TABBAR_HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))
+  return (
+    <>
+      <div className={showTabBar ? 'pb-16 md:pb-0' : undefined}>
+        {children}
+      </div>
+      {showTabBar && <MobileTabBar />}
+      <PwaInstallBanner />
+      <OfflineBanner />
+    </>
+  )
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <ThemeInitializer />
+          <AppShell>
           <Routes>
             {/* 公开路由 */}
             <Route path="/" element={<Navigate to="/portal" replace />} />
@@ -82,6 +106,7 @@ export default function App() {
             <Route path="/portal/articles/:id" element={<PortalArticleDetailPage />} />
             <Route path="/portal/activities" element={<PortalActivityListPage />} />
             <Route path="/portal/activities/:id" element={<PortalActivityDetailPage />} />
+            <Route path="/search" element={<GlobalSearchPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
             {/* 供需对接（公开浏览，收藏/对接需登录） */}
@@ -178,6 +203,7 @@ export default function App() {
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </AppShell>
         </Suspense>
       </BrowserRouter>
     </QueryClientProvider>

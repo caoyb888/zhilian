@@ -1,0 +1,49 @@
+Runner 安装要求如下，在内网机（xintong@100.95.76.81）上执行：                                                                           16:37:41 [26/1837]
+                                                                                                                                                            
+  ---                                                                                                                                                       
+  安装步骤                                                                                                                                                  
+                                                                                                                                                            
+  # 1. 创建目录                                                                                                                                             
+  mkdir -p ~/actions-runner && cd ~/actions-runner                                                                                                          
+                                                                                                                                                            
+  # 2. 下载 runner（x64 Linux）                                                                                                                             
+  curl -fL https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz \                                           
+    -o actions-runner.tar.gz                                                                                                                                
+                                                                                                                                                            
+  # 3. 解压                                                                                                                                                 
+  tar -xzf actions-runner.tar.gz && rm actions-runner.tar.gz                                                                                                
+                                                                                                                                                            
+  # 4. 注册（--unattended 全默认，无需交互）                                                                                                                
+  ./config.sh \                                                                                                                                             
+    --url https://github.com/caoyb888/zhilian \                                                                                                             
+    --token ANAZ3FFNSFP4UQOMWFYXZXLKEFBJU \                                                                                                                 
+    --name intranet-runner \                                                                                                                                
+    --labels "self-hosted,linux,intranet" \                                                                                                                 
+    --work _work \                                                                                                                                          
+    --unattended                                                                                                                                            
+                                                                                                                                                            
+  # 5. 安装为 systemd 服务（开机自启）                                                                                                                      
+  sudo ./svc.sh install                                                                                                                                     
+  sudo ./svc.sh start                                                                                                                                       
+                                                                               
+  # 6. 验证运行状态
+  sudo ./svc.sh status
+  
+   验收标准                                                                     
+                                                                               
+  ┌─────────────┬─────────────────────────────────────┬────────────────────────────────┐
+  │   检查项     │                命令                 │            期望结果            │
+  ├─────────────┼─────────────────────────────────────┼────────────────────────────────┤
+  │ 服务状态     │ sudo ./svc.sh status                │ active (running)               │
+  ├─────────────┼─────────────────────────────────────┼────────────────────────────────┤
+  │ GitHub 页面  │ Repo → Settings → Actions → Runners │ 显示 intranet-runner Idle 状态 │
+  └─────────────┴─────────────────────────────────────┴────────────────────────────────┘
+
+  ---                                                                          
+  注意事项                                                                     
+ 
+  - Token 有效期 1 小时，若过期需回 GitHub 页面重新生成（Settings → Actions → Runners → New self-hosted runner）
+  - 安装时如提示缺少依赖，运行 sudo ./bin/installdependencies.sh 补装
+  - _work 目录是构建工作区，确保磁盘有足够空间（当前 / 已用 83%，建议清理或挂载新目录）
+
+  安装完成后告诉我，我来触发一次 push 验证全链路。                             

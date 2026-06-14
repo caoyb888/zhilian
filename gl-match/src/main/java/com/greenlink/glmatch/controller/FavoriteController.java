@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 收藏/取消收藏接口（S5-09）。
  *
@@ -65,6 +68,16 @@ public class FavoriteController {
             return Result.ok(false);
         }
         return Result.ok(favoriteService.check(accountId, bizType, bizId));
+    }
+
+    @GetMapping("/ids")
+    public Result<List<Long>> listIds(
+            @RequestHeader(value = "X-Account-Id", required = false) Long accountId,
+            @RequestParam @Pattern(regexp = "RESOURCE|DEMAND", message = "bizType 只能为 RESOURCE 或 DEMAND") String bizType) {
+        if (accountId == null) {
+            return Result.ok(Collections.emptyList());
+        }
+        return Result.ok(favoriteService.listIds(accountId, bizType));
     }
 
     @GetMapping

@@ -9,6 +9,6 @@ import lombok.Data;
 public class ActivityStatusUpdateRequest {
 
     @NotNull(message = "状态不能为空")
-    @Min(1) @Max(3)
+    @Min(1) @Max(5)
     private Integer status;
 }

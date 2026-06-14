@@ -73,6 +73,7 @@ public class ArticleEsSyncService {
                         .query(keyword)
                         .fields(List.of("title^2", "summary"))
                         .analyzer("ik_smart")
+                        .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
                 )._toQuery())
                 .filter(filterQueries)
         )._toQuery();

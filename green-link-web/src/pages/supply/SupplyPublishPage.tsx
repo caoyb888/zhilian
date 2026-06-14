@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Clock,
-  FileText, MapPin, Tag, X,
+  AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, Clock,
+  FileText, FlaskConical, MapPin, Package, Sparkles, Tag, Users, X,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { PortalNav } from '@/business/PortalNav'
@@ -90,43 +90,93 @@ function useTagGroups() {
   })
 }
 
+// ─── Toggle ───────────────────────────────────────────────────────────────────
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+  hint,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  label: string
+  hint?: string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-stone-50 p-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-stone-800">{label}</p>
+        {hint && <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">{hint}</p>}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={[
+          'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2',
+          checked ? 'bg-emerald-500' : 'bg-stone-300',
+        ].join(' ')}
+      >
+        <span
+          className={[
+            'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200',
+            checked ? 'translate-x-5' : 'translate-x-0',
+          ].join(' ')}
+        />
+      </button>
+    </div>
+  )
+}
+
 // ─── StepIndicator ────────────────────────────────────────────────────────────
 
 function StepIndicator({ current }: { current: number }) {
   return (
     <>
-      {/* Desktop: numbered steps */}
-      <nav className="hidden sm:flex items-center justify-center gap-0 mb-8">
+      {/* Desktop */}
+      <nav className="hidden sm:flex items-start justify-center gap-0 mb-10">
         {STEP_LABELS.map((label, i) => {
-          const done = i < current
+          const done   = i < current
           const active = i === current
           return (
-            <div key={i} className="flex items-center">
-              <div className="flex flex-col items-center gap-1.5">
+            <div key={i} className="flex items-start">
+              <div className="flex flex-col items-center gap-2">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                  className={[
+                    'flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-all duration-300',
                     done
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
                       : active
-                      ? 'bg-theme-accent text-white ring-4 ring-emerald-100'
-                      : 'bg-stone-100 text-stone-400'
-                  }`}
+                      ? 'bg-emerald-500 text-white ring-4 ring-emerald-100 shadow-md shadow-emerald-200'
+                      : 'bg-stone-100 text-stone-400',
+                  ].join(' ')}
                 >
-                  {done ? <Icon icon={CheckCircle2} size={16} /> : i + 1}
+                  {done ? (
+                    <Icon icon={CheckCircle2} size={18} />
+                  ) : (
+                    <span className="text-xs font-black tabular-nums">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                  )}
                 </div>
                 <span
-                  className={`text-xs font-medium whitespace-nowrap ${
-                    active ? 'text-theme-accent' : done ? 'text-emerald-600' : 'text-stone-400'
-                  }`}
+                  className={[
+                    'text-xs font-semibold whitespace-nowrap tracking-wide',
+                    active ? 'text-emerald-600' : done ? 'text-emerald-500' : 'text-stone-400',
+                  ].join(' ')}
                 >
                   {label}
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
                 <div
-                  className={`mx-3 mt-[-14px] h-0.5 w-12 transition-colors ${
-                    done ? 'bg-emerald-400' : 'bg-stone-200'
-                  }`}
+                  className={[
+                    'mx-3 mt-5 h-0.5 w-16 shrink-0 rounded-full transition-colors duration-300',
+                    done ? 'bg-emerald-400' : 'bg-stone-200',
+                  ].join(' ')}
                 />
               )}
             </div>
@@ -134,21 +184,37 @@ function StepIndicator({ current }: { current: number }) {
         })}
       </nav>
 
-      {/* Mobile: progress bar */}
+      {/* Mobile */}
       <div className="sm:hidden mb-6">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-stone-700">
-            步骤 {current + 1}/{STEP_LABELS.length}：{STEP_LABELS[current]}
-          </span>
-          <span className="text-xs text-stone-400">
-            {Math.round(((current + 1) / STEP_LABELS.length) * 100)}%
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-black">
+              {current + 1}
+            </span>
+            <span className="text-sm font-semibold text-stone-800">
+              {STEP_LABELS[current]}
+            </span>
+          </div>
+          <span className="text-xs font-medium text-stone-400 tabular-nums">
+            {current + 1} / {STEP_LABELS.length}
           </span>
         </div>
-        <div className="h-2 w-full rounded-full bg-stone-100 overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-stone-100 overflow-hidden">
           <div
-            className="h-full rounded-full bg-theme-accent transition-all duration-300"
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
             style={{ width: `${((current + 1) / STEP_LABELS.length) * 100}%` }}
           />
+        </div>
+        <div className="flex mt-1.5 gap-1">
+          {STEP_LABELS.map((_, i) => (
+            <div
+              key={i}
+              className={[
+                'h-0.5 flex-1 rounded-full transition-colors duration-300',
+                i <= current ? 'bg-emerald-400' : 'bg-stone-200',
+              ].join(' ')}
+            />
+          ))}
         </div>
       </div>
     </>
@@ -157,10 +223,14 @@ function StepIndicator({ current }: { current: number }) {
 
 // ─── Step 1 — 基本信息 ─────────────────────────────────────────────────────────
 
-const TYPE_BADGE_CLASS: Record<string, string> = {
-  PRODUCT: 'border-emerald-300 bg-emerald-50 text-emerald-800',
-  TECHNOLOGY: 'border-blue-300 bg-blue-50 text-blue-800',
-  TALENT: 'border-purple-300 bg-purple-50 text-purple-800',
+const TYPE_CONFIG: Record<string, {
+  icon: typeof Package
+  activeClass: string
+  dotClass: string
+}> = {
+  PRODUCT:    { icon: Package,      activeClass: 'border-emerald-400 bg-emerald-50 text-emerald-800', dotClass: 'bg-emerald-500' },
+  TECHNOLOGY: { icon: FlaskConical, activeClass: 'border-blue-400 bg-blue-50 text-blue-800',         dotClass: 'bg-blue-500'    },
+  TALENT:     { icon: Users,        activeClass: 'border-purple-400 bg-purple-50 text-purple-800',    dotClass: 'bg-purple-500'  },
 }
 
 function Step1BasicInfo() {
@@ -171,7 +241,8 @@ function Step1BasicInfo() {
     formState: { errors },
   } = useFormContext<FormValues>()
 
-  const selectedType = watch('type')
+  const selectedType   = watch('type')
+  const contactVisible = watch('contactVisible')
 
   return (
     <div className="space-y-6">
@@ -179,20 +250,25 @@ function Step1BasicInfo() {
       <FormField label="资源类型" required error={errors.type?.message}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {RESOURCE_TYPES.map((t) => {
-            const active = selectedType === t
-            const cls = TYPE_BADGE_CLASS[t] ?? 'border-stone-300 bg-stone-50 text-stone-800'
+            const active   = selectedType === t
+            const cfg      = TYPE_CONFIG[t] ?? { icon: Package, activeClass: 'border-stone-300 bg-stone-50 text-stone-800', dotClass: 'bg-stone-400' }
+            const TypeIcon = cfg.icon
             return (
               <button
                 key={t}
                 type="button"
                 onClick={() => setValue('type', t, { shouldValidate: true, shouldDirty: true })}
-                className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all duration-200 ${
-                  active ? `${cls} shadow-sm` : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'
-                }`}
+                className={[
+                  'relative flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 px-4 py-5 text-sm font-semibold transition-all duration-200',
+                  active
+                    ? `${cfg.activeClass} shadow-md`
+                    : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300 hover:bg-stone-50',
+                ].join(' ')}
               >
-                <span className="text-xl">
-                  {t === 'PRODUCT' ? '📦' : t === 'TECHNOLOGY' ? '🔬' : '👥'}
-                </span>
+                {active && (
+                  <span className={`absolute top-2.5 right-2.5 h-2 w-2 rounded-full ${cfg.dotClass}`} />
+                )}
+                <Icon icon={TypeIcon} size={24} className={active ? 'opacity-100' : 'opacity-40'} />
                 {RESOURCE_TYPE_LABELS[t]}
               </button>
             )
@@ -206,7 +282,7 @@ function Step1BasicInfo() {
           id="title"
           type="text"
           placeholder="请输入资源标题，如：光伏组件生产技术转让"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200"
           {...register('title')}
         />
       </FormField>
@@ -222,7 +298,7 @@ function Step1BasicInfo() {
           id="summary"
           rows={3}
           placeholder="简要描述您的资源..."
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200 resize-none"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200 resize-none"
           {...register('summary')}
         />
       </FormField>
@@ -232,7 +308,7 @@ function Step1BasicInfo() {
         <FormField label="所在省份" htmlFor="province" error={errors.province?.message}>
           <select
             id="province"
-            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200 bg-white"
             {...register('province')}
           >
             <option value="">请选择省份</option>
@@ -247,7 +323,7 @@ function Step1BasicInfo() {
             id="city"
             type="text"
             placeholder="如：济南"
-            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200"
             {...register('city')}
           />
         </FormField>
@@ -259,7 +335,7 @@ function Step1BasicInfo() {
           id="cooperationMode"
           type="text"
           placeholder="如：技术转让、许可授权、合作研发、入股合作..."
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200"
           {...register('cooperationMode')}
         />
       </FormField>
@@ -269,26 +345,18 @@ function Step1BasicInfo() {
         <input
           id="validUntil"
           type="date"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all duration-200"
           {...register('validUntil')}
         />
       </FormField>
 
-      {/* Contact visible */}
-      <div className="flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 p-4">
-        <input
-          id="contactVisible"
-          type="checkbox"
-          className="mt-0.5 h-4 w-4 accent-theme-accent cursor-pointer"
-          {...register('contactVisible')}
-        />
-        <label htmlFor="contactVisible" className="flex flex-col gap-0.5 cursor-pointer">
-          <span className="text-sm font-medium text-stone-800">向会员公开联系方式</span>
-          <span className="text-xs text-stone-500">
-            勾选后，已登录的会员可在详情页查看您的联系人、手机号和邮箱
-          </span>
-        </label>
-      </div>
+      {/* Contact visible — toggle */}
+      <Toggle
+        checked={contactVisible}
+        onChange={(v) => setValue('contactVisible', v, { shouldDirty: true })}
+        label="向会员公开联系方式"
+        hint="开启后，已登录的会员可在详情页查看您的联系人、手机号和邮箱"
+      />
     </div>
   )
 }
@@ -376,28 +444,28 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: Step3TagsAttachmentsPr
           </p>
           {tagIds.length > 0 && (
             <span className="text-xs text-stone-500">
-              已选 <span className="font-semibold text-theme-accent">{tagIds.length}</span> / {MAX_TAGS}
+              已选 <span className="font-semibold text-emerald-600">{tagIds.length}</span> / {MAX_TAGS}
             </span>
           )}
         </div>
 
         {(tagLimitError || errors.tagIds?.message) && (
           <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-600">
-            <Icon icon={AlertCircle} size={14} className="flex-shrink-0" />
+            <Icon icon={AlertCircle} size={14} className="shrink-0" />
             {tagLimitError || errors.tagIds?.message}
           </div>
         )}
 
-        {/* Selected tag chips */}
+        {/* Selected chips */}
         {tagIds.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-2 rounded-xl bg-emerald-50 border border-emerald-100 p-3">
             {tagGroups
               .flatMap((g) => g.tags)
               .filter((t) => tagIds.includes(t.id))
               .map((t) => (
                 <span
                   key={t.id}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm"
                 >
                   #{t.name}
                   <button
@@ -420,10 +488,11 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: Step3TagsAttachmentsPr
         ) : tagGroups.length === 0 ? (
           <p className="text-sm text-stone-400 py-4">暂无可用标签</p>
         ) : (
-          <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+          <div className="space-y-5 max-h-72 overflow-y-auto pr-1 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
             {tagGroups.map((group) => (
               <div key={group.categoryId}>
-                <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2.5 flex items-center gap-1.5">
+                  <Icon icon={Tag} size={11} />
                   {group.categoryName}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -434,11 +503,12 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: Step3TagsAttachmentsPr
                         key={tag.id}
                         type="button"
                         onClick={() => toggleTag(tag.id)}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200 ${
+                        className={[
+                          'rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200',
                           selected
-                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                            : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'
-                        }`}
+                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700 shadow-sm'
+                            : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-200 hover:text-emerald-700',
+                        ].join(' ')}
                       >
                         {tag.name}
                       </button>
@@ -471,136 +541,169 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: Step3TagsAttachmentsPr
 
 // ─── Step 4 — 预览与提交 ───────────────────────────────────────────────────────
 
-function Step4Preview() {
+function Step4Preview({ tagGroups }: { tagGroups: TagGroup[] }) {
   const { watch } = useFormContext<FormValues>()
   const values = watch()
 
-  const typeLabel = RESOURCE_TYPE_LABELS[values.type] ?? values.type
+  const typeLabel        = RESOURCE_TYPE_LABELS[values.type] ?? values.type
+  const allTags          = tagGroups.flatMap((g) => g.tags)
+  const selectedTagNames = values.tagIds
+    .map((id) => allTags.find((t) => t.id === id)?.name)
+    .filter((n): n is string => !!n)
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-stone-200 bg-stone-50 p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-stone-700 pb-2 border-b border-stone-200">
-          信息预览（提交后进入人工审核）
-        </h3>
+      {/* Notice */}
+      <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700">
+        <Icon icon={AlertCircle} size={16} className="shrink-0 mt-0.5 text-amber-500" />
+        <span>提交后将进入人工审核流程，请仔细核对以下信息</span>
+      </div>
 
-        <Row label="资源类型">
-          <span className="rounded-md bg-white border border-stone-200 px-2.5 py-0.5 text-xs font-semibold">
-            {typeLabel || '—'}
-          </span>
-        </Row>
+      {/* Preview card */}
+      <div className="rounded-xl border-l-4 border-l-emerald-500 border border-stone-200 bg-stone-50 overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-stone-200 bg-white">
+          <h3 className="text-sm font-bold text-stone-800">信息预览</h3>
+        </div>
+        <div className="divide-y divide-stone-100">
+          <PreviewRow label="资源类型">
+            {typeLabel ? (
+              <span className="inline-flex items-center rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+                {typeLabel}
+              </span>
+            ) : <EmptyVal />}
+          </PreviewRow>
 
-        <Row label="资源标题">
-          <span className="text-sm font-medium text-stone-900">{values.title || '—'}</span>
-        </Row>
+          <PreviewRow label="资源标题">
+            <span className="text-sm font-medium text-stone-900">{values.title || <EmptyVal />}</span>
+          </PreviewRow>
 
-        {values.summary && (
-          <Row label="摘要">
-            <span className="text-sm text-stone-700">{values.summary}</span>
-          </Row>
-        )}
-
-        {(values.province || values.city) && (
-          <Row label="所在地区">
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={MapPin} size={13} className="text-stone-400" />
-              {[values.province, values.city].filter(Boolean).join('·')}
-            </span>
-          </Row>
-        )}
-
-        {values.cooperationMode && (
-          <Row label="合作方式">
-            <span className="text-sm text-stone-700">{values.cooperationMode}</span>
-          </Row>
-        )}
-
-        {values.validUntil && (
-          <Row label="有效期至">
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={Clock} size={13} className="text-stone-400" />
-              {values.validUntil}
-            </span>
-          </Row>
-        )}
-
-        <Row label="联系方式">
-          <span className="text-sm text-stone-700">
-            {values.contactVisible ? '向会员公开' : '不公开'}
-          </span>
-        </Row>
-
-        <Row label="详细介绍">
-          <span className="text-sm text-stone-500">
-            {values.content ? '已填写（富文本内容）' : '未填写'}
-          </span>
-        </Row>
-
-        <Row label="标签">
-          {values.tagIds.length > 0 ? (
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={Tag} size={13} className="text-stone-400" />
-              已选 {values.tagIds.length} 个标签
-            </span>
-          ) : (
-            <span className="text-sm text-stone-400">未选择</span>
+          {values.summary && (
+            <PreviewRow label="摘要">
+              <span className="text-sm text-stone-700">{values.summary}</span>
+            </PreviewRow>
           )}
-        </Row>
 
-        <Row label="附件">
-          {values.attachments.length > 0 ? (
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={FileText} size={13} className="text-stone-400" />
-              {values.attachments.length} 个附件
-            </span>
-          ) : (
-            <span className="text-sm text-stone-400">未上传</span>
+          {(values.province || values.city) && (
+            <PreviewRow label="所在地区">
+              <span className="inline-flex items-center gap-1 text-sm text-stone-700">
+                <Icon icon={MapPin} size={13} className="text-stone-400" />
+                {[values.province, values.city].filter(Boolean).join(' · ')}
+              </span>
+            </PreviewRow>
           )}
-        </Row>
+
+          {values.cooperationMode && (
+            <PreviewRow label="合作方式">
+              <span className="text-sm text-stone-700">{values.cooperationMode}</span>
+            </PreviewRow>
+          )}
+
+          {values.validUntil && (
+            <PreviewRow label="有效期至">
+              <span className="inline-flex items-center gap-1 text-sm text-stone-700">
+                <Icon icon={Clock} size={13} className="text-stone-400" />
+                {values.validUntil}
+              </span>
+            </PreviewRow>
+          )}
+
+          <PreviewRow label="联系方式">
+            <span className={`text-sm font-medium ${values.contactVisible ? 'text-emerald-700' : 'text-stone-500'}`}>
+              {values.contactVisible ? '向会员公开' : '不公开'}
+            </span>
+          </PreviewRow>
+
+          <PreviewRow label="详细介绍">
+            <span className={`text-sm ${values.content ? 'text-emerald-700 font-medium' : 'text-stone-400'}`}>
+              {values.content ? '已填写' : '未填写'}
+            </span>
+          </PreviewRow>
+
+          <PreviewRow label="标签">
+            {selectedTagNames.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedTagNames.map((name) => (
+                  <span
+                    key={name}
+                    className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
+                  >
+                    #{name}
+                  </span>
+                ))}
+              </div>
+            ) : <EmptyVal />}
+          </PreviewRow>
+
+          <PreviewRow label="附件">
+            {values.attachments.length > 0 ? (
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-stone-700">
+                <Icon icon={FileText} size={13} className="text-stone-400" />
+                {values.attachments.length} 个附件
+              </span>
+            ) : <EmptyVal />}
+          </PreviewRow>
+        </div>
       </div>
 
       <p className="text-xs text-stone-400 text-center">
-        提交后，资源将进入审核流程，通常在 1 个工作日内完成审核
+        提交后通常在 1 个工作日内完成审核，审核结果将通过站内信通知您
       </p>
     </div>
   )
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function EmptyVal() {
+  return <span className="text-sm text-stone-300">—</span>
+}
+
+function PreviewRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-3">
-      <span className="w-20 flex-shrink-0 text-xs text-stone-400 pt-0.5">{label}</span>
+    <div className="flex gap-3 px-5 py-3.5">
+      <span className="w-20 shrink-0 text-xs font-medium text-stone-400 pt-0.5">{label}</span>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   )
 }
 
-
 // ─── Success state ────────────────────────────────────────────────────────────
 
 function SuccessState({ onPublishAnother }: { onPublishAnother: () => void }) {
   return (
-    <div className="rounded-2xl border border-stone-100 bg-white p-12 text-center shadow-card">
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-        <Icon icon={CheckCircle2} size={36} />
+    <div className="rounded-2xl border border-stone-100 bg-white p-12 text-center shadow-sm">
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 ring-8 ring-emerald-50/50 text-emerald-500">
+        <Icon icon={CheckCircle2} size={42} />
       </div>
-      <h2 className="text-xl font-bold text-stone-900 mb-2">发布成功</h2>
-      <p className="text-sm text-stone-500 mb-8">
-        您的资源已提交审核，管理员审核通过后即可在平台展示，通常 1 个工作日内完成。
+
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-600 mb-4">
+        <Icon icon={Sparkles} size={12} />
+        发布成功
+      </div>
+
+      <h2 className="text-2xl font-bold text-stone-900 mb-2">资源已提交审核</h2>
+      <p className="text-sm text-stone-500 mb-8 max-w-sm mx-auto leading-relaxed">
+        您的资源已进入审核流程，管理员通过后即可在平台展示。
+        通常在 <span className="font-semibold text-stone-700">1 个工作日</span>内完成，结果将通过站内信通知您。
       </p>
+
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link
           to="/supply"
-          className="rounded-lg border border-stone-200 px-6 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-200 px-6 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
         >
           返回供需列表
+        </Link>
+        <Link
+          to="/member/my-resources"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-6 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-all duration-200"
+        >
+          查看我的资源
         </Link>
         <button
           type="button"
           onClick={onPublishAnother}
-          className="rounded-lg bg-theme-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-all duration-200"
         >
-          继续发布资源
+          继续发布 <Icon icon={ArrowRight} size={14} />
         </button>
       </div>
     </div>
@@ -745,20 +848,35 @@ export default function SupplyPublishPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col bg-theme-bg">
+    <div className="min-h-screen flex flex-col bg-stone-50">
       <PortalNav />
 
-      <main className="flex-1 mx-auto w-full max-w-2xl px-4 sm:px-6 lg:px-8 py-10">
+      <main className="flex-1 mx-auto w-full max-w-2xl px-4 sm:px-6 py-10">
+
         {/* Back link */}
         <Link
           to="/supply"
-          className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-800 mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-8 transition-colors group"
         >
-          <Icon icon={ArrowLeft} size={16} />
+          <Icon
+            icon={ArrowLeft}
+            size={15}
+            className="group-hover:-translate-x-0.5 transition-transform duration-200"
+          />
           返回供需列表
         </Link>
 
-        <h1 className="text-2xl font-bold text-stone-900 mb-8">发布资源</h1>
+        {/* Page header */}
+        {!submitSuccess && (
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-stone-900">发布资源</h1>
+            <p className="mt-1 text-sm text-stone-500">
+              填写绿色低碳资源信息，发布后经审核即可在平台展示
+              <span className="mx-1.5 text-stone-300">·</span>
+              共 {STEP_LABELS.length} 步，约 5 分钟完成
+            </p>
+          </div>
+        )}
 
         {submitSuccess ? (
           <SuccessState onPublishAnother={handlePublishAnother} />
@@ -766,10 +884,13 @@ export default function SupplyPublishPage() {
           <>
             <StepIndicator current={currentStep} />
 
-            {/* Draft restored notice */}
+            {/* Draft restored */}
             {draftRestored && (
-              <div className="mb-6 flex items-center justify-between rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
-                <span>已恢复上次保存的草稿</span>
+              <div className="mb-6 flex items-center justify-between rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
+                <div className="flex items-center gap-2">
+                  <Icon icon={AlertCircle} size={15} className="text-blue-400" />
+                  已恢复上次保存的草稿
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -777,7 +898,7 @@ export default function SupplyPublishPage() {
                     localStorage.removeItem(DRAFT_KEY)
                     setDraftRestored(false)
                   }}
-                  className="ml-4 text-blue-500 hover:text-blue-700 transition-colors"
+                  className="text-xs text-blue-400 hover:text-blue-600 transition-colors underline underline-offset-2"
                 >
                   清除草稿
                 </button>
@@ -786,21 +907,21 @@ export default function SupplyPublishPage() {
 
             {/* Submit error */}
             {createMutation.isError && (
-              <div className="mb-6 flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
-                <Icon icon={AlertCircle} size={16} className="flex-shrink-0" />
+              <div className="mb-6 flex items-center gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
+                <Icon icon={AlertCircle} size={16} className="shrink-0" />
                 <span>提交失败，请检查网络后重试</span>
               </div>
             )}
 
-            {/* Form */}
-            <div className="rounded-2xl border border-stone-100 bg-white p-6 sm:p-8 shadow-card mb-6">
+            {/* Form card */}
+            <div className="rounded-2xl border border-stone-100 bg-white p-6 sm:p-8 shadow-sm mb-6">
               <FormProvider {...form}>
                 {currentStep === 0 && <Step1BasicInfo />}
                 {currentStep === 1 && <Step2Content imageUploadFn={imageUploadFn} />}
                 {currentStep === 2 && (
                   <Step3TagsAttachments tagGroups={tagGroups} tagsLoading={tagsLoading} />
                 )}
-                {currentStep === 3 && <Step4Preview />}
+                {currentStep === 3 && <Step4Preview tagGroups={tagGroups} />}
               </FormProvider>
             </div>
 
@@ -811,26 +932,27 @@ export default function SupplyPublishPage() {
                   <button
                     type="button"
                     onClick={goBack}
-                    className="rounded-lg border border-stone-200 px-5 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200"
                   >
+                    <Icon icon={ArrowLeft} size={14} />
                     上一步
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={saveDraftNow}
-                  className="rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-500 hover:bg-stone-50 transition-all duration-200 hidden sm:inline-flex"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-500 hover:bg-stone-50 transition-all duration-200"
                 >
                   保存草稿
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div>
                 {currentStep < STEP_LABELS.length - 1 ? (
                   <button
                     type="button"
                     onClick={goNext}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-theme-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 shadow-sm shadow-emerald-200 transition-all duration-200 active:scale-[0.98]"
                   >
                     下一步
                     <Icon icon={ChevronRight} size={16} />
@@ -840,15 +962,12 @@ export default function SupplyPublishPage() {
                     type="button"
                     onClick={onSubmit}
                     disabled={createMutation.isPending}
-                    className="inline-flex items-center gap-2 rounded-lg bg-theme-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 shadow-sm shadow-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
                   >
                     {createMutation.isPending ? (
-                      <>
-                        <Spinner size="sm" />
-                        提交中...
-                      </>
+                      <><Spinner size="sm" />提交中...</>
                     ) : (
-                      '提交发布'
+                      <>提交发布 <Icon icon={ArrowRight} size={15} /></>
                     )}
                   </button>
                 )}
@@ -858,12 +977,11 @@ export default function SupplyPublishPage() {
         )}
       </main>
 
-      <footer className="bg-stone-900 text-stone-400 py-6">
+      <footer className="mt-auto bg-stone-950 text-stone-500 py-6">
         <div className="mx-auto max-w-7xl px-4 text-center text-xs">
           © 2024 山东省绿色低碳产业协会 · 绿产智链平台
         </div>
       </footer>
-
     </div>
   )
 }

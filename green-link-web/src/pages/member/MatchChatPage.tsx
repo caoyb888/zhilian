@@ -819,7 +819,7 @@ export default function MatchChatPage() {
   return (
     <div
       className="flex flex-col bg-theme-bg"
-      style={{ height: 'calc(100dvh - 4rem)' }}
+      style={{ height: 'calc(var(--app-height, 100vh) - 4rem)' }}
     >
       {/* ── Header ── */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-stone-100 bg-white shrink-0">
