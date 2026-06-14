@@ -400,32 +400,6 @@ export default function SupplyRecommendPage() {
         </div>
       </div>
 
-      {/* Tab-nav bar */}
-      <div className="bg-white border-b border-theme-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-2">
-            <Link
-              to="/supply"
-              className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
-            >
-              资源列表
-            </Link>
-            <Link
-              to="/supply/demands"
-              className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
-            >
-              需求列表
-            </Link>
-            <Link
-              to="/supply/recommend"
-              className="rounded-full px-4 py-1.5 text-sm font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 transition-all duration-200"
-            >
-              智能推荐
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Main */}
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-6 flex-1">
         {applyTarget && (
