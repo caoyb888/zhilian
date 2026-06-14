@@ -317,9 +317,10 @@ interface EditorFormData {
 interface EditorViewProps {
   editingId: number | null   // null = new article
   onBack: () => void
+  onCreated: (id: number) => void
 }
 
-function EditorView({ editingId, onBack }: EditorViewProps) {
+function EditorView({ editingId, onBack, onCreated }: EditorViewProps) {
   const isNew = editingId === null
 
   const { data: detail, isLoading: detailLoading } = useArticleDetail(editingId)
@@ -436,9 +437,7 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
           onSuccess: (result) => {
             setSavedMsg(mode === 'DRAFT' ? '草稿已保存' : '文章已发布')
             setTimeout(() => setSavedMsg(''), 3000)
-            // Navigate to edit mode for the newly created article
-            reset((prev) => prev)
-            void result
+            onCreated(result.id)
           },
         })
       } else {
@@ -744,6 +743,7 @@ export default function ArticleListPage() {
       <EditorView
         editingId={view.editingId}
         onBack={() => setView({ mode: 'list' })}
+        onCreated={(id) => setView({ mode: 'editor', editingId: id })}
       />
     )
   }
