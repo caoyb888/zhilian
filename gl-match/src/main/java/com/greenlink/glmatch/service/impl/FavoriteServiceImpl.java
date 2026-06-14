@@ -96,6 +96,17 @@ public class FavoriteServiceImpl implements FavoriteService {
         return PageResult.of(vos, dbPage.getTotal(), page, size);
     }
 
+    @Override
+    public List<Long> listIds(Long accountId, String bizType) {
+        QueryWrapper<MatchFavorite> qw = new QueryWrapper<MatchFavorite>()
+                .select("biz_id")
+                .eq("account_id", accountId)
+                .eq("biz_type", bizType);
+        return favoriteMapper.selectList(qw).stream()
+                .map(MatchFavorite::getBizId)
+                .toList();
+    }
+
     private Map<Long, SupplyBriefDTO> fetchBriefs(String bizType, List<Long> ids) {
         if (CollectionUtils.isEmpty(ids)) return Collections.emptyMap();
         try {

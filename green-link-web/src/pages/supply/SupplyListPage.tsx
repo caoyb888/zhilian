@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
@@ -16,6 +16,7 @@ import {
   useResourceList,
   useFavoriteResource,
   useUnfavoriteResource,
+  useFavoriteIds,
   RESOURCE_TYPE_LABELS,
   RESOURCE_TYPES,
   PROVINCES,
@@ -504,8 +505,14 @@ export default function SupplyListPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginPrompt, setLoginPrompt] = useState(false)
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
-  // TODO S5-09: 登录后从服务端初始化 favorites Set（GET /match/favorites）
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
+
+  // 登录后从服务端加载已收藏 ID 初始化 Set
+  const { data: favoriteIds } = useFavoriteIds('RESOURCE', !!accountInfo)
+  useEffect(() => {
+    if (!favoriteIds) return
+    setFavorites(new Set(favoriteIds))
+  }, [favoriteIds])
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 

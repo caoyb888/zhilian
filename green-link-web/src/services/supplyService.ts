@@ -104,6 +104,7 @@ export interface DemandItem {
   tags: ResourceTagItem[]
   highlightTitle: string | null
   highlightSummary: string | null
+  isFavorited?: boolean
 }
 
 export interface DemandDetail {
@@ -333,6 +334,18 @@ export function useFavoriteList(bizType: 'RESOURCE' | 'DEMAND', page: number, si
       return res.data.data
     },
     placeholderData: (prev) => prev,
+  })
+}
+
+export function useFavoriteIds(bizType: 'RESOURCE' | 'DEMAND', enabled: boolean) {
+  return useQuery({
+    queryKey: ['favorites', 'ids', bizType],
+    queryFn: async () => {
+      const res = await http.get<ApiResult<number[]>>('/favorites/ids', { params: { bizType } })
+      return res.data.data ?? []
+    },
+    enabled,
+    staleTime: 0,
   })
 }
 
