@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, Clock,
-  FileText, FlaskConical, MapPin, Package, Sparkles, Tag, Users, X,
+  FileText, FlaskConical, MapPin, Package, Sparkles, Users, X,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { PortalNav } from '@/business/PortalNav'
