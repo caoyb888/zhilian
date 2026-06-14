@@ -28,7 +28,7 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 const AUDIT_STATUS_OPTIONS = [
   { label: '全部状态', value: -1 },
@@ -573,31 +573,46 @@ export default function SupplyAuditPage() {
 
   const filterParams = { keyword, type, auditStatus }
 
+  const resourcePendingQuery = useAdminResourceList({ page: 1, size: 1, auditStatus: 0 })
+  const resourceApprovedQuery = useAdminResourceList({ page: 1, size: 1, auditStatus: 1 })
+  const demandPendingQuery = useAdminDemandList({ page: 1, size: 1, auditStatus: 0 })
+  const demandApprovedQuery = useAdminDemandList({ page: 1, size: 1, auditStatus: 1 })
+
+  const pendingCount = tab === 'resource'
+    ? (resourcePendingQuery.data?.total ?? 0)
+    : (demandPendingQuery.data?.total ?? 0)
+  const approvedCount = tab === 'resource'
+    ? (resourceApprovedQuery.data?.total ?? 0)
+    : (demandApprovedQuery.data?.total ?? 0)
+
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-theme-text-main">供需内容审核</h1>
-        <p className="mt-0.5 text-sm text-theme-text-muted">审核会员发布的资源与需求信息</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-0 border-b border-slate-700/60">
-        {(['resource', 'demand'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => switchTab(t)}
-            className={clsx(
-              'px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
-              tab === t
-                ? 'border-theme-accent text-theme-accent'
-                : 'border-transparent text-slate-400 hover:text-slate-100 hover:border-slate-600',
-            )}
-          >
-            {t === 'resource' ? '资源审核' : '需求审核'}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-sm text-theme-text-muted">审核会员发布的资源与需求信息</p>
+        <div className="flex flex-wrap gap-1">
+          {(['resource', 'demand'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => switchTab(t)}
+              className={clsx(
+                'rounded-full px-3 py-1 text-xs font-medium transition-all duration-200',
+                tab === t
+                  ? 'bg-theme-accent text-white'
+                  : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60',
+              )}
+            >
+              {t === 'resource' ? '资源审核' : '需求审核'}
+            </button>
+          ))}
+        </div>
+        {approvedCount > 0 && (
+          <Badge variant="success">{approvedCount} 已通过</Badge>
+        )}
+        {pendingCount > 0 && (
+          <Badge variant="warning">{pendingCount} 待审核</Badge>
+        )}
       </div>
 
       {/* Filter bar */}

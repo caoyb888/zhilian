@@ -37,15 +37,15 @@ const STATUS_TABS = [
   { value: undefined, label: '全部' },
   { value: 1, label: '筹备中' },
   { value: 2, label: '报名中' },
-  { value: 3, label: '已结束' },
+  { value: 3, label: '进行中' },
+  { value: 4, label: '已结束' },
+  { value: 5, label: '已取消' },
 ]
 
 function ActivityStatusBadge({ status }: { status: number }) {
   const info = ACTIVITY_STATUS_MAP[status]
   if (!info) return <Badge variant="default">未知</Badge>
-  if (status === 1) return <Badge variant="default">{info.label}</Badge>
-  if (status === 2) return <Badge variant="success">{info.label}</Badge>
-  return <Badge variant="error">{info.label}</Badge>
+  return <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold tracking-wide border ${info.color}`}>{info.label}</span>
 }
 
 function SignupStatusBadge({ status }: { status: number }) {
@@ -64,6 +64,27 @@ export default function ActivityListPage() {
   const { data: activityPage, refetch: refetchActivities } = useQuery({
     queryKey: ['activities', statusFilter],
     queryFn: () => fetchActivities({ status: statusFilter, page: 1, size: 50 }),
+  })
+
+  const { data: preparingPage } = useQuery({
+    queryKey: ['activities', 'count', 1],
+    queryFn: () => fetchActivities({ status: 1, page: 1, size: 1 }),
+  })
+  const { data: registeringPage } = useQuery({
+    queryKey: ['activities', 'count', 2],
+    queryFn: () => fetchActivities({ status: 2, page: 1, size: 1 }),
+  })
+  const { data: inProgressPage } = useQuery({
+    queryKey: ['activities', 'count', 3],
+    queryFn: () => fetchActivities({ status: 3, page: 1, size: 1 }),
+  })
+  const { data: endedPage } = useQuery({
+    queryKey: ['activities', 'count', 4],
+    queryFn: () => fetchActivities({ status: 4, page: 1, size: 1 }),
+  })
+  const { data: cancelledPage } = useQuery({
+    queryKey: ['activities', 'count', 5],
+    queryFn: () => fetchActivities({ status: 5, page: 1, size: 1 }),
   })
 
   const { data: signupsPage, refetch: refetchSignups } = useQuery({
@@ -120,13 +141,25 @@ export default function ActivityListPage() {
 
   const records = activityPage?.records ?? []
 
+  const statusCounts = [
+    { status: 1, label: '筹备中', total: preparingPage?.total ?? 0, variant: 'default' as const },
+    { status: 2, label: '报名中', total: registeringPage?.total ?? 0, variant: 'success' as const },
+    { status: 3, label: '进行中', total: inProgressPage?.total ?? 0, variant: 'default' as const },
+    { status: 4, label: '已结束', total: endedPage?.total ?? 0, variant: 'error' as const },
+    { status: 5, label: '已取消', total: cancelledPage?.total ?? 0, variant: 'error' as const },
+  ]
+
   return (
     <div className="flex flex-col gap-4">
       {/* header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-theme-text-main">活动管理</h1>
-          <p className="mt-0.5 text-sm text-theme-text-muted">协会活动发布与报名管理</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-theme-text-muted">协会活动发布与报名管理</p>
+          {statusCounts.map((s) => s.total > 0 && (
+            <Badge key={s.status} variant={s.variant}>
+              {s.total} {s.label}
+            </Badge>
+          ))}
         </div>
         <Button size="sm" onClick={() => openActivityModal()}>
           新建活动

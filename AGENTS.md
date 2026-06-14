@@ -425,7 +425,7 @@ CREATE TABLE portal_activity (
     reg_deadline    DATETIME        COMMENT '报名截止',
     max_capacity    INT             COMMENT '最大容量（NULL=不限）',
     reg_count       INT             NOT NULL DEFAULT 0 COMMENT '已报名人数',
-    status          TINYINT         NOT NULL DEFAULT 1 COMMENT '1筹备中 2报名中 3已结束',
+    status          TINYINT         NOT NULL DEFAULT 1 COMMENT '1筹备中 2报名中 3进行中 4已结束 5已取消',
     is_deleted      TINYINT(1)      NOT NULL DEFAULT 0,
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

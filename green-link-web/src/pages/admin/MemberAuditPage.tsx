@@ -169,10 +169,7 @@ export default function MemberAuditPage() {
     <div className="flex flex-col gap-4">
       {/* header */}
       <div className="flex items-center gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-theme-text-main">会员审核</h1>
-          <p className="mt-0.5 text-sm text-theme-text-muted">处理待审核会员申请</p>
-        </div>
+        <p className="text-sm text-theme-text-muted">处理待审核会员申请</p>
         {total > 0 && (
           <Badge variant="warning">{total} 待审</Badge>
         )}
