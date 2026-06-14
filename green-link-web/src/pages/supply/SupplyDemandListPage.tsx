@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
-  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Handshake,
+  Banknote, Building2, Calendar, RefreshCw, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Handshake, ChevronRight, Clock,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -50,6 +50,12 @@ function formatBudget(min: number | null, max: number | null): string {
   return `≤ ${max} 万元`
 }
 
+function isDeadlineUrgent(deadline: string | null | undefined): boolean {
+  if (!deadline) return false
+  const ms = new Date(deadline).getTime() - Date.now()
+  return ms > 0 && ms < 7 * 24 * 60 * 60 * 1000
+}
+
 // ─── Type badge colors ────────────────────────────────────────────────────────
 
 const TYPE_BADGE_CLASS: Record<string, string> = {
@@ -69,17 +75,18 @@ const AUDIT_STATUS_MAP: Record<number, { label: string; className: string }> = {
 
 function DemandSkeletonCard() {
   return (
-    <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card animate-pulse">
+    <div className="relative rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm animate-pulse overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-stone-100" />
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-5 w-16 rounded bg-stone-100" />
-        <div className="h-4 w-20 rounded bg-stone-100" />
+        <div className="h-5 w-16 rounded-full bg-stone-100" />
+        <div className="h-4 w-20 rounded-full bg-stone-100" />
       </div>
       <div className="h-4 w-full rounded bg-stone-100 mb-2" />
       <div className="h-4 w-4/5 rounded bg-stone-100 mb-3" />
       <div className="h-3 w-3/5 rounded bg-stone-100 mb-4" />
       <div className="flex gap-1 mb-4">
-        <div className="h-5 w-12 rounded bg-stone-100" />
-        <div className="h-5 w-14 rounded bg-stone-100" />
+        <div className="h-5 w-12 rounded-full bg-stone-100" />
+        <div className="h-5 w-14 rounded-full bg-stone-100" />
       </div>
       <div className="flex items-center justify-between border-t border-stone-100 pt-3">
         <div className="h-3 w-24 rounded bg-stone-100" />
@@ -100,9 +107,17 @@ interface DemandCardProps {
 function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
   const typeLabel = DEMAND_TYPE_LABELS[demand.type] ?? demand.type
   const badgeClass = TYPE_BADGE_CLASS[demand.type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
+  const urgent = isDeadlineUrgent(demand.deadline)
+
+  const cooperationChips = demand.cooperationMode
+    ? demand.cooperationMode.split(/[,，、\/]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+    : []
 
   return (
-    <div className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+    <div className="group relative flex flex-col rounded-2xl border border-stone-200/80 bg-white shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+      {/* Orange left accent bar */}
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-orange-500" />
+
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center justify-between mb-2 gap-2">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -120,7 +135,7 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
             })()}
           </div>
           {demand.province && (
-            <span className="flex items-center gap-1 text-xs text-stone-400 truncate">
+            <span className="flex items-center gap-1 text-xs text-stone-400 truncate flex-shrink-0">
               <Icon icon={MapPin} size={12} />
               {demand.province}
             </span>
@@ -129,7 +144,7 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
 
         <Link
           to={`/supply/demands/${demand.id}`}
-          className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200 mb-2"
+          className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-orange-600 transition-colors duration-200 mb-2"
         >
           <Highlight html={demand.highlightTitle} fallback={demand.title} />
         </Link>
@@ -140,26 +155,44 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
           </p>
         )}
 
-        {/* Budget */}
-        <p className="flex items-center gap-1.5 text-xs text-stone-600 font-medium mb-2">
+        {/* Budget — highlighted */}
+        <div className="flex items-center gap-1.5 mb-2">
           <Icon icon={Banknote} size={13} className="text-stone-400 flex-shrink-0" />
-          预算：{formatBudget(demand.budgetMin, demand.budgetMax)}
-        </p>
+          <span className="text-xs text-stone-500">预算：</span>
+          <span className="text-xs font-mono font-semibold text-orange-600">
+            {formatBudget(demand.budgetMin, demand.budgetMax)}
+          </span>
+        </div>
 
+        {/* Deadline — urgent highlight */}
         {demand.deadline && (
-          <p className="flex items-center gap-1.5 text-xs text-stone-500 mb-2">
-            <Icon icon={Calendar} size={12} className="text-stone-400 flex-shrink-0" />
-            截止：{formatDate(demand.deadline)}
-          </p>
+          <div className={`flex items-center gap-1.5 mb-2 ${urgent ? 'text-red-600' : 'text-stone-500'}`}>
+            <Icon icon={urgent ? Clock : Calendar} size={12} className="flex-shrink-0" />
+            <span className="text-xs">截止：{formatDate(demand.deadline)}</span>
+            {urgent && (
+              <span className="text-[10px] font-bold bg-red-50 border border-red-200 text-red-600 px-1.5 py-0.5 rounded-full">
+                急
+              </span>
+            )}
+          </div>
         )}
 
+        {/* Cooperation mode chips */}
+        {cooperationChips.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {cooperationChips.map((mode, i) => (
+              <span key={i} className="text-[10px] bg-stone-50 text-stone-500 border border-stone-200 px-2 py-0.5 rounded-full">
+                {mode}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Tags */}
         {demand.tags && demand.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {demand.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag.id}
-                className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 px-1.5 py-0.5 rounded font-medium"
-              >
+              <span key={tag.id} className="text-[10px] bg-orange-50 text-orange-700 border border-orange-100 px-1.5 py-0.5 rounded font-medium">
                 {tag.name}
               </span>
             ))}
@@ -188,18 +221,27 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
             {formatDate(demand.createdAt)}
           </span>
         </div>
-        <button
-          type="button"
-          aria-label={isFavorited ? '取消收藏' : '收藏'}
-          onClick={() => onFavorite(demand.id, isFavorited)}
-          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
-            isFavorited
-              ? 'text-rose-500 bg-rose-50 hover:bg-rose-100'
-              : 'text-stone-400 hover:text-rose-400 hover:bg-rose-50'
-          }`}
-        >
-          <Icon icon={Heart} size={16} className={isFavorited ? 'fill-rose-500' : ''} />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/supply/demands/${demand.id}`}
+            className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-medium text-orange-700 hover:bg-orange-100 transition-all duration-200"
+          >
+            申请合作
+            <Icon icon={ChevronRight} size={11} />
+          </Link>
+          <button
+            type="button"
+            aria-label={isFavorited ? '取消收藏' : '收藏'}
+            onClick={() => onFavorite(demand.id, isFavorited)}
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
+              isFavorited
+                ? 'text-rose-500 bg-rose-50 hover:bg-rose-100'
+                : 'text-stone-400 hover:text-rose-400 hover:bg-rose-50'
+            }`}
+          >
+            <Icon icon={Heart} size={16} className={isFavorited ? 'fill-rose-500' : ''} />
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -221,72 +263,102 @@ interface FilterPanelProps {
   onReset: () => void
 }
 
+const DEMAND_TYPE_PILL: Record<string, { active: string; dot: string }> = {
+  PRODUCT:    { active: 'bg-orange-50 text-orange-700 border-orange-300', dot: 'bg-orange-500' },
+  TECHNOLOGY: { active: 'bg-blue-50 text-blue-700 border-blue-300',       dot: 'bg-blue-500' },
+  TALENT:     { active: 'bg-purple-50 text-purple-700 border-purple-300',  dot: 'bg-purple-500' },
+}
+
 function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPanelProps) {
   const hasActive = !!(filters.type || filters.province || filters.tagId)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-stone-400">筛选器</span>
+        {hasActive && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-[11px] text-orange-600 hover:text-orange-700 font-medium transition-colors flex items-center gap-1"
+          >
+            <Icon icon={RefreshCw} size={11} />
+            重置
+          </button>
+        )}
+      </div>
+
+      {/* Demand type — pill buttons */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">需求类型</h3>
-        <div className="space-y-2">
-          {DEMAND_TYPES.map((t) => (
-            <label key={t} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
-              <input
-                type="checkbox"
-                className="accent-theme-accent h-4 w-4 cursor-pointer rounded border-stone-300"
-                checked={filters.type === t}
-                onChange={() => onChange({ type: filters.type === t ? '' : t })}
-              />
-              <span className="text-sm text-stone-700">{DEMAND_TYPE_LABELS[t]}</span>
-            </label>
-          ))}
+        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-400">需求类型</p>
+        <div className="flex flex-wrap gap-1.5">
+          {DEMAND_TYPES.map((t) => {
+            const isActive = filters.type === t
+            const style = DEMAND_TYPE_PILL[t]
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onChange({ type: isActive ? '' : t })}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all duration-200 ${
+                  isActive
+                    ? (style?.active ?? 'bg-orange-50 text-orange-700 border-orange-300')
+                    : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300 hover:text-stone-700'
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${isActive ? (style?.dot ?? 'bg-orange-500') : 'bg-stone-300'}`} />
+                {DEMAND_TYPE_LABELS[t]}
+              </button>
+            )
+          })}
         </div>
       </div>
 
+      {/* Province */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">期望省份</h3>
+        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-400">期望省份</p>
         <select
           value={filters.province}
           onChange={(e) => onChange({ province: e.target.value })}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all duration-200"
         >
           <option value="">全部省份</option>
           {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
 
+      {/* Tags — pill chips */}
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">标签筛选</h3>
+        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-400">行业标签</p>
         {tagsLoading ? (
-          <div className="flex justify-center py-4"><Spinner size="sm" className="text-stone-300" /></div>
+          <div className="flex justify-center py-4">
+            <Spinner size="sm" className="text-stone-300" />
+          </div>
         ) : tags.length === 0 ? (
           <p className="text-xs text-stone-400">暂无可用标签</p>
         ) : (
-          <div className="space-y-1.5">
-            {tags.map((tag) => (
-              <label key={tag.id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
-                <input
-                  type="checkbox"
-                  className="accent-theme-accent h-4 w-4 cursor-pointer rounded border-stone-300"
-                  checked={filters.tagId === tag.id}
-                  onChange={() => onChange({ tagId: filters.tagId === tag.id ? 0 : tag.id })}
-                />
-                <span className="text-sm text-stone-700">{tag.name}</span>
-              </label>
-            ))}
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((tag) => {
+              const isActive = filters.tagId === tag.id
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => onChange({ tagId: isActive ? 0 : tag.id })}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all duration-200 ${
+                    isActive
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white text-stone-600 border-stone-200 hover:border-orange-300 hover:text-orange-700'
+                  }`}
+                >
+                  #{tag.name}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={onReset}
-        disabled={!hasActive}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-200 py-2 text-sm text-stone-500 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-      >
-        <Icon icon={RefreshCw} size={14} />
-        重置筛选
-      </button>
     </div>
   )
 }
@@ -651,7 +723,7 @@ export default function SupplyDemandListPage() {
       <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex gap-6">
           <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0 self-start">
-            <div className="sticky top-[4.5rem] rounded-xl border border-stone-100 bg-white p-5 shadow-card">
+            <div className="sticky top-[4.5rem] rounded-2xl border border-stone-200/60 bg-white p-5 shadow-sm">
               <FilterPanel {...filterPanelProps} />
             </div>
           </aside>
