@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Sparkles, Building2, MapPin, ChevronRight, CheckCircle2, Zap,
+  Brain, ArrowRight, ListFilter,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -32,10 +33,11 @@ function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * r
   const filled = (Math.min(score, 100) / 100) * circumference
   const color = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#94a3b8'
+  const trackColor = score >= 80 ? '#d1fae5' : score >= 60 ? '#fef3c7' : '#f1f5f9'
 
   return (
     <svg width="60" height="60" viewBox="0 0 60 60" aria-label={`匹配度 ${Math.round(score)} 分`}>
-      <circle cx="30" cy="30" r={r} fill="none" stroke="#f1f5f9" strokeWidth="5" />
+      <circle cx="30" cy="30" r={r} fill="none" stroke={trackColor} strokeWidth="5" />
       <circle
         cx="30" cy="30" r={r}
         fill="none"
@@ -56,7 +58,8 @@ function ScoreRing({ score }: { score: number }) {
 
 function RecommendSkeletonCard() {
   return (
-    <div className="rounded-xl border border-stone-100 bg-white p-5 shadow-card animate-pulse">
+    <div className="relative rounded-2xl border border-stone-200/80 bg-white p-5 shadow-sm animate-pulse overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-stone-100" />
       <div className="flex items-start gap-4">
         <div className="h-[60px] w-[60px] rounded-full bg-stone-100 flex-shrink-0" />
         <div className="flex-1 min-w-0">
@@ -93,8 +96,17 @@ function RecommendCard({ item, onApply }: RecommendCardProps) {
     ?? MEMBER_LEVEL_CLASS[1]
   const levelLabel = MEMBER_LEVEL_LABELS[item.targetMember?.memberLevel ?? 1] ?? '普通'
 
+  const accentBar = item.targetType === 'RESOURCE' ? 'bg-emerald-500' : 'bg-orange-500'
+  const typeLabel = item.targetType === 'RESOURCE' ? '资源' : '需求'
+  const typeBadgeClass = item.targetType === 'RESOURCE'
+    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    : 'bg-orange-50 text-orange-700 border-orange-200'
+
   return (
-    <div className="group flex flex-col rounded-xl border border-stone-100 bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
+    <div className="group relative flex flex-col rounded-2xl border border-stone-200/80 bg-white shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+      {/* Left accent bar */}
+      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${accentBar}`} />
+
       <div className="flex items-start gap-4 p-5">
         {/* Score ring */}
         <div className="flex flex-col items-center flex-shrink-0">
@@ -104,15 +116,22 @@ function RecommendCard({ item, onApply }: RecommendCardProps) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Title */}
-          <Link
-            to={detailPath}
-            className="block text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-theme-accent transition-colors duration-200 mb-1.5"
-          >
-            {item.targetTitle || '（标题加载中）'}
-          </Link>
+          {/* Type badge + title */}
+          <div className="flex items-start gap-1.5 mb-1.5 flex-wrap">
+            {typeLabel && (
+              <span className={`inline-flex items-center flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold border mt-0.5 ${typeBadgeClass}`}>
+                {typeLabel}
+              </span>
+            )}
+            <Link
+              to={detailPath}
+              className="text-sm font-semibold text-stone-900 line-clamp-2 group-hover:text-emerald-600 transition-colors duration-200 leading-snug"
+            >
+              {item.targetTitle || '（标题加载中）'}
+            </Link>
+          </div>
 
-          {/* Company + province */}
+          {/* Company + province + level */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2.5">
             {item.targetMember?.name && (
               <span className="flex items-center gap-1 text-xs text-stone-500 truncate">
@@ -127,9 +146,7 @@ function RecommendCard({ item, onApply }: RecommendCardProps) {
               </span>
             )}
             {item.targetMember?.memberLevel && (
-              <span
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${levelClass}`}
-              >
+              <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${levelClass}`}>
                 {levelLabel}会员
               </span>
             )}
@@ -163,10 +180,10 @@ function RecommendCard({ item, onApply }: RecommendCardProps) {
           <button
             type="button"
             onClick={() => onApply(item)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 transition-colors duration-200"
+            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-all duration-200"
           >
             发起对接申请
-            <Icon icon={ChevronRight} size={13} />
+            <Icon icon={ChevronRight} size={12} />
           </button>
         )}
       </div>
@@ -194,7 +211,7 @@ function SourceItem({
       ].join(' ')}
     >
       <div className="flex items-start gap-2">
-        <span className={`mt-0.5 inline-flex flex-shrink-0 h-2 w-2 rounded-full ${selected ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+        <span className={`mt-1 inline-flex flex-shrink-0 h-2 w-2 rounded-full ${selected ? 'bg-emerald-500' : 'bg-stone-300'}`} />
         <div className="min-w-0">
           <p className="text-xs font-medium text-stone-800 line-clamp-2 leading-snug">{title}</p>
           <p className="text-[10px] text-stone-400 mt-0.5">{typeLabel}</p>
@@ -215,7 +232,7 @@ function LoginPrompt() {
       <button
         type="button"
         onClick={() => navigate('/login')}
-        className="rounded-lg bg-brand-500 px-6 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
+        className="rounded-full bg-theme-accent px-6 py-2 text-sm font-semibold text-white hover:bg-theme-accent-hover transition-colors"
       >
         立即登录
       </button>
@@ -251,7 +268,6 @@ export default function SupplyRecommendPage() {
     [setSearchParams],
   )
 
-  // Load my resources and demands (all approved, no paging needed for the selector)
   const { data: myResources, isLoading: resLoading } = useMyResources(
     { page: 1, size: 50, auditStatus: 1 },
   )
@@ -296,19 +312,15 @@ export default function SupplyRecommendPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
+    <div className="min-h-screen bg-theme-bg flex flex-col">
       <PortalNav />
 
-      {/* Hero */}
+      {/* Hero — same height as /supply */}
       <div className="relative overflow-hidden">
-        {/* 品牌色渐变背景 */}
         <div
           className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)',
-          }}
+          style={{ background: 'linear-gradient(90deg, rgba(0,102,79,0.9) 0%, rgba(76,175,80,0.9) 100%)' }}
         />
-        {/* 科技感方格纹路 */}
         <div
           className="absolute inset-0 opacity-[0.08]"
           style={{
@@ -318,21 +330,24 @@ export default function SupplyRecommendPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* 左侧：标题 + 副标题 */}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Left: title */}
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">智能推荐</h1>
-              <p className="mt-2 text-sm text-white/80">基于行业标签与地域相近度为您精准匹配供需</p>
+              <div className="flex items-center gap-2">
+                <Icon icon={Sparkles} size={24} className="text-white/70" />
+                <h1 className="text-3xl font-bold text-white tracking-tight">智能推荐</h1>
+              </div>
+              <p className="mt-1 text-sm text-white/70">基于行业标签与地域相近度为您精准匹配供需</p>
             </div>
 
-            {/* 右侧：装饰图标区 */}
+            {/* Right: AI badge */}
             <div className="hidden lg:flex items-center gap-3 text-white/70">
-              <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
-                <Icon icon={Sparkles} size={24} className="text-white" />
+              <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                <Icon icon={Brain} size={20} className="text-white" />
               </div>
               <div>
-                <div className="text-lg font-bold text-white leading-none">AI 匹配</div>
+                <div className="text-base font-bold text-white leading-none">AI 匹配</div>
                 <div className="text-xs text-white/60 mt-0.5">标签召回 + 相似度排序</div>
               </div>
             </div>
@@ -340,6 +355,78 @@ export default function SupplyRecommendPage() {
         </div>
       </div>
 
+      {/* Ticker bar */}
+      <div className="relative overflow-hidden" style={{ background: 'rgba(0, 60, 45, 0.85)' }}>
+        <style>{`
+          @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .ticker-animate { animation: ticker-scroll 22s linear infinite; }
+        `}</style>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className="flex-shrink-0 text-[10px] font-bold text-emerald-200 uppercase tracking-wider bg-emerald-500/20 rounded px-1.5 py-0.5">
+              算法
+            </span>
+            <div className="flex-1 overflow-hidden relative">
+              <div className="ticker-animate flex gap-8 whitespace-nowrap w-max">
+                {[
+                  { label: '标签召回', text: '基于行业标签精准定向匹配' },
+                  { label: '地域加权', text: '优先推荐省内及邻近地区资源' },
+                  { label: '实时更新', text: '新发布供需即时进入推荐池' },
+                  { label: '相似度排序', text: '多维特征向量计算综合评分' },
+                ].map((item, i) => (
+                  <span key={i} className="inline-flex items-center gap-2 text-sm text-white/90">
+                    <span className="bg-emerald-500/25 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">{item.label}</span>
+                    {item.text}
+                  </span>
+                ))}
+                {/* duplicate for seamless loop */}
+                {[
+                  { label: '标签召回', text: '基于行业标签精准定向匹配' },
+                  { label: '地域加权', text: '优先推荐省内及邻近地区资源' },
+                  { label: '实时更新', text: '新发布供需即时进入推荐池' },
+                  { label: '相似度排序', text: '多维特征向量计算综合评分' },
+                ].map((item, i) => (
+                  <span key={`d${i}`} className="inline-flex items-center gap-2 text-sm text-white/90">
+                    <span className="bg-emerald-500/25 rounded px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">{item.label}</span>
+                    {item.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab-nav bar */}
+      <div className="bg-white border-b border-theme-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-2">
+            <Link
+              to="/supply"
+              className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
+            >
+              资源列表
+            </Link>
+            <Link
+              to="/supply/demands"
+              className="rounded-full px-4 py-1.5 text-sm font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-700 transition-all duration-200"
+            >
+              需求列表
+            </Link>
+            <Link
+              to="/supply/recommend"
+              className="rounded-full px-4 py-1.5 text-sm font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 transition-all duration-200"
+            >
+              智能推荐
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main */}
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-6 flex-1">
         {applyTarget && (
           <ApplyMatchDialog
@@ -356,7 +443,15 @@ export default function SupplyRecommendPage() {
           <div className="flex gap-6 items-start">
             {/* ── Left: source selector ── */}
             <aside className="hidden lg:flex flex-col w-64 xl:w-72 flex-shrink-0 sticky top-24 gap-3">
-              <div className="rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
+              <div className="rounded-2xl border border-stone-200/60 bg-white shadow-sm overflow-hidden">
+                {/* Sidebar header */}
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-100">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100 text-emerald-600 flex-shrink-0">
+                    <Icon icon={ListFilter} size={13} />
+                  </span>
+                  <span className="text-xs font-bold text-stone-600 tracking-wide">选择匹配源</span>
+                </div>
+
                 {/* Tabs */}
                 <div className="flex border-b border-stone-100">
                   {(['RESOURCE', 'DEMAND'] as const).map((tab) => (
@@ -365,7 +460,7 @@ export default function SupplyRecommendPage() {
                       type="button"
                       onClick={() => handleTabChange(tab)}
                       className={[
-                        'flex-1 py-3 text-xs font-semibold transition-colors duration-150',
+                        'flex-1 py-2.5 text-xs font-semibold transition-colors duration-150',
                         activeTab === tab
                           ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-500'
                           : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50',
@@ -414,7 +509,11 @@ export default function SupplyRecommendPage() {
             {/* ── Right: recommendation results ── */}
             <main className="flex-1 min-w-0">
               {/* Mobile source selector */}
-              <div className="lg:hidden mb-4 rounded-xl border border-stone-100 bg-white shadow-card overflow-hidden">
+              <div className="lg:hidden mb-4 rounded-2xl border border-stone-200/60 bg-white shadow-sm overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-100">
+                  <Icon icon={ListFilter} size={14} className="text-emerald-600" />
+                  <span className="text-xs font-bold text-stone-600">选择匹配源</span>
+                </div>
                 <div className="flex border-b border-stone-100">
                   {(['RESOURCE', 'DEMAND'] as const).map((tab) => (
                     <button
@@ -463,9 +562,22 @@ export default function SupplyRecommendPage() {
 
               {/* Result area */}
               {!hasSource ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-200 bg-white py-20 gap-3">
-                  <Icon icon={Sparkles} size={36} className="text-stone-200" />
-                  <p className="text-stone-400 text-sm">请从左侧选择一个资源或需求</p>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white py-16 gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-300">
+                    <Icon icon={Sparkles} size={28} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-stone-600 mb-1">选择一个资源或需求开始匹配</p>
+                    <p className="text-xs text-stone-400">系统将基于标签与地域为您智能推荐最佳对接对象</p>
+                  </div>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-stone-400">
+                    {['行业标签匹配', '地域相近优先', '综合评分排序'].map((tip, i) => (
+                      <span key={i} className="flex items-center gap-1">
+                        <Icon icon={ArrowRight} size={11} className="text-emerald-400" />
+                        {tip}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ) : recLoading ? (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
