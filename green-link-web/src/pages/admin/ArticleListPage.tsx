@@ -518,6 +518,10 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
               defaultValue={isNew ? '' : (detail?.content ?? '')}
               onChange={setContent}
               minHeight={480}
+              imageUploadFn={async (file) => {
+                const result = await uploadFileWithProgress(file, { bizType: 'ARTICLE' })
+                return result.fileUrl
+              }}
             />
           </div>
         </div>

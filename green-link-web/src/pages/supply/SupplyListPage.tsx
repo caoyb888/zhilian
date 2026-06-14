@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import DOMPurify from 'dompurify'
 import {
   Building2, Search, SlidersHorizontal, X, Heart, Eye, MapPin, Calendar, RefreshCw, Handshake, ChevronRight,
-  Layers, Tag as TagIcon,
+  Layers, Tag as TagIcon, type LucideIcon,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Pagination } from '@/components/Pagination'
@@ -247,7 +247,7 @@ const RESOURCE_TYPE_PILL: Record<string, { active: string; dot: string }> = {
 function FilterSection({
   icon, iconClass, label, children,
 }: {
-  icon: React.ComponentType<{ size?: number }>
+  icon: LucideIcon
   iconClass: string
   label: string
   children: React.ReactNode
