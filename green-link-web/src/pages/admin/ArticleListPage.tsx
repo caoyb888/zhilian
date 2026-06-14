@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { clsx } from 'clsx'
 import {
@@ -10,7 +10,10 @@ import {
   Trash2,
   ArrowUpDown,
   ArrowLeft,
+  Upload,
+  ImagePlus,
 } from 'lucide-react'
+import { uploadFileWithProgress } from '@/services/fileService'
 import { Icon } from '@/components/Icon'
 import { SkeletonList } from '@/components/states/SkeletonList'
 import { EmptyState } from '@/components/states/EmptyState'
@@ -330,11 +333,17 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
   const updateMutation = useUpdateArticle()
   const isPending = createMutation.isPending || updateMutation.isPending
 
+  const coverInputRef = useRef<HTMLInputElement>(null)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [coverProgress, setCoverProgress] = useState(0)
+  const [coverError, setCoverError] = useState('')
+
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<EditorFormData>({
     defaultValues: {
@@ -375,6 +384,37 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
       reset((prev) => ({ ...prev, categoryId: prev.categoryId || flatCats[0].id }))
     }
   }, [isNew, flatCats, reset])
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!ALLOWED.includes(file.type)) {
+      setCoverError('仅支持 JPG / PNG / GIF / WebP 格式')
+      return
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setCoverError('图片大小不能超过 20MB')
+      return
+    }
+
+    setCoverError('')
+    setCoverUploading(true)
+    setCoverProgress(0)
+    try {
+      const result = await uploadFileWithProgress(file, {
+        bizType: 'ARTICLE',
+        onProgress: setCoverProgress,
+      })
+      setValue('coverUrl', result.fileUrl, { shouldDirty: true })
+    } catch {
+      setCoverError('上传失败，请重试')
+    } finally {
+      setCoverUploading(false)
+      if (coverInputRef.current) coverInputRef.current.value = ''
+    }
+  }
 
   function onSubmit(mode: PublishMode) {
     handleSubmit((data) => {
@@ -583,22 +623,91 @@ function EditorView({ editingId, onBack }: EditorViewProps) {
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">封面 &amp; 来源</h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-slate-400">封面图 URL</label>
+                <label className="mb-1 block text-xs text-slate-400">封面图</label>
+
+                {/* Upload area */}
                 <input
-                  type="url"
-                  placeholder="https://..."
-                  className="w-full rounded-lg border border-slate-700/60 bg-theme-surface px-3 py-1.5 text-sm text-theme-text-main transition-all duration-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
-                  {...register('coverUrl')}
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleCoverUpload}
                 />
-                {/* cover preview */}
-                {watch('coverUrl') && (
-                  <img
-                    src={watch('coverUrl')}
-                    alt="封面预览"
-                    className="mt-2 aspect-[16/10] w-full rounded-lg object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  />
+
+                {watch('coverUrl') ? (
+                  /* Preview with replace button */
+                  <div className="relative group">
+                    <img
+                      src={watch('coverUrl')}
+                      alt="封面预览"
+                      className="aspect-[16/10] w-full rounded-lg object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-lg bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        type="button"
+                        onClick={() => coverInputRef.current?.click()}
+                        disabled={coverUploading}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-stone-800 hover:bg-white transition-colors"
+                      >
+                        <Icon icon={ImagePlus} size={13} />
+                        更换图片
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setValue('coverUrl', '', { shouldDirty: true })}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors"
+                      >
+                        <Icon icon={X} size={13} />
+                        移除
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Upload trigger */
+                  <button
+                    type="button"
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={coverUploading}
+                    className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-700/60 bg-slate-800/30 py-6 text-slate-400 transition-all duration-200 hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Icon icon={Upload} size={20} />
+                    <span className="text-xs">点击上传本地图片</span>
+                    <span className="text-[10px] text-slate-600">JPG / PNG / GIF / WebP · 最大 20MB</span>
+                  </button>
                 )}
+
+                {/* Progress bar */}
+                {coverUploading && (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">上传中…</span>
+                      <span className="text-xs text-emerald-400">{coverProgress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-slate-700">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all duration-200"
+                        style={{ width: `${coverProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Error */}
+                {coverError && (
+                  <p className="mt-1 text-xs text-red-400">{coverError}</p>
+                )}
+
+                {/* Manual URL fallback */}
+                <div className="mt-2">
+                  <label className="mb-1 block text-[10px] text-slate-600">或直接填写图片 URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    className="w-full rounded-lg border border-slate-700/60 bg-theme-surface px-3 py-1.5 text-xs text-theme-text-main transition-all duration-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-theme-accent/20 focus:border-theme-accent"
+                    {...register('coverUrl')}
+                  />
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-slate-400">原文链接</label>
