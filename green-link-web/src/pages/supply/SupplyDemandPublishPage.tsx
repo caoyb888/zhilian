@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Clock,
-  FileText, MapPin, Tag, X,
+  AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, Clock,
+  FileText, FlaskConical, MapPin, Package, Sparkles, Tag, Users, X,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { PortalNav } from '@/business/PortalNav'
@@ -93,37 +93,62 @@ function useTagGroups() {
 function StepIndicator({ current }: { current: number }) {
   return (
     <>
-      <nav className="hidden sm:flex items-center justify-center gap-0 mb-8">
+      {/* Desktop */}
+      <nav className="hidden sm:flex items-start justify-center gap-0 mb-10">
         {STEP_LABELS.map((label, i) => {
-          const done = i < current
+          const done   = i < current
           const active = i === current
           return (
-            <div key={i} className="flex items-center">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${done ? 'bg-blue-500 text-white' : active ? 'bg-theme-accent text-white ring-4 ring-blue-100' : 'bg-stone-100 text-stone-400'}`}>
-                  {done ? <Icon icon={CheckCircle2} size={16} /> : i + 1}
+            <div key={i} className="flex items-start">
+              <div className="flex flex-col items-center gap-2">
+                <div className={[
+                  'flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-all duration-300',
+                  done
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-200/60'
+                    : active
+                    ? 'bg-emerald-500 text-white ring-4 ring-emerald-100 shadow-md shadow-emerald-200/50'
+                    : 'bg-stone-100 text-stone-400',
+                ].join(' ')}>
+                  {done ? (
+                    <Icon icon={CheckCircle2} size={18} />
+                  ) : (
+                    <span className="text-xs font-black tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                  )}
                 </div>
-                <span className={`text-xs font-medium whitespace-nowrap ${active ? 'text-theme-accent' : done ? 'text-blue-600' : 'text-stone-400'}`}>
+                <span className={[
+                  'text-xs font-semibold whitespace-nowrap tracking-wide',
+                  active ? 'text-emerald-700' : done ? 'text-emerald-500' : 'text-stone-400',
+                ].join(' ')}>
                   {label}
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
-                <div className={`mx-3 mt-[-14px] h-0.5 w-12 transition-colors ${done ? 'bg-blue-400' : 'bg-stone-200'}`} />
+                <div className={[
+                  'mx-3 mt-5 h-0.5 w-16 shrink-0 rounded-full transition-all duration-500',
+                  done ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-stone-200',
+                ].join(' ')} />
               )}
             </div>
           )
         })}
       </nav>
 
+      {/* Mobile */}
       <div className="sm:hidden mb-6">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-stone-700">
-            步骤 {current + 1}/{STEP_LABELS.length}：{STEP_LABELS[current]}
-          </span>
-          <span className="text-xs text-stone-400">{Math.round(((current + 1) / STEP_LABELS.length) * 100)}%</span>
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-black shadow-sm shadow-emerald-200">
+              {current + 1}
+            </span>
+            <span className="text-sm font-semibold text-stone-800">{STEP_LABELS[current]}</span>
+          </div>
+          <span className="text-xs font-medium text-stone-400 tabular-nums">{current + 1} / {STEP_LABELS.length}</span>
         </div>
-        <div className="h-2 w-full rounded-full bg-stone-100 overflow-hidden">
-          <div className="h-full rounded-full bg-theme-accent transition-all duration-300" style={{ width: `${((current + 1) / STEP_LABELS.length) * 100}%` }} />
+        <div className="h-1.5 w-full rounded-full bg-stone-100 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-500"
+            style={{ width: `${((current + 1) / STEP_LABELS.length) * 100}%` }}
+          />
         </div>
       </div>
     </>
@@ -132,16 +157,34 @@ function StepIndicator({ current }: { current: number }) {
 
 // ─── Step 1 — 基本信息 ─────────────────────────────────────────────────────────
 
-const TYPE_BADGE_CLASS: Record<string, string> = {
-  PRODUCT: 'border-orange-300 bg-orange-50 text-orange-800',
-  TECHNOLOGY: 'border-blue-300 bg-blue-50 text-blue-800',
-  TALENT: 'border-purple-300 bg-purple-50 text-purple-800',
-}
-
-const TYPE_EMOJI: Record<string, string> = {
-  PRODUCT: '🛒',
-  TECHNOLOGY: '🔬',
-  TALENT: '👥',
+const TYPE_CONFIG: Record<string, {
+  icon: typeof Package
+  activeClass: string
+  iconBg: string
+  dotClass: string
+  shadow: string
+}> = {
+  PRODUCT: {
+    icon: Package,
+    activeClass: 'border-orange-400 bg-gradient-to-b from-orange-50 to-white text-orange-800',
+    iconBg: 'bg-orange-100 text-orange-600',
+    dotClass: 'bg-orange-500',
+    shadow: 'shadow-lg shadow-orange-100',
+  },
+  TECHNOLOGY: {
+    icon: FlaskConical,
+    activeClass: 'border-blue-400 bg-gradient-to-b from-blue-50 to-white text-blue-800',
+    iconBg: 'bg-blue-100 text-blue-600',
+    dotClass: 'bg-blue-500',
+    shadow: 'shadow-lg shadow-blue-100',
+  },
+  TALENT: {
+    icon: Users,
+    activeClass: 'border-purple-400 bg-gradient-to-b from-purple-50 to-white text-purple-800',
+    iconBg: 'bg-purple-100 text-purple-600',
+    dotClass: 'bg-purple-500',
+    shadow: 'shadow-lg shadow-purple-100',
+  },
 }
 
 function Step1BasicInfo() {
@@ -154,15 +197,36 @@ function Step1BasicInfo() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {DEMAND_TYPES.map((t) => {
             const active = selectedType === t
-            const cls = TYPE_BADGE_CLASS[t] ?? 'border-stone-300 bg-stone-50 text-stone-800'
+            const cfg = TYPE_CONFIG[t] ?? {
+              icon: Package,
+              activeClass: 'border-stone-300 bg-stone-50 text-stone-800',
+              iconBg: 'bg-stone-100 text-stone-600',
+              dotClass: 'bg-stone-400',
+              shadow: 'shadow-md',
+            }
+            const TypeIcon = cfg.icon
             return (
               <button
                 key={t}
                 type="button"
                 onClick={() => setValue('type', t, { shouldValidate: true, shouldDirty: true })}
-                className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all duration-200 ${active ? `${cls} shadow-sm` : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'}`}
+                className={[
+                  'relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 px-4 py-7 text-sm font-semibold',
+                  'transition-all duration-200 hover:scale-[1.02]',
+                  active
+                    ? `${cfg.activeClass} ${cfg.shadow} scale-[1.02]`
+                    : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300 hover:bg-stone-50/80 hover:shadow-sm',
+                ].join(' ')}
               >
-                <span className="text-xl">{TYPE_EMOJI[t]}</span>
+                {active && (
+                  <span className={`absolute top-2.5 right-2.5 h-2 w-2 rounded-full ${cfg.dotClass}`} />
+                )}
+                <span className={[
+                  'flex h-10 w-10 items-center justify-center rounded-xl transition-colors duration-200',
+                  active ? cfg.iconBg : 'bg-stone-100 text-stone-400',
+                ].join(' ')}>
+                  <Icon icon={TypeIcon} size={20} />
+                </span>
                 {DEMAND_TYPE_LABELS[t]}
               </button>
             )
@@ -175,7 +239,7 @@ function Step1BasicInfo() {
           id="title"
           type="text"
           placeholder="请输入需求标题，如：寻求光伏组件封装技术合作"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200"
           {...register('title')}
         />
       </FormField>
@@ -185,7 +249,7 @@ function Step1BasicInfo() {
           id="summary"
           rows={3}
           placeholder="简要描述您的需求..."
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200 resize-none"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200 resize-none"
           {...register('summary')}
         />
       </FormField>
@@ -193,7 +257,7 @@ function Step1BasicInfo() {
       <FormField label="期望省份" htmlFor="province" error={errors.province?.message}>
         <select
           id="province"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200 bg-white"
           {...register('province')}
         >
           <option value="">不限省份</option>
@@ -206,7 +270,7 @@ function Step1BasicInfo() {
           id="cooperationMode"
           type="text"
           placeholder="如：技术合作、购买服务、人才引进..."
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200"
           {...register('cooperationMode')}
         />
       </FormField>
@@ -220,7 +284,7 @@ function Step1BasicInfo() {
             min="0"
             step="0.01"
             placeholder="如：50"
-            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200"
             {...register('budgetMin')}
           />
         </FormField>
@@ -231,7 +295,7 @@ function Step1BasicInfo() {
             min="0"
             step="0.01"
             placeholder="如：200"
-            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+            className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200"
             {...register('budgetMax')}
           />
         </FormField>
@@ -241,7 +305,7 @@ function Step1BasicInfo() {
         <input
           id="deadline"
           type="date"
-          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:shadow-sm transition-all duration-200"
           {...register('deadline')}
         />
       </FormField>
@@ -309,23 +373,23 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: { tagGroups: TagGroup[
             <span className="ml-1 text-xs text-stone-400 font-normal">（最多 {MAX_TAGS} 个）</span>
           </p>
           {tagIds.length > 0 && (
-            <span className="text-xs text-stone-500">已选 <span className="font-semibold text-theme-accent">{tagIds.length}</span> / {MAX_TAGS}</span>
+            <span className="text-xs text-stone-500">已选 <span className="font-semibold text-emerald-600">{tagIds.length}</span> / {MAX_TAGS}</span>
           )}
         </div>
 
         {(tagLimitError || errors.tagIds?.message) && (
           <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-600">
-            <Icon icon={AlertCircle} size={14} className="flex-shrink-0" />
+            <Icon icon={AlertCircle} size={14} className="shrink-0" />
             {tagLimitError || errors.tagIds?.message}
           </div>
         )}
 
         {tagIds.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-2 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-200/60 p-3">
             {tagGroups.flatMap((g) => g.tags).filter((t) => tagIds.includes(t.id)).map((t) => (
-              <span key={t.id} className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-medium text-blue-700">
+              <span key={t.id} className="inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
                 #{t.name}
-                <button type="button" onClick={() => toggleTag(t.id)} className="rounded-full hover:text-blue-900 transition-colors" aria-label={`移除标签 ${t.name}`}>
+                <button type="button" onClick={() => toggleTag(t.id)} className="rounded-full hover:text-emerald-900 transition-colors" aria-label={`移除标签 ${t.name}`}>
                   <Icon icon={X} size={11} />
                 </button>
               </span>
@@ -338,10 +402,13 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: { tagGroups: TagGroup[
         ) : tagGroups.length === 0 ? (
           <p className="text-sm text-stone-400 py-4">暂无可用标签</p>
         ) : (
-          <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+          <div className="space-y-5 max-h-72 overflow-y-auto pr-1 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
             {tagGroups.map((group) => (
               <div key={group.categoryId}>
-                <p className="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">{group.categoryName}</p>
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  {group.categoryName}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {group.tags.map((tag) => {
                     const selected = tagIds.includes(tag.id)
@@ -350,7 +417,12 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: { tagGroups: TagGroup[
                         key={tag.id}
                         type="button"
                         onClick={() => toggleTag(tag.id)}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200 ${selected ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'}`}
+                        className={[
+                          'rounded-full border px-3 py-1 text-xs font-medium transition-all duration-200 hover:scale-[1.03]',
+                          selected
+                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700 shadow-sm font-semibold'
+                            : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-200 hover:text-emerald-700 hover:bg-emerald-50/50',
+                        ].join(' ')}
                       >
                         {tag.name}
                       </button>
@@ -382,10 +454,10 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: { tagGroups: TagGroup[
 
 // ─── Step 4 — 预览与提交 ───────────────────────────────────────────────────────
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function PreviewRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-3">
-      <span className="w-20 flex-shrink-0 text-xs text-stone-400 pt-0.5">{label}</span>
+    <div className="flex gap-3 px-5 py-3.5 hover:bg-stone-50/60 transition-colors duration-100">
+      <span className="w-20 shrink-0 text-xs font-medium text-stone-400 pt-0.5">{label}</span>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   )
@@ -395,6 +467,7 @@ function Step4Preview() {
   const { watch } = useFormContext<FormValues>()
   const values = watch()
   const typeLabel = DEMAND_TYPE_LABELS[values.type] ?? values.type
+  const typeCfg = TYPE_CONFIG[values.type]
 
   function budgetText() {
     const min = values.budgetMin !== '' ? parseFloat(values.budgetMin) : null
@@ -409,83 +482,144 @@ function Step4Preview() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-stone-200 bg-stone-50 p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-stone-700 pb-2 border-b border-stone-200">信息预览（提交后进入人工审核）</h3>
-
-        <Row label="需求类型">
-          <span className="rounded-md bg-white border border-stone-200 px-2.5 py-0.5 text-xs font-semibold">{typeLabel || '—'}</span>
-        </Row>
-        <Row label="需求标题">
-          <span className="text-sm font-medium text-stone-900">{values.title || '—'}</span>
-        </Row>
-        {values.summary && (
-          <Row label="摘要"><span className="text-sm text-stone-700">{values.summary}</span></Row>
-        )}
-        {values.province && (
-          <Row label="期望省份">
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={MapPin} size={13} className="text-stone-400" />
-              {values.province}
-            </span>
-          </Row>
-        )}
-        {values.cooperationMode && (
-          <Row label="合作方式"><span className="text-sm text-stone-700">{values.cooperationMode}</span></Row>
-        )}
-        <Row label="预算">
-          <span className="text-sm text-stone-700">{budgetText()}</span>
-        </Row>
-        {values.deadline && (
-          <Row label="截止日期">
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={Clock} size={13} className="text-stone-400" />
-              {values.deadline}
-            </span>
-          </Row>
-        )}
-        <Row label="详细描述">
-          <span className="text-sm text-stone-500">{values.content ? '已填写（富文本内容）' : '未填写'}</span>
-        </Row>
-        <Row label="标签">
-          {values.tagIds.length > 0 ? (
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={Tag} size={13} className="text-stone-400" />
-              已选 {values.tagIds.length} 个标签
-            </span>
-          ) : (
-            <span className="text-sm text-stone-400">未选择</span>
-          )}
-        </Row>
-        <Row label="附件">
-          {values.attachments.length > 0 ? (
-            <span className="flex items-center gap-1 text-sm text-stone-700">
-              <Icon icon={FileText} size={13} className="text-stone-400" />
-              {values.attachments.length} 个附件
-            </span>
-          ) : (
-            <span className="text-sm text-stone-400">未上传</span>
-          )}
-        </Row>
+      {/* Notice */}
+      <div className="flex items-start gap-3 rounded-xl border-l-4 border-l-amber-400 border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-amber-700">
+        <Icon icon={AlertCircle} size={16} className="shrink-0 mt-0.5 text-amber-500" />
+        <span>提交后将进入人工审核流程，请仔细核对以下信息</span>
       </div>
-      <p className="text-xs text-stone-400 text-center">提交后，需求将进入审核流程，通常在 1 个工作日内完成审核</p>
+
+      {/* Preview card */}
+      <div className="rounded-xl border-l-4 border-l-emerald-500 border border-stone-200 bg-white overflow-hidden shadow-sm">
+        <div className="px-5 py-3.5 border-b border-stone-100 bg-gradient-to-r from-stone-50 to-white flex items-center gap-2">
+          <div className="h-1.5 w-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" />
+          <h3 className="text-sm font-bold text-stone-800">信息预览</h3>
+        </div>
+        <div className="divide-y divide-stone-50">
+          <PreviewRow label="需求类型">
+            {typeLabel ? (
+              <span className={[
+                'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold',
+                typeCfg ? typeCfg.activeClass : 'bg-emerald-100 text-emerald-800',
+              ].join(' ')}>
+                {typeLabel}
+              </span>
+            ) : <span className="text-sm text-stone-300">—</span>}
+          </PreviewRow>
+
+          <PreviewRow label="需求标题">
+            <span className="text-sm font-medium text-stone-900">{values.title || <span className="text-stone-300">—</span>}</span>
+          </PreviewRow>
+
+          {values.summary && (
+            <PreviewRow label="摘要">
+              <span className="text-sm text-stone-700">{values.summary}</span>
+            </PreviewRow>
+          )}
+
+          {values.province && (
+            <PreviewRow label="期望省份">
+              <span className="inline-flex items-center gap-1 text-sm text-stone-700">
+                <Icon icon={MapPin} size={13} className="text-emerald-400" />
+                {values.province}
+              </span>
+            </PreviewRow>
+          )}
+
+          {values.cooperationMode && (
+            <PreviewRow label="合作方式">
+              <span className="text-sm text-stone-700">{values.cooperationMode}</span>
+            </PreviewRow>
+          )}
+
+          <PreviewRow label="预算">
+            <span className={`text-sm font-medium ${budgetText() !== '面议' ? 'text-stone-700' : 'text-stone-500'}`}>
+              {budgetText()}
+            </span>
+          </PreviewRow>
+
+          {values.deadline && (
+            <PreviewRow label="截止日期">
+              <span className="inline-flex items-center gap-1 text-sm text-stone-700">
+                <Icon icon={Clock} size={13} className="text-stone-400" />
+                {values.deadline}
+              </span>
+            </PreviewRow>
+          )}
+
+          <PreviewRow label="详细描述">
+            <span className={`text-sm ${values.content ? 'text-emerald-700 font-medium' : 'text-stone-400'}`}>
+              {values.content ? '已填写' : '未填写'}
+            </span>
+          </PreviewRow>
+
+          <PreviewRow label="标签">
+            {values.tagIds.length > 0 ? (
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
+                <Icon icon={Tag} size={13} className="text-emerald-400" />
+                已选 {values.tagIds.length} 个标签
+              </span>
+            ) : (
+              <span className="text-sm text-stone-400">未选择</span>
+            )}
+          </PreviewRow>
+
+          <PreviewRow label="附件">
+            {values.attachments.length > 0 ? (
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-stone-700">
+                <Icon icon={FileText} size={13} className="text-stone-400" />
+                {values.attachments.length} 个附件
+              </span>
+            ) : (
+              <span className="text-sm text-stone-400">未上传</span>
+            )}
+          </PreviewRow>
+        </div>
+      </div>
+
+      <p className="text-xs text-stone-400 text-center">提交后通常在 1 个工作日内完成审核，审核结果将通过站内信通知您</p>
     </div>
   )
 }
-
 
 // ─── Success state ────────────────────────────────────────────────────────────
 
 function SuccessState({ onPublishAnother }: { onPublishAnother: () => void }) {
   return (
-    <div className="rounded-2xl border border-stone-100 bg-white p-12 text-center shadow-card">
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-        <Icon icon={CheckCircle2} size={36} />
-      </div>
-      <h2 className="text-xl font-bold text-stone-900 mb-2">发布成功</h2>
-      <p className="text-sm text-stone-500 mb-8">您的需求已提交审核，管理员审核通过后即可在平台展示，通常 1 个工作日内完成。</p>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <Link to="/supply/demands" className="rounded-lg border border-stone-200 px-6 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200">返回需求列表</Link>
-        <button type="button" onClick={onPublishAnother} className="rounded-lg bg-theme-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">继续发布需求</button>
+    <div className="rounded-2xl border border-stone-100 bg-white overflow-hidden shadow-sm">
+      {/* Top gradient band */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500" />
+
+      <div className="p-12 text-center">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 ring-8 ring-emerald-50/80 ring-offset-4 ring-offset-white text-emerald-500">
+          <Icon icon={CheckCircle2} size={42} />
+        </div>
+
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-600 mb-4">
+          <Icon icon={Sparkles} size={12} />
+          发布成功
+        </div>
+
+        <h2 className="text-2xl font-bold text-stone-900 mb-2">需求已提交审核</h2>
+        <p className="text-sm text-stone-500 mb-8 max-w-sm mx-auto leading-relaxed">
+          您的需求已进入审核流程，管理员通过后即可在平台展示。
+          通常在 <span className="font-semibold text-stone-700">1 个工作日</span>内完成，结果将通过站内信通知您。
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            to="/supply/demands"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-200 px-6 py-2.5 text-sm text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200"
+          >
+            返回需求列表
+          </Link>
+          <button
+            type="button"
+            onClick={onPublishAnother}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-semibold text-white hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-200/60 transition-all duration-200 active:scale-[0.98]"
+          >
+            继续发布需求 <Icon icon={ArrowRight} size={14} />
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -604,16 +738,38 @@ export default function SupplyDemandPublishPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-theme-bg">
+    <div className="min-h-screen flex flex-col bg-[#fafaf9]">
       <PortalNav />
 
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 sm:px-6 lg:px-8 py-10">
-        <Link to="/supply/demands" className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-800 mb-6 transition-colors">
-          <Icon icon={ArrowLeft} size={16} />
+        {/* Back link */}
+        <Link
+          to="/supply/demands"
+          className="inline-flex items-center gap-1.5 text-sm text-stone-400 hover:text-emerald-700 mb-8 transition-colors group"
+        >
+          <Icon icon={ArrowLeft} size={15} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
           返回需求列表
         </Link>
 
-        <h1 className="text-2xl font-bold text-stone-900 mb-8">发布需求</h1>
+        {/* Page header */}
+        {!submitSuccess && (
+          <div className="mb-8">
+            <div className="h-1 w-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 mb-5" />
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-200/60 mt-0.5">
+                <Icon icon={Package} size={18} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-stone-900">发布需求</h1>
+                <p className="mt-1 text-sm text-stone-500">
+                  填写绿色低碳采购需求，发布后经审核即可在平台展示
+                  <span className="mx-1.5 text-stone-300">·</span>
+                  共 {STEP_LABELS.length} 步，约 5 分钟完成
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {submitSuccess ? (
           <SuccessState onPublishAnother={handlePublishAnother} />
@@ -622,12 +778,15 @@ export default function SupplyDemandPublishPage() {
             <StepIndicator current={currentStep} />
 
             {draftRestored && (
-              <div className="mb-6 flex items-center justify-between rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
-                <span>已恢复上次保存的草稿</span>
+              <div className="mb-6 flex items-center justify-between rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
+                <div className="flex items-center gap-2">
+                  <Icon icon={AlertCircle} size={15} className="text-blue-400" />
+                  已恢复上次保存的草稿
+                </div>
                 <button
                   type="button"
                   onClick={() => { reset(DEFAULT_VALUES); localStorage.removeItem(DRAFT_KEY); setDraftRestored(false) }}
-                  className="ml-4 text-blue-500 hover:text-blue-700 transition-colors"
+                  className="text-xs text-blue-400 hover:text-blue-600 transition-colors underline underline-offset-2"
                 >
                   清除草稿
                 </button>
@@ -635,13 +794,13 @@ export default function SupplyDemandPublishPage() {
             )}
 
             {createMutation.isError && (
-              <div className="mb-6 flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
-                <Icon icon={AlertCircle} size={16} className="flex-shrink-0" />
+              <div className="mb-6 flex items-center gap-2 rounded-xl border-l-4 border-l-red-400 bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
+                <Icon icon={AlertCircle} size={16} className="shrink-0" />
                 <span>提交失败，请检查网络后重试</span>
               </div>
             )}
 
-            <div className="rounded-2xl border border-stone-100 bg-white p-6 sm:p-8 shadow-card mb-6">
+            <div className="rounded-2xl border border-stone-100 bg-white p-6 sm:p-8 shadow-[0_4px_32px_-8px_rgba(16,185,129,0.08)] mb-6">
               <FormProvider {...form}>
                 {currentStep === 0 && <Step1BasicInfo />}
                 {currentStep === 1 && <Step2Content imageUploadFn={imageUploadFn} />}
@@ -650,17 +809,34 @@ export default function SupplyDemandPublishPage() {
               </FormProvider>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-2">
                 {currentStep > 0 && (
-                  <button type="button" onClick={goBack} className="rounded-lg border border-stone-200 px-5 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-all duration-200">上一步</button>
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all duration-200 group"
+                  >
+                    <Icon icon={ArrowLeft} size={14} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
+                    上一步
+                  </button>
                 )}
-                <button type="button" onClick={saveDraftNow} className="rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-500 hover:bg-stone-50 transition-all duration-200 hidden sm:inline-flex">保存草稿</button>
+                <button
+                  type="button"
+                  onClick={saveDraftNow}
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-500 hover:bg-stone-50 hover:border-emerald-200 hover:text-emerald-600 transition-all duration-200"
+                >
+                  保存草稿
+                </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div>
                 {currentStep < STEP_LABELS.length - 1 ? (
-                  <button type="button" onClick={goNext} className="inline-flex items-center gap-1.5 rounded-lg bg-theme-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover transition-all duration-200">
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-semibold text-white hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-200/60 transition-all duration-200 active:scale-[0.98]"
+                  >
                     下一步
                     <Icon icon={ChevronRight} size={16} />
                   </button>
@@ -669,9 +845,13 @@ export default function SupplyDemandPublishPage() {
                     type="button"
                     onClick={onSubmit}
                     disabled={createMutation.isPending}
-                    className="inline-flex items-center gap-2 rounded-lg bg-theme-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-theme-accent-hover disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
+                    className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-semibold text-white hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-200/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
                   >
-                    {createMutation.isPending ? <><Spinner size="sm" />提交中...</> : '提交发布'}
+                    {createMutation.isPending ? (
+                      <><Spinner size="sm" />提交中...</>
+                    ) : (
+                      <>提交发布 <Icon icon={ArrowRight} size={15} /></>
+                    )}
                   </button>
                 )}
               </div>
@@ -680,12 +860,11 @@ export default function SupplyDemandPublishPage() {
         )}
       </main>
 
-      <footer className="bg-stone-900 text-stone-400 py-6">
+      <footer className="mt-auto bg-stone-950 text-stone-500 py-6">
         <div className="mx-auto max-w-7xl px-4 text-center text-xs">
           © 2024 山东省绿色低碳产业协会 · 绿产智链平台
         </div>
       </footer>
-
     </div>
   )
 }
