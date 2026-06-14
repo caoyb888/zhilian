@@ -15,7 +15,7 @@ jobs:
   build:
     name: Build & Type Check
     runs-on: [ self-hosted, linux, intranet ]
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     defaults:
       run:
@@ -29,6 +29,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: ''   # 禁用 GitHub Actions 远端 cache（内网机无法访问 artifact 服务）
 
       - name: Install dependencies
         run: npm ci --cache /home/xintong/npm-cache --prefer-offline
