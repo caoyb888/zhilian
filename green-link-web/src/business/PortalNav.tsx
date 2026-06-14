@@ -77,40 +77,71 @@ export function PortalNav() {
           : 'bg-white/80 border-emerald-100 shadow-none',
       ].join(' ')}
     >
-      {/* ── Row 1: Logo + Right actions ── */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className={[
-          'flex items-center transition-all duration-300',
-          scrolled ? 'h-11' : 'h-13',
-        ].join(' ')} style={{ height: scrolled ? '44px' : '52px' }}>
+        <div className="relative flex items-center" style={{ height: scrolled ? '52px' : '64px', transition: 'height 0.3s' }}>
 
           {/* Logo */}
-          <Link to="/portal" className="flex items-center gap-2.5 flex-shrink-0 group">
+          <Link to="/portal" className="relative z-10 flex items-center gap-3 flex-shrink-0">
             <img
               src="/lsdt-logo.png"
               alt="山东省绿色低碳产业发展协会"
               className={[
-                'rounded-full object-contain ring-1 ring-emerald-200/60 transition-all duration-300',
-                scrolled ? 'h-7 w-7' : 'h-8 w-8',
+                'rounded-full object-contain ring-1 ring-emerald-200/60 transition-all duration-300 flex-shrink-0',
+                scrolled ? 'h-8 w-8' : 'h-10 w-10',
               ].join(' ')}
             />
-            <div className="hidden sm:flex items-baseline gap-1.5">
-              <span className="font-bold text-stone-900 text-base leading-none tracking-tight">
+            <div className="hidden sm:flex flex-col justify-center">
+              <span className={[
+                'font-bold text-stone-900 leading-tight tracking-tight transition-all duration-300',
+                scrolled ? 'text-base' : 'text-lg',
+              ].join(' ')}>
                 绿产智链
               </span>
-              {!scrolled && (
-                <>
-                  <span className="text-stone-300 text-xs select-none">·</span>
-                  <span className="text-stone-400 text-[11px] leading-none">
-                    山东绿色低碳产业智慧平台
-                  </span>
-                </>
-              )}
+              <span className={[
+                'text-stone-400 leading-tight transition-all duration-300 overflow-hidden',
+                scrolled ? 'text-[10px] max-h-0 opacity-0' : 'text-[11px] max-h-4 opacity-100',
+              ].join(' ')}>
+                山东绿色低碳产业智慧平台
+              </span>
             </div>
           </Link>
 
+          {/* Desktop Nav — centered absolutely */}
+          <nav className="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-0 pointer-events-auto">
+              {NAV_LINKS.map(({ label, path }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={[
+                    'px-4 py-1.5 text-sm transition-all duration-200 border-b-2',
+                    isActive(path)
+                      ? 'font-semibold text-emerald-700 border-emerald-500'
+                      : 'font-medium text-stone-500 border-transparent hover:text-emerald-700 hover:border-emerald-200',
+                  ].join(' ')}
+                >
+                  {label}
+                </Link>
+              ))}
+              {accountInfo && (
+                <Link
+                  to="/supply/recommend"
+                  className={[
+                    'inline-flex items-center gap-1 px-4 py-1.5 text-sm transition-all duration-200 border-b-2',
+                    isActive('/supply/recommend')
+                      ? 'font-semibold text-emerald-700 border-emerald-500'
+                      : 'font-medium text-stone-500 border-transparent hover:text-emerald-700 hover:border-emerald-200',
+                  ].join(' ')}
+                >
+                  <Icon icon={Sparkles} size={13} />
+                  智能推荐
+                </Link>
+              )}
+            </div>
+          </nav>
+
           {/* Right actions */}
-          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+          <div className="relative z-10 flex items-center gap-1.5 ml-auto flex-shrink-0">
             {accountInfo ? (
               <>
                 {/* Search */}
@@ -235,42 +266,6 @@ export function PortalNav() {
               <Icon icon={Menu} size={20} />
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* ── Row 2: Nav links (desktop only) ── */}
-      <div className="hidden md:block border-t border-stone-100/70">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <nav className="flex justify-center items-end h-9 gap-0">
-            {NAV_LINKS.map(({ label, path }) => (
-              <Link
-                key={path}
-                to={path}
-                className={[
-                  'px-5 pb-2 text-sm transition-all duration-200 border-b-2 -mb-px leading-none pt-2',
-                  isActive(path)
-                    ? 'font-semibold text-emerald-700 border-emerald-500'
-                    : 'font-medium text-stone-500 border-transparent hover:text-emerald-700 hover:border-emerald-200',
-                ].join(' ')}
-              >
-                {label}
-              </Link>
-            ))}
-            {accountInfo && (
-              <Link
-                to="/supply/recommend"
-                className={[
-                  'inline-flex items-center gap-1 px-5 pb-2 pt-2 text-sm transition-all duration-200 border-b-2 -mb-px leading-none',
-                  isActive('/supply/recommend')
-                    ? 'font-semibold text-emerald-700 border-emerald-500'
-                    : 'font-medium text-stone-500 border-transparent hover:text-emerald-700 hover:border-emerald-200',
-                ].join(' ')}
-              >
-                <Icon icon={Sparkles} size={13} />
-                智能推荐
-              </Link>
-            )}
-          </nav>
         </div>
       </div>
 
