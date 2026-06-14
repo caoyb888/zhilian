@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import {
@@ -504,15 +504,10 @@ export default function SupplyListPage() {
   }
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginPrompt, setLoginPrompt] = useState(false)
-  const [favorites, setFavorites] = useState<Set<number>>(new Set())
   const [favoriteError, setFavoriteError] = useState<string | null>(null)
 
-  // 登录后从服务端加载已收藏 ID 初始化 Set
   const { data: favoriteIds } = useFavoriteIds('RESOURCE', !!accountInfo)
-  useEffect(() => {
-    if (!favoriteIds) return
-    setFavorites(new Set(favoriteIds))
-  }, [favoriteIds])
+  const favorites = useMemo(() => new Set(favoriteIds ?? []), [favoriteIds])
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -624,15 +619,9 @@ export default function SupplyListPage() {
       setTimeout(() => setFavoriteError(null), 3000)
     }
     if (isFavorited) {
-      unfavoriteMutation.mutate(id, {
-        onSuccess: () => setFavorites((prev) => { const n = new Set(prev); n.delete(id); return n }),
-        onError: showError,
-      })
+      unfavoriteMutation.mutate(id, { onError: showError })
     } else {
-      favoriteMutation.mutate(id, {
-        onSuccess: () => setFavorites((prev) => { const n = new Set(prev); n.add(id); return n }),
-        onError: showError,
-      })
+      favoriteMutation.mutate(id, { onError: showError })
     }
   }
 
