@@ -236,6 +236,17 @@ const RESOURCE_TYPE_PILL: Record<string, { active: string; dot: string }> = {
   TALENT:     { active: 'bg-purple-50 text-purple-700 border-purple-300',    dot: 'bg-purple-500' },
 }
 
+function FilterSection({ color, label, children }: { color: string; label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className={`flex items-center gap-2 mb-3 pl-2 border-l-[3px] ${color}`}>
+        <p className="text-xs font-semibold text-stone-700">{label}</p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
 function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPanelProps) {
   const hasActive = !!(filters.type || filters.province || filters.tagId)
 
@@ -243,23 +254,22 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-stone-400">筛选器</span>
+        <span className="text-xs font-bold text-stone-600 tracking-wide">筛选器</span>
         {hasActive && (
           <button
             type="button"
             onClick={onReset}
-            className="text-[11px] text-emerald-600 hover:text-emerald-700 font-medium transition-colors flex items-center gap-1"
+            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors flex items-center gap-1"
           >
-            <Icon icon={RefreshCw} size={11} />
+            <Icon icon={RefreshCw} size={12} />
             重置
           </button>
         )}
       </div>
 
-      {/* Resource type — pill buttons */}
-      <div>
-        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-400">资源类型</p>
-        <div className="flex flex-wrap gap-1.5">
+      {/* 资源类型 — 翡翠绿 */}
+      <FilterSection color="border-emerald-500" label="资源类型">
+        <div className="flex flex-wrap gap-2">
           {RESOURCE_TYPES.map((t) => {
             const isActive = filters.type === t
             const style = RESOURCE_TYPE_PILL[t]
@@ -268,36 +278,34 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
                 key={t}
                 type="button"
                 onClick={() => onChange({ type: isActive ? '' : t })}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all duration-200 ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-all duration-200 ${
                   isActive
-                    ? (style?.active ?? 'bg-emerald-50 text-emerald-700 border-emerald-300')
-                    : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300 hover:text-stone-700'
+                    ? (style?.active ?? 'bg-emerald-50 text-emerald-700 border-emerald-400')
+                    : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50'
                 }`}
               >
-                <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${isActive ? (style?.dot ?? 'bg-emerald-500') : 'bg-stone-300'}`} />
+                <span className={`h-2 w-2 rounded-full flex-shrink-0 ${isActive ? (style?.dot ?? 'bg-emerald-500') : 'bg-stone-300'}`} />
                 {RESOURCE_TYPE_LABELS[t]}
               </button>
             )
           })}
         </div>
-      </div>
+      </FilterSection>
 
-      {/* Province */}
-      <div>
-        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-400">所在省份</p>
+      {/* 所在省份 — 蓝色 */}
+      <FilterSection color="border-blue-500" label="所在省份">
         <select
           value={filters.province}
           onChange={(e) => onChange({ province: e.target.value })}
-          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all duration-200"
+          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-400 transition-all duration-200"
         >
           <option value="">全部省份</option>
           {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
-      </div>
+      </FilterSection>
 
-      {/* Tags — pill chips */}
-      <div>
-        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-widest text-stone-400">行业标签</p>
+      {/* 行业标签 — 紫色 */}
+      <FilterSection color="border-violet-500" label="行业标签">
         {tagsLoading ? (
           <div className="flex justify-center py-4">
             <Spinner size="sm" className="text-stone-300" />
@@ -313,10 +321,10 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
                   key={tag.id}
                   type="button"
                   onClick={() => onChange({ tagId: isActive ? 0 : tag.id })}
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all duration-200 ${
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-all duration-200 ${
                     isActive
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-stone-600 border-stone-200 hover:border-emerald-300 hover:text-emerald-700'
+                      ? 'bg-violet-500 text-white border-violet-500'
+                      : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50'
                   }`}
                 >
                   #{tag.name}
@@ -325,7 +333,7 @@ function FilterPanel({ filters, tags, tagsLoading, onChange, onReset }: FilterPa
             })}
           </div>
         )}
-      </div>
+      </FilterSection>
     </div>
   )
 }
