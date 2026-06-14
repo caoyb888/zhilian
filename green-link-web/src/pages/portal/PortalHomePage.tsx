@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { clsx } from 'clsx'
 import {
   MapPin, Calendar, CalendarDays, ChevronLeft, ChevronRight,
-  Monitor, Sun, Moon, ArrowRight, Building2, Layers, Handshake,
+  ArrowRight, Building2, Layers, Handshake, FileText, Users,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { EmptyState } from '@/components/states/EmptyState'
 import { PortalNav } from '@/business/PortalNav'
-import { useThemeStore } from '@/stores/themeStore'
-import type { ThemeKey } from '@/styles/themeSchema'
+import { useCountUp } from '@/hooks/useCountUp'
 import {
   usePortalBanners,
   usePortalLatestArticles,
@@ -77,15 +77,20 @@ function SectionHeader({
   linkTo: string
 }) {
   return (
-    <div className="flex items-end gap-4 mb-10">
-      <span className="text-[5rem] leading-none font-black text-emerald-500/[0.12] select-none tabular-nums shrink-0">
-        {num}
-      </span>
-      <div className="pb-1.5 min-w-0">
-        <h2 className="text-2xl font-bold text-theme-text-main leading-tight">{title}</h2>
-        <p className="text-sm text-theme-text-muted mt-0.5">{subtitle}</p>
+    <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-10">
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="h-10 w-1 rounded-full bg-emerald-500" />
+        <div>
+          <span className="block text-[10px] font-bold tracking-widest text-emerald-500 uppercase">
+            Section {num}
+          </span>
+          <h2 className="text-2xl font-bold text-theme-text-main leading-tight">{title}</h2>
+        </div>
       </div>
       <div className="hidden lg:block flex-1 border-b border-dashed border-stone-200 mb-3 mx-2" />
+      <div className="pb-0.5 min-w-0">
+        <p className="text-sm text-theme-text-muted">{subtitle}</p>
+      </div>
       <Link
         to={linkTo}
         className="shrink-0 mb-2 inline-flex items-center gap-1 text-sm font-medium text-theme-accent hover:text-theme-accent-hover transition-colors duration-200"
@@ -102,7 +107,7 @@ const PLACEHOLDER_BANNERS: BannerItem[] = [
   {
     id: 0,
     title: '绿产智链 — 山东省绿色低碳产业智慧对接平台',
-    imageUrl: null,
+    imageUrl: 'https://picsum.photos/seed/greenlink-hero/1600/600',
     linkUrl: null,
     sortOrder: 0,
   },
@@ -113,22 +118,30 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
   const [current, setCurrent] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  function startTimer() {
+  const startTimer = useCallback(() => {
     timerRef.current = setInterval(() => setCurrent((c) => (c + 1) % items.length), 5000)
-  }
-  function resetTimer() {
+  }, [items.length])
+
+  const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
     startTimer()
-  }
+  }, [startTimer])
 
   useEffect(() => {
     if (items.length <= 1) return
     startTimer()
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [items.length])
+  }, [items.length, startTimer])
 
-  function prev() { setCurrent((c) => (c - 1 + items.length) % items.length); resetTimer() }
-  function next() { setCurrent((c) => (c + 1) % items.length); resetTimer() }
+  const prev = useCallback(() => {
+    setCurrent((c) => (c - 1 + items.length) % items.length)
+    resetTimer()
+  }, [items.length, resetTimer])
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c + 1) % items.length)
+    resetTimer()
+  }, [items.length, resetTimer])
 
   const item = items[current]
 
@@ -146,12 +159,12 @@ function BannerCarousel({ banners }: { banners: BannerItem[] }) {
           key={item.id}
           src={item.imageUrl}
           alt={item.title}
-          className="absolute inset-0 h-full w-full object-cover opacity-25 transition-opacity duration-700"
+          className="absolute inset-0 h-full w-full object-cover animate-fade-in"
         />
       )}
 
       {/* Content — editorial left-aligned layout */}
-      <div className="relative z-10 flex h-full items-center">
+      <div key={current} className="relative z-10 flex h-full items-center animate-fade-in-up">
         <div className="mx-auto max-w-7xl w-full px-6 sm:px-10 lg:px-16">
           <div className="flex items-stretch gap-5 max-w-2xl">
             {/* Vertical accent bar */}
@@ -237,25 +250,84 @@ const STATS = [
   { label: '覆盖城市', value: '16', unit: '座', icon: MapPin },
 ]
 
+function StatItem({
+  label,
+  value,
+  unit,
+  icon,
+}: {
+  label: string
+  value: string
+  unit: string
+  icon: typeof Building2
+}) {
+  const { display, suffix } = useCountUp(value, 1800)
+
+  return (
+    <div className="flex flex-col items-center justify-center py-6 px-4 hover:bg-emerald-50/40 transition-colors duration-200 cursor-default">
+      <div className="flex items-end gap-0.5 leading-none">
+        <span className="text-4xl font-black text-emerald-700 tabular-nums">
+          {display.toLocaleString()}
+        </span>
+        <span className="text-base font-bold text-emerald-500 mb-0.5">
+          {suffix || unit}
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5 mt-2">
+        <Icon icon={icon} size={12} className="text-stone-400" />
+        <span className="text-xs text-stone-500 tracking-wide">{label}</span>
+      </div>
+    </div>
+  )
+}
+
 function StatBar() {
   return (
     <div className="bg-white border-t-[3px] border-t-emerald-500 shadow-md">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-stone-100">
-          {STATS.map(({ label, value, unit, icon }) => (
-            <div key={label} className="flex flex-col items-center justify-center py-6 px-4 hover:bg-emerald-50/40 transition-colors duration-200 cursor-default">
-              <div className="flex items-end gap-0.5 leading-none">
-                <span className="text-4xl font-black text-emerald-700 tabular-nums">{value}</span>
-                <span className="text-base font-bold text-emerald-500 mb-0.5">{unit}</span>
-              </div>
-              <div className="flex items-center gap-1.5 mt-2">
-                <Icon icon={icon} size={12} className="text-stone-400" />
-                <span className="text-xs text-stone-500 tracking-wide">{label}</span>
-              </div>
-            </div>
+          {STATS.map((stat) => (
+            <StatItem key={stat.label} {...stat} />
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Placeholder Cover ────────────────────────────────────────────────────────
+
+function PlaceholderCover({
+  type,
+  className,
+}: {
+  type: 'article' | 'activity'
+  className?: string
+}) {
+  const config = {
+    article: {
+      gradient: 'from-emerald-50 to-teal-100',
+      icon: FileText,
+      iconColor: 'text-emerald-300',
+    },
+    activity: {
+      gradient: 'from-teal-50 to-emerald-100',
+      icon: Users,
+      iconColor: 'text-teal-300',
+    },
+  }
+  const conf = config[type]
+  const IconComp = conf.icon
+
+  return (
+    <div
+      className={clsx(
+        'flex h-full w-full items-center justify-center bg-gradient-to-br',
+        conf.gradient,
+        className,
+      )}
+    >
+      <Icon icon={IconComp} size={48} className={conf.iconColor} />
     </div>
   )
 }
@@ -278,9 +350,7 @@ function ArticleCard({ article }: { article: ArticleItem }) {
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="text-7xl font-black text-emerald-200/60 select-none">绿</span>
-          </div>
+          <PlaceholderCover type="article" />
         )}
         {/* Category + top badge overlaid on cover */}
         <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
@@ -318,6 +388,7 @@ function ArticleCard({ article }: { article: ArticleItem }) {
 
 function ActivityCard({ activity }: { activity: Activity }) {
   const statusMeta = ACTIVITY_STATUS_MAP[activity.status] ?? { label: '未知', color: 'bg-gray-100 text-gray-500' }
+  const isFull = activity.maxCapacity !== null && activity.regCount >= activity.maxCapacity
 
   return (
     <Link
@@ -333,9 +404,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <Icon icon={CalendarDays} size={40} className="text-teal-200" />
-          </div>
+          <PlaceholderCover type="activity" />
         )}
         <span className={`absolute top-3 right-3 rounded px-2 py-0.5 text-[10px] font-bold shadow-sm ${statusMeta.color}`}>
           {statusMeta.label}
@@ -363,15 +432,22 @@ function ActivityCard({ activity }: { activity: Activity }) {
         </div>
         {activity.maxCapacity && (
           <div className="mt-3 border-t border-stone-50 pt-3">
-            <div className="flex justify-between text-xs text-stone-400 mb-1.5">
-              <span>报名进度</span>
-              <span className="tabular-nums font-medium text-emerald-600">
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className={isFull ? 'text-red-500 font-medium' : 'text-stone-400'}>
+                {isFull ? '名额已满' : '报名进度'}
+              </span>
+              <span className={clsx('tabular-nums font-bold', isFull ? 'text-red-500' : 'text-emerald-600')}>
                 {activity.regCount} / {activity.maxCapacity}
               </span>
             </div>
-            <div className="h-1 rounded-full bg-stone-100 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-700"
+                className={clsx(
+                  'h-full rounded-full transition-all duration-700',
+                  isFull
+                    ? 'bg-gradient-to-r from-red-400 to-red-500'
+                    : 'bg-gradient-to-r from-emerald-400 to-teal-400 shadow-[0_0_8px_rgba(16,185,129,0.35)]',
+                )}
                 style={{ width: `${Math.min(100, (activity.regCount / activity.maxCapacity) * 100)}%` }}
               />
             </div>
@@ -498,66 +574,66 @@ function SupplyCtaSection() {
   )
 }
 
-// ─── Theme Demo Bar ───────────────────────────────────────────────────────────
-
-function ThemeDemoBar() {
-  const { currentTheme, setTheme } = useThemeStore()
-  const themes: { id: ThemeKey; label: string; icon: typeof Monitor }[] = [
-    { id: 'nordic', label: '北欧绿', icon: Sun },
-    { id: 'office', label: '蔚蓝商务', icon: Monitor },
-    { id: 'tech', label: '极客暗色', icon: Moon },
-  ]
-
-  return (
-    <section className="border-t border-stone-200 bg-stone-50/80 py-4">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-stone-400">
-            主题风格体验（演示）— 实时切换三种设计令牌
-          </p>
-          <div className="flex items-center gap-2">
-            {themes.map(({ id, label, icon }) => (
-              <button
-                key={id}
-                onClick={() => setTheme(id)}
-                className={[
-                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200',
-                  currentTheme === id
-                    ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300'
-                    : 'bg-white text-stone-500 border border-stone-200 hover:border-emerald-200 hover:text-emerald-700',
-                ].join(' ')}
-              >
-                <Icon icon={icon} size={13} />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 function PortalFooter() {
   return (
-    <footer className="bg-stone-950 text-stone-500 py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-emerald-500 flex items-center justify-center shadow-md shadow-emerald-900/50">
-              <span className="text-white text-xs font-bold">绿</span>
+    <footer className="bg-stone-950 text-stone-400">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Brand */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-md shadow-emerald-900/50">
+                <span className="text-white text-xs font-bold">绿</span>
+              </div>
+              <div>
+                <span className="text-white font-bold text-sm">绿产智链</span>
+                <span className="ml-2 text-stone-600 text-xs">Green-Link</span>
+              </div>
             </div>
-            <div>
-              <span className="text-white font-bold text-sm">绿产智链</span>
-              <span className="ml-2 text-stone-600 text-xs">Green-Link</span>
-            </div>
+            <p className="text-xs leading-relaxed text-stone-500">
+              山东省绿色低碳产业协会官方数字化运营平台，构建"资源聚合 → 智能匹配 → 在线对接 → 成交归档"的全流程供需闭环。
+            </p>
           </div>
-          <p className="text-xs text-center text-stone-600">
-            © 2024 山东省绿色低碳产业协会 · 绿产智链平台 · 鲁ICP备XXXXXXXX号
-          </p>
-          <div className="flex gap-5 text-xs">
+
+          {/* Platform links */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">平台服务</h4>
+            <ul className="space-y-2 text-xs">
+              <li><Link to="/portal/articles" className="hover:text-emerald-400 transition-colors duration-200">最新资讯</Link></li>
+              <li><Link to="/portal/activities" className="hover:text-emerald-400 transition-colors duration-200">近期活动</Link></li>
+              <li><Link to="/supply" className="hover:text-emerald-400 transition-colors duration-200">供需对接</Link></li>
+              <li><Link to="/supply/recommend" className="hover:text-emerald-400 transition-colors duration-200">智能推荐</Link></li>
+            </ul>
+          </div>
+
+          {/* Member links */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">会员服务</h4>
+            <ul className="space-y-2 text-xs">
+              <li><Link to="/register" className="hover:text-emerald-400 transition-colors duration-200">注册会员</Link></li>
+              <li><Link to="/member/my-resources" className="hover:text-emerald-400 transition-colors duration-200">我的资源</Link></li>
+              <li><Link to="/member/my-records" className="hover:text-emerald-400 transition-colors duration-200">我的对接</Link></li>
+              <li><Link to="/member/messages" className="hover:text-emerald-400 transition-colors duration-200">消息中心</Link></li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">联系我们</h4>
+            <ul className="space-y-2 text-xs text-stone-500">
+              <li>山东省绿色低碳产业协会</li>
+              <li>地址：山东省济南市</li>
+              <li>邮箱：contact@greenlink.org</li>
+              <li>电话：0531-XXXXXXXX</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-stone-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-600">
+          <p>© 2024 山东省绿色低碳产业协会 · 绿产智链平台 · 鲁ICP备XXXXXXXX号</p>
+          <div className="flex gap-5">
             <a href="#" className="hover:text-emerald-400 transition-colors duration-200">关于我们</a>
             <a href="#" className="hover:text-emerald-400 transition-colors duration-200">联系方式</a>
             <a href="#" className="hover:text-emerald-400 transition-colors duration-200">隐私政策</a>
@@ -583,7 +659,6 @@ export default function PortalHomePage() {
         <ActivitiesSection />
         <SupplyCtaSection />
       </main>
-      <ThemeDemoBar />
       <PortalFooter />
     </div>
   )

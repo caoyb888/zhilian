@@ -208,47 +208,47 @@ function DemandCard({ item, index }: { item: DemandItem; index: number }) {
             </div>
           </div>
 
-          {/* 右侧元信息（桌面端） */}
-          <div className="hidden md:flex flex-col items-end gap-1 shrink-0 text-right">
-            <span className={clsx(
-              'inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[11px] font-semibold border',
-              status.badge,
-            )}>
-              {status.label}
-            </span>
-            <span className="text-[11px] text-stone-400 font-mono">
-              {item.createdAt.slice(0, 10)}
-            </span>
-            {item.viewCount > 0 && (
-              <span className="text-[11px] text-stone-300">{item.viewCount} 次浏览</span>
-            )}
-          </div>
-
-          {/* 操作按钮（hover 显示） */}
-          <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-            <Link
-              to={`/supply/demands/${item.id}`}
-              className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-theme-accent transition-colors"
-              title="查看详情"
-            >
-              <Icon icon={Eye} size={15} />
-            </Link>
-            {item.auditStatus === 1 && (
-              <button
-                className="rounded-lg p-1.5 text-stone-400 hover:bg-amber-50 hover:text-amber-500 transition-colors"
-                title="关闭需求"
-                onClick={() => setPendingAction('close')}
+          {/* 右侧信息 + 操作（桌面端） */}
+          <div className="hidden md:flex items-start gap-4 shrink-0">
+            <div className="flex flex-col items-end gap-1 text-right">
+              <span className={clsx(
+                'inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[11px] font-semibold border',
+                status.badge,
+              )}>
+                {status.label}
+              </span>
+              <span className="text-[11px] text-stone-400 font-mono">
+                {item.createdAt.slice(0, 10)}
+              </span>
+              {item.viewCount > 0 && (
+                <span className="text-[11px] text-stone-300">{item.viewCount} 次浏览</span>
+              )}
+            </div>
+            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 min-w-[88px]">
+              <Link
+                to={`/supply/demands/${item.id}`}
+                className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-theme-accent transition-colors"
+                title="查看详情"
               >
-                <Icon icon={PowerOff} size={15} />
+                <Icon icon={Eye} size={15} />
+              </Link>
+              {item.auditStatus === 1 && (
+                <button
+                  className="rounded-lg p-1.5 text-stone-400 hover:bg-amber-50 hover:text-amber-500 transition-colors"
+                  title="关闭需求"
+                  onClick={() => setPendingAction('close')}
+                >
+                  <Icon icon={PowerOff} size={15} />
+                </button>
+              )}
+              <button
+                className="rounded-lg p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                title="删除"
+                onClick={() => setPendingAction('delete')}
+              >
+                <Icon icon={Trash2} size={15} />
               </button>
-            )}
-            <button
-              className="rounded-lg p-1.5 text-stone-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-              title="删除"
-              onClick={() => setPendingAction('delete')}
-            >
-              <Icon icon={Trash2} size={15} />
-            </button>
+            </div>
           </div>
 
           {/* 移动端状态徽章 */}
