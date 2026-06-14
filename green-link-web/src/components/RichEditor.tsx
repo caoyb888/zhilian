@@ -61,6 +61,10 @@ export function RichEditor({ defaultValue = '', onChange, minHeight = 360, readO
         | undefined
       toolbar?.addHandler('image', () => {
         if (!imageUploadFnRef.current) return
+        // Save cursor position NOW — file dialog will steal focus from the editor
+        const savedRange = quill.getSelection() ?? { index: quill.getLength(), length: 0 }
+        const insertIndex = savedRange.index
+
         const input = document.createElement('input')
         input.type = 'file'
         input.accept = 'image/*'
@@ -69,11 +73,11 @@ export function RichEditor({ defaultValue = '', onChange, minHeight = 360, readO
           if (!file || !imageUploadFnRef.current) return
           try {
             const url = await imageUploadFnRef.current(file)
-            const range = quill.getSelection(true)
-            quill.insertEmbed(range.index, 'image', url, 'user')
-            quill.setSelection(range.index + 1, 0)
-          } catch {
-            // silently fail; upload error is handled by the caller
+            quill.focus()
+            quill.insertEmbed(insertIndex, 'image', url, 'user')
+            quill.setSelection(insertIndex + 1, 0)
+          } catch (err) {
+            console.error('[RichEditor] 图片上传失败:', err)
           }
         }
         input.click()
