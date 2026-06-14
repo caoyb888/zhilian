@@ -65,6 +65,12 @@ const TYPE_BADGE_CLASS: Record<string, string> = {
   TALENT: 'bg-purple-50 text-purple-700 border-purple-200',
 }
 
+const TYPE_ACCENT_BAR: Record<string, string> = {
+  PRODUCT: 'bg-orange-500',
+  TECHNOLOGY: 'bg-blue-500',
+  TALENT: 'bg-purple-500',
+}
+
 const AUDIT_STATUS_MAP: Record<number, { label: string; className: string }> = {
   0: { label: '待审核', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   1: { label: '可对接', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -116,8 +122,8 @@ function DemandCard({ demand, isFavorited, onFavorite }: DemandCardProps) {
 
   return (
     <div className="group relative flex flex-col rounded-2xl border border-stone-200/80 bg-white shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-      {/* Orange left accent bar */}
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-orange-500" />
+      {/* Left accent bar — color matches demand type */}
+      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${TYPE_ACCENT_BAR[demand.type] ?? 'bg-stone-400'}`} />
 
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center justify-between mb-2 gap-2">
