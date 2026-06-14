@@ -97,7 +97,7 @@ function PasswordStrength({ password }: { password: string }) {
 
 function LeftBrand() {
   return (
-    <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden bg-emerald-800 text-white flex-col justify-center p-12">
+    <div className="hidden md:flex md:w-5/12 relative overflow-hidden bg-emerald-800 text-white flex-col justify-center p-8">
       <div className="relative z-10">
         <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-emerald-400/30 shadow-lg">
           <Icon icon={Leaf} size={36} className="text-emerald-300" />
@@ -128,8 +128,8 @@ function LeftBrand() {
 
 function SectionCard({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl bg-white border border-stone-100 p-6 shadow-sm">
-      <h2 className="mb-5 text-base font-semibold text-gray-800 flex items-center gap-2.5">
+    <div className="rounded-2xl bg-white border border-stone-100 p-5 shadow-sm">
+      <h2 className="mb-4 text-sm font-semibold text-gray-800 flex items-center gap-2">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-sm shadow-emerald-200">
           {step}
         </span>
@@ -201,10 +201,10 @@ export default function RegisterPage() {
 
   if (pageState === 'success') {
     return (
-      <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_right,_#064e3b,_#022c22)]">
+      <div className="flex h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,_#064e3b,_#022c22)]">
         <LeftBrand />
 
-        <div className="flex w-full items-center justify-center px-4 py-12 lg:w-1/2 xl:w-2/5">
+        <div className="flex w-full md:w-7/12 items-center justify-center px-4 py-12 overflow-y-auto">
           <div className="w-full max-w-md animate-fade-in-up">
             <div className="rounded-3xl bg-white p-10 shadow-2xl text-center">
               <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 ring-8 ring-emerald-50/80 ring-offset-4 ring-offset-white text-emerald-500">
@@ -239,12 +239,12 @@ export default function RegisterPage() {
   // ── Form state ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_right,_#064e3b,_#022c22)]">
+    <div className="flex h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,_#064e3b,_#022c22)]">
       <LeftBrand />
 
       {/* ─── Right Form ─── */}
-      <div className="flex w-full items-start justify-center bg-white lg:bg-transparent px-4 py-8 lg:w-1/2 xl:w-2/5 overflow-y-auto">
-        <div className="w-full max-w-xl animate-fade-in-up">
+      <div className="flex w-full md:w-7/12 overflow-y-auto bg-white md:bg-transparent">
+        <div className="w-full max-w-xl mx-auto px-4 py-8 animate-fade-in-up">
           {/* Mobile logo */}
           <div className="mb-6 text-center lg:hidden">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 shadow-md shadow-emerald-200">
@@ -255,16 +255,16 @@ export default function RegisterPage() {
           </div>
 
           {/* Desktop heading */}
-          <div className="hidden lg:block mb-6">
-            <h2 className="text-2xl font-bold text-white">申请加入绿产智链</h2>
+          <div className="hidden md:block mb-4">
+            <h2 className="text-xl font-bold text-white">申请加入绿产智链</h2>
             <p className="mt-1 text-sm text-emerald-200/80">提交申请后，协会将在 1–3 个工作日内完成审核</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">
 
             {/* ── Section 1: Unit Info ── */}
             <SectionCard step={1} title="单位信息">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <FormField
                   label="单位名称"
                   htmlFor="name"
@@ -350,7 +350,7 @@ export default function RegisterPage() {
 
             {/* ── Section 2: Account Info ── */}
             <SectionCard step={2} title="账号信息">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <FormField
                   label="登录用户名"
                   htmlFor="username"
