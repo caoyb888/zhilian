@@ -31,5 +31,7 @@ public class UpdateMemberRequest {
     private Long logoFileId;
     /** 文件上传后直接传 URL，优先于 logoFileId */
     private String logoUrl;
+    /** 资质证书/营业执照附件 URL（#9） */
+    private String licenseUrl;
     private List<Long> tagIds;
 }

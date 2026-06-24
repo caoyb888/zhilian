@@ -25,6 +25,7 @@ public class MemberUnit {
     private Integer memberLevel;
     private BigDecimal creditScore;
     private String logoUrl;
+    private String licenseUrl;
     private String introduction;
     private String contactName;
     private String contactPhone;

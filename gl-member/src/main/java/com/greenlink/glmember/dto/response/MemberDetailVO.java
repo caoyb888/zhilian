@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 public class MemberDetailVO extends MemberVO {
 
     private String introduction;
+    /** 资质证书/营业执照附件 URL */
+    private String licenseUrl;
     /** 联系人（未登录脱敏为 "***"） */
     private String contactName;
     /** 联系电话（未登录脱敏为 "138****8888"） */

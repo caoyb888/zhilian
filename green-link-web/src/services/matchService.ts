@@ -70,6 +70,37 @@ export function useApplyMatch() {
   })
 }
 
+// ─── Batch Apply（#13 1 对 N）──────────────────────────────────────────────────
+
+export interface BatchApplyMatchBody {
+  resourceId?: number
+  demandIds?: number[]
+  demandId?: number
+  resourceIds?: number[]
+  applyMessage?: string
+}
+
+export interface BatchApplyResult {
+  total: number
+  success: number
+  failed: number
+  errors: string[]
+}
+
+export function useBatchApplyMatch() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: BatchApplyMatchBody) => {
+      const res = await http.post<ApiResult<BatchApplyResult>>('/match/apply-batch', body)
+      return res.data.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['match', 'recommendations'] })
+      queryClient.invalidateQueries({ queryKey: ['match', 'records', 'my'] })
+    },
+  })
+}
+
 // ─── My Records ───────────────────────────────────────────────────────────────
 
 export interface MatchCounterparty {

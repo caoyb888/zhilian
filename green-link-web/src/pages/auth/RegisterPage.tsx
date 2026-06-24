@@ -22,6 +22,8 @@ import { Input } from '@/components/Input'
 import { FormField } from '@/components/FormField'
 import { useRegister, useSendSmsCode } from '@/hooks/useAuthMutations'
 import { extractApiError } from '@/services/authService'
+import { PROVINCES } from '@/services/supplyService'
+import { useDictOptions, DICT_CITY } from '@/services/dictService'
 
 const schema = z.object({
   name: z.string().min(2, '单位名称至少2个字').max(200, '单位名称过长'),
@@ -151,12 +153,18 @@ export default function RegisterPage() {
   const registerMutation = useRegister()
   const sendSmsMutation = useSendSmsCode()
 
-  const { register, handleSubmit, trigger, getValues, watch, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, trigger, getValues, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { agreeTerms: false },
   })
 
   const passwordValue = watch('password')
+
+  // 省份/城市级联（#1）：城市选项按所选省份从字典 CITY 过滤
+  const selectedProvince = watch('province')
+  const { data: cityDict } = useDictOptions(DICT_CITY)
+  const cityOptions = (cityDict ?? []).filter((c) => c.parentValue === selectedProvince)
+  const provinceField = register('province')
 
   async function handleSendSms() {
     const phone = getValues('phone')
@@ -219,7 +227,7 @@ export default function RegisterPage() {
               <h2 className="text-xl font-bold text-gray-800 mb-2">注册申请已提交！</h2>
               <p className="text-sm text-stone-600 leading-relaxed mb-1">
                 您的申请（编号：<span className="font-semibold text-emerald-600">{registeredMemberId}</span>）已提交，
-                协会工作人员将在 <strong className="text-gray-700">1–3 个工作日</strong>内完成审核。
+                协会工作人员将在 <strong className="text-gray-700">1–3 个工作日</strong>内审核。
               </p>
               <p className="text-sm text-stone-500 mb-8">审核通过后，您将收到短信通知，届时即可登录平台。</p>
 
@@ -257,7 +265,7 @@ export default function RegisterPage() {
           {/* Desktop heading */}
           <div className="hidden md:block mb-4">
             <h2 className="text-xl font-bold text-white">申请加入绿产智链</h2>
-            <p className="mt-1 text-sm text-emerald-200/80">提交申请后，协会将在 1–3 个工作日内完成审核</p>
+            <p className="mt-1 text-sm text-emerald-200/80">提交申请后，协会工作人员将在 1–3 个工作日内审核</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">
@@ -318,31 +326,41 @@ export default function RegisterPage() {
 
                 <FormField label="省份" htmlFor="province" error={errors.province?.message}>
                   <div className="relative">
-                    <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
+                    <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 z-10">
                       <Icon icon={MapPin} size={16} />
                     </div>
-                    <Input
+                    <select
                       id="province"
-                      inputClassName="pl-9 rounded-xl"
-                      placeholder="如：山东省"
-                      error={!!errors.province}
-                      {...register('province')}
-                    />
+                      className="w-full appearance-none rounded-xl border border-stone-200 bg-white pl-9 pr-3 py-2 text-sm text-stone-700 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors"
+                      {...provinceField}
+                      onChange={(e) => { provinceField.onChange(e); setValue('city', '') }}
+                    >
+                      <option value="">请选择省份</option>
+                      {PROVINCES.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
                   </div>
                 </FormField>
 
                 <FormField label="城市" htmlFor="city" error={errors.city?.message}>
                   <div className="relative">
-                    <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
+                    <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 z-10">
                       <Icon icon={MapPin} size={16} />
                     </div>
-                    <Input
+                    <select
                       id="city"
-                      inputClassName="pl-9 rounded-xl"
-                      placeholder="如：济南市"
-                      error={!!errors.city}
+                      disabled={!selectedProvince || cityOptions.length === 0}
+                      className="w-full appearance-none rounded-xl border border-stone-200 bg-white pl-9 pr-3 py-2 text-sm text-stone-700 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors disabled:bg-stone-50 disabled:text-stone-400"
                       {...register('city')}
-                    />
+                    >
+                      <option value="">
+                        {!selectedProvince ? '请先选择省份' : cityOptions.length === 0 ? '该省份暂无预置城市' : '请选择城市'}
+                      </option>
+                      {cityOptions.map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </FormField>
               </div>

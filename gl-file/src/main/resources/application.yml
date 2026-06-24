@@ -6,8 +6,9 @@ spring:
     name: gl-file
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 20MB
+      # #3 视频附件：单文件上限上调至 100MB（注意同步调整 Nginx client_max_body_size 与网关超时）
+      max-file-size: 100MB
+      max-request-size: 100MB
   cloud:
     nacos:
       discovery:

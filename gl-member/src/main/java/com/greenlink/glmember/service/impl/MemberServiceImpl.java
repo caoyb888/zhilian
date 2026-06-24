@@ -163,6 +163,7 @@ public class MemberServiceImpl implements MemberService {
         if (StringUtils.hasText(request.getContactPhone())) unit.setContactPhone(request.getContactPhone());
         if (StringUtils.hasText(request.getContactEmail())) unit.setContactEmail(request.getContactEmail());
         if (StringUtils.hasText(request.getLogoUrl())) unit.setLogoUrl(request.getLogoUrl());
+        if (StringUtils.hasText(request.getLicenseUrl())) unit.setLicenseUrl(request.getLicenseUrl());
         unit.setUpdatedAt(LocalDateTime.now());
         memberUnitMapper.updateById(unit);
 
@@ -244,6 +245,7 @@ public class MemberServiceImpl implements MemberService {
         vo.setProvince(unit.getProvince());
         vo.setCity(unit.getCity());
         vo.setLogoUrl(unit.getLogoUrl());
+        vo.setLicenseUrl(unit.getLicenseUrl());
         vo.setIsCertified(unit.getIsCertified() != null && unit.getIsCertified() == 1);
         vo.setStatus(unit.getStatus());
         vo.setCreatedAt(unit.getCreatedAt());
@@ -286,6 +288,7 @@ public class MemberServiceImpl implements MemberService {
         unit.setProvince(request.getProvince());
         unit.setCity(request.getCity());
         unit.setIntroduction(request.getIntroduction());
+        unit.setLicenseUrl(request.getLicenseUrl());
         unit.setContactName(request.getContactName());
         unit.setContactPhone(request.getPhone());
         unit.setContactEmail(request.getEmail());

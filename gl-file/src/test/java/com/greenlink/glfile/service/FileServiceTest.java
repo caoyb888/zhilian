@@ -84,10 +84,10 @@ class FileServiceTest {
         verifyNoInteractions(fileRecordMapper);
     }
 
-    // 场景3：文件超过 20MB → code 6001
+    // 场景3：文件超过 100MB → code 6001
     @Test
     void upload_file_too_large_throws_6001() {
-        byte[] bigData = new byte[21 * 1024 * 1024];
+        byte[] bigData = new byte[101 * 1024 * 1024];
         MockMultipartFile file = new MockMultipartFile(
                 "file", "large.pdf", "application/pdf", bigData);
 

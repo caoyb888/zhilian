@@ -41,6 +41,11 @@ function isImageType(fileType: string | null, fileName: string): boolean {
   return /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(fileName)
 }
 
+function isVideoType(fileType: string | null, fileName: string): boolean {
+  if (fileType?.startsWith('video/')) return true
+  return /\.(mp4|mov|webm|m4v)$/i.test(fileName)
+}
+
 // ─── Reading Progress ─────────────────────────────────────────────────────────
 
 function ReadingProgressBar() {
@@ -105,6 +110,22 @@ function MetaTag({
 
 function AttachmentPreview({ att }: { att: AttachmentItem }) {
   const isImage = isImageType(att.fileType, att.fileName)
+  const isVideo = isVideoType(att.fileType, att.fileName)
+
+  if (isVideo) {
+    return (
+      <div className="overflow-hidden rounded-2xl bg-black" title={att.fileName}>
+        <video
+          src={att.fileUrl}
+          controls
+          preload="metadata"
+          className="h-full w-full max-h-72 object-contain bg-black"
+        >
+          您的浏览器不支持视频播放，<a href={att.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">点击下载</a>
+        </video>
+      </div>
+    )
+  }
 
   if (isImage) {
     return (
@@ -535,7 +556,10 @@ export default function SupplyResourceDetailPage() {
     : ''
 
   const images = resource?.attachments.filter((a) => isImageType(a.fileType, a.fileName)) ?? []
-  const files = resource?.attachments.filter((a) => !isImageType(a.fileType, a.fileName)) ?? []
+  const videos = resource?.attachments.filter((a) => isVideoType(a.fileType, a.fileName)) ?? []
+  const files = resource?.attachments.filter(
+    (a) => !isImageType(a.fileType, a.fileName) && !isVideoType(a.fileType, a.fileName),
+  ) ?? []
 
   return (
     <div className="min-h-screen flex flex-col bg-theme-bg">
@@ -643,7 +667,7 @@ export default function SupplyResourceDetailPage() {
 
                 {/* Tags */}
                 {resource.tags.length > 0 && (
-                  <div>
+                  <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-6 sm:p-8">
                     <h2 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2.5">
                       <Icon icon={Tags} size={18} className="text-emerald-500" />
                       相关标签
@@ -663,7 +687,7 @@ export default function SupplyResourceDetailPage() {
 
                 {/* Attachments */}
                 {resource.attachments.length > 0 && (
-                  <div>
+                  <div className="rounded-3xl bg-white ring-1 ring-stone-100 p-6 sm:p-8">
                     <h2 className="flex items-center gap-2.5 text-base font-bold text-stone-800 mb-5">
                       <Icon icon={Paperclip} size={18} className="text-emerald-500" />
                       附件（{resource.attachments.length}）
@@ -672,6 +696,14 @@ export default function SupplyResourceDetailPage() {
                     {images.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                         {images.map((att) => (
+                          <AttachmentPreview key={att.id} att={att} />
+                        ))}
+                      </div>
+                    )}
+
+                    {videos.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        {videos.map((att) => (
                           <AttachmentPreview key={att.id} att={att} />
                         ))}
                       </div>

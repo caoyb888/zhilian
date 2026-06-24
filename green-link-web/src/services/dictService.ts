@@ -40,6 +40,7 @@ export interface UpdateDictItemRequest {
 // 常用字典类型编码
 export const DICT_RESOURCE_TYPE = 'RESOURCE_TYPE'
 export const DICT_DEMAND_TYPE = 'DEMAND_TYPE'
+export const DICT_CITY = 'CITY'
 
 // ─── 公开读取（前端下拉） ───────────────────────────────────────────────────────
 

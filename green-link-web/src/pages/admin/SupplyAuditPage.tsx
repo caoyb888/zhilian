@@ -1,10 +1,9 @@
 import { useCallback, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { clsx } from 'clsx'
 import {
-  Check, CheckCircle2, Eye, FileText, Search, X, XCircle,
+  CheckCircle2, Eye, FileText, Search, X, XCircle,
 } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Button } from '@/components/Button'
@@ -12,7 +11,6 @@ import { Badge } from '@/components/Badge'
 import { Pagination } from '@/components/Pagination'
 import { EmptyState } from '@/components/states/EmptyState'
 import { SkeletonList } from '@/components/states/SkeletonList'
-import { FormField } from '@/components/FormField'
 import {
   useAdminResourceList,
   useAdminDemandList,
@@ -26,7 +24,10 @@ import {
 import {
   RESOURCE_TYPE_LABELS,
   DEMAND_TYPE_LABELS,
+  useResourceDetail,
+  useDemandDetail,
 } from '@/services/supplyService'
+import DOMPurify from 'dompurify'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -75,142 +76,147 @@ function TypeBadge({ type, isResource }: { type: string; isResource: boolean }) 
   )
 }
 
-// ─── Audit Modal ──────────────────────────────────────────────────────────────
-
 type AuditItem = AdminResourceVO | AdminDemandVO
 
-interface AuditFormData {
-  action: 'APPROVE' | 'REJECT'
-  remark: string
+// ─── Detail View Modal（#7 详情与审核分开：只读完整详情）─────────────────────────
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value === null || value === undefined || value === '') return null
+  return (
+    <div className="flex gap-3 py-1.5 text-sm">
+      <span className="w-24 shrink-0 text-slate-500">{label}</span>
+      <span className="text-slate-200 break-all">{value}</span>
+    </div>
+  )
 }
 
-function AuditModal({
+function DetailViewModal({
   item,
   isResource,
   onClose,
+  onAudit,
 }: {
   item: AuditItem
   isResource: boolean
   onClose: () => void
+  onAudit: (action: 'APPROVE' | 'REJECT') => void
 }) {
-  const resourceMutation = useAuditResource()
-  const demandMutation = useAuditDemand()
-  const mutation = isResource ? resourceMutation : demandMutation
-
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<AuditFormData>({
-    defaultValues: { action: 'APPROVE', remark: '' },
-  })
-
-  const action = watch('action')
-
-  function onSubmit(data: AuditFormData) {
-    mutation.mutate(
-      { id: item.id, action: data.action, remark: data.remark.trim() || undefined },
-      { onSuccess: onClose },
-    )
-  }
+  const resourceQuery = useResourceDetail(isResource ? item.id : null)
+  const demandQuery = useDemandDetail(isResource ? null : item.id)
+  const query = isResource ? resourceQuery : demandQuery
+  const detail = query.data
+  const typeLabel = isResource
+    ? (RESOURCE_TYPE_LABELS[item.type] ?? item.type)
+    : (DEMAND_TYPE_LABELS[item.type] ?? item.type)
+  const sanitized = DOMPurify.sanitize(detail?.content ?? '')
+  const isPending = item.auditStatus === 0
 
   return (
     <Dialog open onClose={onClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
+        <DialogPanel className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
           <div className="flex items-center justify-between border-b border-slate-800/60 px-6 py-4">
             <DialogTitle className="text-base font-semibold text-slate-100">
-              审核{isResource ? '资源' : '需求'}
+              {isResource ? '资源' : '需求'}详情
             </DialogTitle>
-            <button
-              className="rounded p-1 text-slate-500 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
-              onClick={onClose}
-              aria-label="关闭"
-            >
+            <button className="rounded p-1 text-slate-500 hover:bg-slate-700/60 hover:text-slate-200" onClick={onClose} aria-label="关闭">
               <Icon icon={X} size={18} />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5">
-            {/* Item info preview */}
-            <div className="mb-5 rounded-lg bg-slate-800/40 p-4">
-              <p className="text-sm font-medium text-slate-100 line-clamp-2">{item.title}</p>
-              <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-slate-400">
-                <span>类型：{isResource ? (RESOURCE_TYPE_LABELS[item.type] ?? item.type) : (DEMAND_TYPE_LABELS[item.type] ?? item.type)}</span>
-                <span>提交时间：{item.createdAt.slice(0, 10)}</span>
-              </div>
-              {item.summary && (
-                <p className="mt-2 text-xs text-slate-400 line-clamp-2">{item.summary}</p>
-              )}
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <h3 className="mb-1 text-lg font-semibold text-slate-100">{item.title}</h3>
+            <div className="mb-4 flex items-center gap-2">
+              <TypeBadge type={item.type} isResource={isResource} />
+              <AuditStatusBadge status={item.auditStatus} />
             </div>
 
-            {/* Action */}
-            <div className="mb-4">
-              <p className="mb-2 text-sm font-medium text-slate-300">审核结果</p>
-              <div className="flex gap-4">
-                <label className={clsx(
-                  'flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200',
-                  action === 'APPROVE'
-                    ? 'border-emerald-500/60 bg-emerald-950/40 text-emerald-400'
-                    : 'border-slate-700/60 text-slate-400 hover:border-slate-600',
-                )}>
-                  <input type="radio" value="APPROVE" {...register('action')} className="accent-emerald-500" />
-                  <Icon icon={Check} size={16} />
-                  通过
-                </label>
-                <label className={clsx(
-                  'flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200',
-                  action === 'REJECT'
-                    ? 'border-red-500/60 bg-red-950/40 text-red-400'
-                    : 'border-slate-700/60 text-slate-400 hover:border-slate-600',
-                )}>
-                  <input type="radio" value="REJECT" {...register('action')} className="accent-red-500" />
-                  <Icon icon={X} size={16} />
-                  拒绝
-                </label>
-              </div>
-            </div>
+            {query.isLoading ? (
+              <SkeletonList count={4} />
+            ) : (
+              <>
+                <div className="divide-y divide-slate-800/40 rounded-lg bg-slate-800/30 px-4 py-2">
+                  <DetailRow label="类型" value={typeLabel} />
+                  <DetailRow label="所在地区" value={[detail?.province, (detail as { city?: string | null } | undefined)?.city].filter(Boolean).join(' / ')} />
+                  <DetailRow label="合作方式" value={detail?.cooperationMode} />
+                  {isResource
+                    ? <DetailRow label="有效期" value={(detail as { validUntil?: string | null } | undefined)?.validUntil} />
+                    : (
+                      <>
+                        <DetailRow label="预算(万元)" value={formatBudget(detail as { budgetMin?: number | null; budgetMax?: number | null } | undefined)} />
+                        <DetailRow label="截止日期" value={(detail as { deadline?: string | null } | undefined)?.deadline} />
+                      </>
+                    )}
+                  <DetailRow label="浏览量" value={detail?.viewCount} />
+                  <DetailRow label="提交时间" value={item.createdAt?.slice(0, 19).replace('T', ' ')} />
+                  {item.auditRemark && <DetailRow label="审核备注" value={item.auditRemark} />}
+                </div>
 
-            {/* Remark */}
-            <FormField
-              label="审核意见"
-              required={action === 'REJECT'}
-              error={errors.remark?.message}
-            >
-              <textarea
-                rows={3}
-                placeholder={action === 'REJECT' ? '请填写拒绝原因（必填）' : '可选，填写说明'}
-                className={clsx(
-                  'w-full resize-none rounded-lg border px-3 py-2 text-sm placeholder-slate-600 bg-slate-800/60 text-slate-200 transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-theme-accent/20',
-                  errors.remark
-                    ? 'border-red-300 focus:border-red-400'
-                    : 'border-slate-700/60 hover:border-slate-600 focus:border-emerald-500/50',
+                {detail?.summary && (
+                  <div className="mt-4">
+                    <p className="mb-1 text-sm font-medium text-slate-400">摘要</p>
+                    <p className="text-sm text-slate-300">{detail.summary}</p>
+                  </div>
                 )}
-                {...register('remark', {
-                  validate: (val, fv) =>
-                    fv.action === 'REJECT' && !val.trim() ? '拒绝时必须填写审核意见' : true,
-                })}
-              />
-            </FormField>
 
-            {mutation.isError && (
-              <p className="mt-2 text-xs text-red-500">提交失败，请重试</p>
+                {sanitized && (
+                  <div className="mt-4">
+                    <p className="mb-1 text-sm font-medium text-slate-400">详细描述</p>
+                    <div
+                      className="prose prose-invert prose-sm max-w-none rounded-lg bg-slate-800/30 p-4 text-slate-200"
+                      dangerouslySetInnerHTML={{ __html: sanitized }}
+                    />
+                  </div>
+                )}
+
+                {detail && detail.tags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {detail.tags.map((t) => (
+                      <span key={t.id} className="rounded-full bg-emerald-950/40 px-2.5 py-1 text-xs text-emerald-400 ring-1 ring-emerald-500/30">#{t.name}</span>
+                    ))}
+                  </div>
+                )}
+
+                {detail && detail.attachments.length > 0 && (
+                  <div className="mt-4">
+                    <p className="mb-2 text-sm font-medium text-slate-400">附件（{detail.attachments.length}）</p>
+                    <div className="space-y-1.5">
+                      {detail.attachments.map((a) => (
+                        <a key={a.id} href={a.fileUrl} target="_blank" rel="noopener noreferrer"
+                           className="block truncate rounded-md bg-slate-800/40 px-3 py-2 text-sm text-emerald-400 hover:bg-slate-800">
+                          {a.fileName}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
+          </div>
 
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="secondary" size="sm" type="button" onClick={onClose}>取消</Button>
-              <Button
-                variant={action === 'APPROVE' ? 'primary' : 'danger'}
-                size="sm"
-                type="submit"
-                loading={mutation.isPending}
-              >
-                {action === 'APPROVE' ? '通过审核' : '拒绝'}
-              </Button>
-            </div>
-          </form>
+          <div className="flex justify-end gap-2 border-t border-slate-800/60 px-6 py-4">
+            <Button variant="secondary" size="sm" type="button" onClick={onClose}>关闭</Button>
+            {isPending && (
+              <>
+                <Button variant="danger" size="sm" type="button" onClick={() => onAudit('REJECT')}>拒绝</Button>
+                <Button variant="primary" size="sm" type="button" onClick={() => onAudit('APPROVE')}>通过审核</Button>
+              </>
+            )}
+          </div>
         </DialogPanel>
       </div>
     </Dialog>
   )
+}
+
+function formatBudget(d?: { budgetMin?: number | null; budgetMax?: number | null }): string {
+  if (!d) return ''
+  const { budgetMin: min, budgetMax: max } = d
+  if (min == null && max == null) return '面议'
+  if (min != null && max != null) return `${min} – ${max}`
+  if (min != null) return `${min} 起`
+  return `≤ ${max}`
 }
 
 // ─── Quick audit confirm ──────────────────────────────────────────────────────
@@ -401,7 +407,7 @@ function ResourceTable({
                       <div className="inline-flex items-center gap-1 rounded-lg border border-slate-700/60 p-0.5">
                         <button
                           className="rounded p-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-700/60 hover:text-emerald-400"
-                          title="查看详情 / 审核"
+                          title="查看详情"
                           onClick={() => setAuditItem(r)}
                         >
                           <Icon icon={Eye} size={14} />
@@ -441,7 +447,12 @@ function ResourceTable({
       </div>
 
       {auditItem && (
-        <AuditModal item={auditItem} isResource onClose={() => setAuditItem(null)} />
+        <DetailViewModal
+          item={auditItem}
+          isResource
+          onClose={() => setAuditItem(null)}
+          onAudit={(action) => { const it = auditItem; setAuditItem(null); setQuickAction({ item: it, action }) }}
+        />
       )}
 
       {quickAction && (
@@ -598,7 +609,7 @@ function DemandTable({
                       <div className="inline-flex items-center gap-1 rounded-lg border border-slate-700/60 p-0.5">
                         <button
                           className="rounded p-1.5 text-slate-400 transition-all duration-200 hover:bg-slate-700/60 hover:text-emerald-400"
-                          title="查看详情 / 审核"
+                          title="查看详情"
                           onClick={() => setAuditItem(r)}
                         >
                           <Icon icon={Eye} size={14} />
@@ -638,7 +649,12 @@ function DemandTable({
       </div>
 
       {auditItem && (
-        <AuditModal item={auditItem} isResource={false} onClose={() => setAuditItem(null)} />
+        <DetailViewModal
+          item={auditItem}
+          isResource={false}
+          onClose={() => setAuditItem(null)}
+          onAudit={(action) => { const it = auditItem; setAuditItem(null); setQuickAction({ item: it, action }) }}
+        />
       )}
 
       {quickAction && (

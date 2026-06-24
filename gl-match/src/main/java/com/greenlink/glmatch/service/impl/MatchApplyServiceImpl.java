@@ -5,7 +5,9 @@ import com.greenlink.common.mq.MatchEventMessage;
 import com.greenlink.common.result.Result;
 import com.greenlink.glmatch.domain.MatchRecord;
 import com.greenlink.glmatch.dto.SupplyBriefDTO;
+import com.greenlink.glmatch.dto.request.BatchMatchApplyRequest;
 import com.greenlink.glmatch.dto.request.MatchApplyRequest;
+import com.greenlink.glmatch.dto.response.BatchMatchApplyVO;
 import com.greenlink.glmatch.dto.response.MatchApplyVO;
 import com.greenlink.glmatch.feign.SupplyClient;
 import com.greenlink.glmatch.mq.MatchEventProducer;
@@ -105,6 +107,41 @@ public class MatchApplyServiceImpl implements MatchApplyService {
                 .applyMessage(record.getApplyMessage())
                 .createdAt(record.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    public BatchMatchApplyVO batchApply(Long accountId, Long memberId, BatchMatchApplyRequest req) {
+        BatchMatchApplyVO result = new BatchMatchApplyVO();
+        // 组装 (resourceId, demandId) 对
+        if (req.getResourceId() != null && req.getDemandIds() != null) {
+            for (Long demandId : req.getDemandIds()) {
+                applyOne(accountId, memberId, req.getResourceId(), demandId, req.getApplyMessage(), result);
+            }
+        } else if (req.getDemandId() != null && req.getResourceIds() != null) {
+            for (Long resourceId : req.getResourceIds()) {
+                applyOne(accountId, memberId, resourceId, req.getDemandId(), req.getApplyMessage(), result);
+            }
+        } else {
+            throw new BizException(1001, "参数不合法：需提供 resourceId+demandIds 或 demandId+resourceIds");
+        }
+        result.setTotal(result.getSuccess() + result.getFailed());
+        log.info("批量对接申请 total={} success={} failed={} memberId={}",
+                result.getTotal(), result.getSuccess(), result.getFailed(), memberId);
+        return result;
+    }
+
+    private void applyOne(Long accountId, Long memberId, Long resourceId, Long demandId,
+                          String applyMessage, BatchMatchApplyVO result) {
+        MatchApplyRequest one = new MatchApplyRequest();
+        one.setResourceId(resourceId);
+        one.setDemandId(demandId);
+        one.setApplyMessage(applyMessage);
+        try {
+            apply(accountId, memberId, one);
+            result.addSuccess();
+        } catch (BizException e) {
+            result.addError("资源" + resourceId + "↔需求" + demandId + "：" + e.getMessage());
+        }
     }
 
     private SupplyBriefDTO fetchBrief(String type, Long id) {

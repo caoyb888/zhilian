@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/authStore'
 import {
   loginByPassword,
@@ -27,9 +27,12 @@ async function hydratePermissions(
 export function usePasswordLogin() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const setPermissions = useAuthStore((s) => s.setPermissions)
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (params: LoginParams) => loginByPassword(params),
     onSuccess: async (data) => {
+      // 切换用户：清空上个用户残留的 React Query 缓存（#12）
+      queryClient.clear()
       setAuth(data)
       await hydratePermissions(setPermissions)
     },
@@ -39,9 +42,11 @@ export function usePasswordLogin() {
 export function useSmsLogin() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const setPermissions = useAuthStore((s) => s.setPermissions)
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (params: SmsLoginParams) => loginBySms(params),
     onSuccess: async (data) => {
+      queryClient.clear()
       setAuth(data)
       await hydratePermissions(setPermissions)
     },
@@ -50,9 +55,14 @@ export function useSmsLogin() {
 
 export function useLogout() {
   const { refreshToken, clearAuth } = useAuthStore()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => logout(refreshToken ?? ''),
-    onSettled: () => clearAuth(),
+    onSettled: () => {
+      clearAuth()
+      // 退出登录：清空缓存，避免下个用户看到上个用户的数据（#12）
+      queryClient.clear()
+    },
   })
 }
 

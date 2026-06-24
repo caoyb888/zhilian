@@ -1,7 +1,9 @@
 package com.greenlink.glmatch.controller;
 
 import com.greenlink.common.result.Result;
+import com.greenlink.glmatch.dto.request.BatchMatchApplyRequest;
 import com.greenlink.glmatch.dto.request.MatchApplyRequest;
+import com.greenlink.glmatch.dto.response.BatchMatchApplyVO;
 import com.greenlink.glmatch.dto.response.MatchApplyVO;
 import com.greenlink.glmatch.service.MatchApplyService;
 import jakarta.validation.Valid;
@@ -42,5 +44,20 @@ public class MatchApplyController {
         }
         MatchApplyVO vo = matchApplyService.apply(accountId, memberId, req);
         return Result.ok(vo);
+    }
+
+    /**
+     * 批量发起对接申请（UAT#13，1 对 N）。允许部分成功。
+     */
+    @PostMapping("/apply-batch")
+    public Result<BatchMatchApplyVO> applyBatch(
+            @RequestHeader(value = "X-Account-Id", required = false) Long accountId,
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId,
+            @Valid @RequestBody BatchMatchApplyRequest req) {
+
+        if (accountId == null || memberId == null) {
+            return Result.fail(1001, "未登录");
+        }
+        return Result.ok(matchApplyService.batchApply(accountId, memberId, req));
     }
 }

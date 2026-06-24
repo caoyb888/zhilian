@@ -556,12 +556,12 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: Step3TagsAttachmentsPr
       <div>
         <p className="text-sm font-medium text-stone-700 mb-3">
           附件上传
-          <span className="ml-1 text-xs text-stone-400 font-normal">（最多 {MAX_ATTACHMENTS} 个，单文件 ≤ 20MB）</span>
+          <span className="ml-1 text-xs text-stone-400 font-normal">（图文/视频/案例，最多 {MAX_ATTACHMENTS} 个，单文件 ≤ 100MB）</span>
         </p>
         <FileUploader
-          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
+          accept="image/*,video/mp4,video/quicktime,.mp4,.mov,application/pdf,.doc,.docx,.xls,.xlsx"
           maxFiles={MAX_ATTACHMENTS}
-          maxSizeMB={20}
+          maxSizeMB={100}
           bizType="RESOURCE"
           onChange={handleAttachmentsChange}
         />
@@ -683,7 +683,7 @@ function Step4Preview({ tagGroups }: { tagGroups: TagGroup[] }) {
       </div>
 
       <p className="text-xs text-stone-400 text-center">
-        提交后通常在 1 个工作日内完成审核，审核结果将通过站内信通知您
+        提交后将由协会工作人员审核，审核结果将通过站内信通知您
       </p>
     </div>
   )
@@ -723,7 +723,7 @@ function SuccessState({ onPublishAnother }: { onPublishAnother: () => void }) {
         <h2 className="text-2xl font-bold text-stone-900 mb-2">资源已提交审核</h2>
         <p className="text-sm text-stone-500 mb-8 max-w-sm mx-auto leading-relaxed">
           您的资源已进入审核流程，管理员通过后即可在平台展示。
-          通常在 <span className="font-semibold text-stone-700">1 个工作日</span>内完成，结果将通过站内信通知您。
+          审核结果将通过站内信通知您。
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

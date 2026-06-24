@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertCircle, CheckCircle2, ChevronRight, Loader2, X } from 'lucide-react'
+import { AlertCircle, Check, CheckCircle2, ChevronRight, Loader2, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { Spinner } from '@/components/Spinner'
 import {
@@ -10,7 +10,7 @@ import {
   type ResourceItem,
   type DemandItem,
 } from '@/services/supplyService'
-import { useApplyMatch, getApplyErrorMsg } from '@/services/matchService'
+import { useBatchApplyMatch, getApplyErrorMsg } from '@/services/matchService'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,11 +54,11 @@ function SourceRow({
       <div className="flex items-start gap-2.5">
         <span
           className={[
-            'mt-0.5 flex-shrink-0 h-4 w-4 rounded-full border-2 flex items-center justify-center',
+            'mt-0.5 flex-shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center',
             selected ? 'border-emerald-500 bg-emerald-500' : 'border-stone-300 bg-white',
           ].join(' ')}
         >
-          {selected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+          {selected && <Icon icon={Check} size={11} className="text-white" />}
         </span>
         <div className="min-w-0">
           <p className="text-xs font-medium text-stone-800 line-clamp-2 leading-snug">{item.title}</p>
@@ -93,12 +93,16 @@ function SuccessPanel({ onClose }: { onClose: () => void }) {
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
 export function ApplyMatchDialog({ target, defaultSourceId, onClose }: ApplyMatchDialogProps) {
-  const [selectedId, setSelectedId] = useState<number | null>(defaultSourceId ?? null)
+  const [selectedIds, setSelectedIds] = useState<number[]>(defaultSourceId ? [defaultSourceId] : [])
   const [message, setMessage] = useState('')
   const [success, setSuccess] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const applyMutation = useApplyMatch()
+  const applyMutation = useBatchApplyMatch()
+
+  function toggle(id: number) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
 
   // Opposite of the target type: if target is RESOURCE, user picks from their demands, and vice versa
   const oppositeType: 'RESOURCE' | 'DEMAND' = target.type === 'RESOURCE' ? 'DEMAND' : 'RESOURCE'
@@ -115,15 +119,24 @@ export function ApplyMatchDialog({ target, defaultSourceId, onClose }: ApplyMatc
   const isLoading = oppositeType === 'RESOURCE' ? resLoading : demLoading
 
   function handleSubmit() {
-    if (!selectedId) return
+    if (selectedIds.length === 0) return
     setErrorMsg(null)
     const body =
       target.type === 'RESOURCE'
-        ? { resourceId: target.id, demandId: selectedId, applyMessage: message || undefined }
-        : { resourceId: selectedId, demandId: target.id, applyMessage: message || undefined }
+        ? { resourceId: target.id, demandIds: selectedIds, applyMessage: message || undefined }
+        : { demandId: target.id, resourceIds: selectedIds, applyMessage: message || undefined }
 
     applyMutation.mutate(body, {
-      onSuccess: () => setSuccess(true),
+      onSuccess: (res) => {
+        if (res && res.failed > 0 && res.success === 0) {
+          setErrorMsg(`全部 ${res.failed} 项发起失败：${res.errors.join('；')}`)
+        } else {
+          if (res && res.failed > 0) {
+            setErrorMsg(`部分成功：成功 ${res.success} 项，失败 ${res.failed} 项`)
+          }
+          setSuccess(true)
+        }
+      },
       onError: (err) => setErrorMsg(getApplyErrorMsg(err)),
     })
   }
@@ -166,7 +179,10 @@ export function ApplyMatchDialog({ target, defaultSourceId, onClose }: ApplyMatc
               <div>
                 <p className="text-xs font-medium text-stone-500 mb-1.5">
                   选择我的{oppositeLabel}
-                  <span className="ml-1 font-normal text-stone-400">（参与本次对接）</span>
+                  <span className="ml-1 font-normal text-stone-400">（可多选，一次对接多个{oppositeLabel}）</span>
+                  {selectedIds.length > 0 && (
+                    <span className="ml-1 text-emerald-600">已选 {selectedIds.length} 项</span>
+                  )}
                 </p>
 
                 {isLoading ? (
@@ -194,8 +210,8 @@ export function ApplyMatchDialog({ target, defaultSourceId, onClose }: ApplyMatc
                         key={item.id}
                         item={item}
                         typeLabel={typeLabels[item.type] ?? item.type}
-                        selected={selectedId === item.id}
-                        onClick={() => setSelectedId(item.id)}
+                        selected={selectedIds.includes(item.id)}
+                        onClick={() => toggle(item.id)}
                       />
                     ))}
                   </div>
@@ -241,7 +257,7 @@ export function ApplyMatchDialog({ target, defaultSourceId, onClose }: ApplyMatc
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!selectedId || applyMutation.isPending || items.length === 0}
+                disabled={selectedIds.length === 0 || applyMutation.isPending || items.length === 0}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {applyMutation.isPending
