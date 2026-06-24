@@ -6,6 +6,7 @@ import com.greenlink.glsupply.dto.request.CreateResourceRequest;
 import com.greenlink.glsupply.dto.request.ResourcePageRequest;
 import com.greenlink.glsupply.dto.request.UpdateResourceRequest;
 import com.greenlink.glsupply.dto.response.AdminResourceVO;
+import com.greenlink.glsupply.dto.response.BatchAuditResultVO;
 import com.greenlink.glsupply.dto.response.ResourceDetailVO;
 import com.greenlink.glsupply.dto.response.ResourceVO;
 import com.greenlink.glsupply.dto.response.SupplyBriefVO;
@@ -35,6 +36,12 @@ public interface SupplyResourceService {
     void approve(Long id, Long auditorId);
 
     void reject(Long id, Long auditorId, String remark);
+
+    /** 批量审核通过（#6），允许部分成功，逐条返回失败原因 */
+    BatchAuditResultVO batchApprove(List<Long> ids, Long auditorId);
+
+    /** 批量审核拒绝（#6），统一 remark，允许部分成功 */
+    BatchAuditResultVO batchReject(List<Long> ids, Long auditorId, String remark);
 
     void adminOffline(Long id, Long auditorId);
 
