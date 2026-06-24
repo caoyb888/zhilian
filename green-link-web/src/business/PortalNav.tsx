@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { Bell, Boxes, ClipboardList, Handshake, LogOut, Menu, Search, Sparkles, User, X } from 'lucide-react'
+import { Bell, Boxes, ChevronDown, ClipboardList, Handshake, LogOut, Menu, Search, Sparkles, User, X } from 'lucide-react'
 import { Icon } from '@/components/Icon'
 import { useAuthStore } from '@/stores/authStore'
 import { useUnreadCount } from '@/services/messageService'
@@ -28,11 +28,13 @@ export function PortalNav() {
   const accountInfo = useAuthStore((s) => s.accountInfo)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [publishMenuOpen, setPublishMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { data: unreadData } = useUnreadCount(!!accountInfo)
   const totalUnread = unreadData?.total ?? 0
   const logoutMutation = useLogout()
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const publishMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -60,6 +62,16 @@ export function PortalNav() {
     if (userMenuOpen) document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [userMenuOpen])
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (publishMenuRef.current && !publishMenuRef.current.contains(e.target as Node)) {
+        setPublishMenuOpen(false)
+      }
+    }
+    if (publishMenuOpen) document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [publishMenuOpen])
 
   const isActive = (path: string) =>
     pathname === path || (path !== '/portal' && pathname.startsWith(path))
@@ -173,13 +185,39 @@ export function PortalNav() {
                   )}
                 </Link>
 
-                {/* Publish */}
-                <Link
-                  to="/supply/resources/publish"
-                  className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700 transition-all duration-200 shadow-sm shadow-emerald-200"
-                >
-                  发布供需
-                </Link>
+                {/* Publish dropdown — 可选发布资源 / 发布需求 */}
+                <div ref={publishMenuRef} className="relative hidden sm:block">
+                  <button
+                    type="button"
+                    onClick={() => setPublishMenuOpen((v) => !v)}
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700 transition-all duration-200 shadow-sm shadow-emerald-200"
+                    aria-expanded={publishMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    发布供需
+                    <Icon icon={ChevronDown} size={13} className={clsx('transition-transform duration-200', publishMenuOpen && 'rotate-180')} />
+                  </button>
+                  {publishMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-44 rounded-xl border border-stone-100 bg-white py-1.5 shadow-lg shadow-stone-200/60 z-50">
+                      <button
+                        type="button"
+                        onClick={() => { setPublishMenuOpen(false); navigate('/supply/resources/publish') }}
+                        className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-stone-600 hover:bg-emerald-50/70 hover:text-emerald-700 transition-colors"
+                      >
+                        <Icon icon={Boxes} size={15} />
+                        发布资源
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPublishMenuOpen(false); navigate('/supply/demands/publish') }}
+                        className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-stone-600 hover:bg-emerald-50/70 hover:text-emerald-700 transition-colors"
+                      >
+                        <Icon icon={ClipboardList} size={15} />
+                        发布需求
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* User dropdown */}
                 <div ref={userMenuRef} className="relative">
@@ -338,6 +376,27 @@ export function PortalNav() {
                     </span>
                   )}
                 </Link>
+              )}
+              {accountInfo && (
+                <>
+                  <div className="my-1.5 border-t border-stone-100" />
+                  <Link
+                    to="/supply/resources/publish"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors"
+                  >
+                    <Icon icon={Boxes} size={14} />
+                    发布资源
+                  </Link>
+                  <Link
+                    to="/supply/demands/publish"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors"
+                  >
+                    <Icon icon={ClipboardList} size={14} />
+                    发布需求
+                  </Link>
+                </>
               )}
             </nav>
           </div>
