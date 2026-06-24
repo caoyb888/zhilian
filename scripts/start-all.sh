@@ -43,6 +43,8 @@ export MINIO_BUCKET=greenlink
 export MINIO_PUBLIC_BUCKET=greenlink-public
 export CDN_URL=http://files.greenlink.com
 export SPRING_CLOUD_NACOS_CONFIG_IMPORT_CHECK_ENABLED=false
+# 开发/联调环境固定短信验证码（仅限内网联调机，生产部署脚本严禁包含）
+export SMS_DEV_DEFAULT_CODE=123456
 
 # 启动顺序：先注册中心/网关/认证/支撑服务，再业务服务
 SERVICES=(
