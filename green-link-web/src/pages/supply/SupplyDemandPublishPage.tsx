@@ -417,12 +417,12 @@ function Step3TagsAttachments({ tagGroups, tagsLoading }: { tagGroups: TagGroup[
       <div>
         <p className="text-sm font-medium text-stone-700 mb-3">
           附件上传
-          <span className="ml-1 text-xs text-stone-400 font-normal">（最多 {MAX_ATTACHMENTS} 个，单文件 ≤ 20MB）</span>
+          <span className="ml-1 text-xs text-stone-400 font-normal">（图文/视频/案例，最多 {MAX_ATTACHMENTS} 个，单文件 ≤ 100MB）</span>
         </p>
         <FileUploader
-          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
+          accept="image/*,video/mp4,video/quicktime,.mp4,.mov,application/pdf,.doc,.docx,.xls,.xlsx"
           maxFiles={MAX_ATTACHMENTS}
-          maxSizeMB={20}
+          maxSizeMB={100}
           bizType="DEMAND"
           onChange={handleAttachmentsChange}
         />

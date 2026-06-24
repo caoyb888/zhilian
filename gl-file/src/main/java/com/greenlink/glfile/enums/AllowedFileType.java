@@ -22,7 +22,10 @@ public enum AllowedFileType {
     DOC("application/msword", Set.of(".doc"), false),
     DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", Set.of(".docx"), false),
     XLS("application/vnd.ms-excel", Set.of(".xls"), false),
-    XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", Set.of(".xlsx"), false);
+    XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", Set.of(".xlsx"), false),
+    // 视频（#3 资源附件支持视频），存公有桶以便前端直接播放
+    MP4("video/mp4", Set.of(".mp4"), true),
+    MOV("video/quicktime", Set.of(".mov"), true);
 
     private final String mimeType;
     private final Set<String> extensions;
