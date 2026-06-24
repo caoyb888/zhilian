@@ -47,6 +47,10 @@ jwt:
   access-token-expire: 7200     # 2小时（秒）
   refresh-token-expire: 604800  # 7天（秒）
 
+sms:
+  # 开发环境固定验证码（仅用于本地/联调，生产环境请勿配置）
+  dev-default-code: ${SMS_DEV_DEFAULT_CODE:}
+
 management:
   endpoints:
     web:

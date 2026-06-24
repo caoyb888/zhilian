@@ -30,6 +30,7 @@ import com.greenlink.glmember.service.MemberService;
 import com.greenlink.glmember.util.MaskUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,9 @@ public class MemberServiceImpl implements MemberService {
     private static final int STATUS_PENDING = 2;
     private static final int STATUS_ACTIVE = 1;
     private static final String BIZ_TYPE_MEMBER = "MEMBER";
+
+    @Value("${sms.dev-default-code:}")
+    private String devDefaultCode;
 
     private final MemberUnitMapper memberUnitMapper;
     private final MemberAccountMapper accountMapper;
@@ -322,6 +326,11 @@ public class MemberServiceImpl implements MemberService {
     }
 
     private void validateSmsCode(String phone, String smsCode) {
+        // 开发环境固定验证码兜底，便于本地联调
+        if (StringUtils.hasText(devDefaultCode) && devDefaultCode.equals(smsCode)) {
+            log.info("[SMS-DEV] 使用开发环境固定验证码通过校验 phone={}", phone);
+            return;
+        }
         String key = "auth:sms:REGISTER:" + phone;
         String stored = redisTemplate.opsForValue().get(key);
         if (stored == null || !stored.equals(smsCode)) {

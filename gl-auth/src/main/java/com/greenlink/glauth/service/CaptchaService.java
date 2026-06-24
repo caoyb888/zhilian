@@ -5,8 +5,10 @@ import cn.hutool.captcha.LineCaptcha;
 import com.greenlink.glauth.dto.response.CaptchaResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +20,9 @@ public class CaptchaService {
 
     private static final String CAPTCHA_PREFIX = "auth:captcha:";
     private static final int CAPTCHA_EXPIRE_SECONDS = 300;
+
+    @Value("${sms.dev-default-code:}")
+    private String devDefaultCode;
 
     private final StringRedisTemplate redisTemplate;
 
@@ -63,7 +68,8 @@ public class CaptchaService {
      * 发送短信验证码（此处存入 Redis，实际环境对接 SMS 网关）
      */
     public void sendSmsCode(String phone, String scene) {
-        String code = String.valueOf((int) ((Math.random() * 9 + 1) * 100000));
+        String code = StringUtils.hasText(devDefaultCode) ? devDefaultCode
+                : String.valueOf((int) ((Math.random() * 9 + 1) * 100000));
         String key = "auth:sms:" + scene + ":" + phone;
 
         // 1 分钟内同一手机号限 1 次
