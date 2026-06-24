@@ -28,6 +28,10 @@ spring:
       password: ${REDIS_PASS:GreenLink@2026}
       database: 0
 
+sms:
+  # 开发环境固定验证码（仅用于本地/联调，生产环境请勿配置）
+  dev-default-code: ${SMS_DEV_DEFAULT_CODE:}
+
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.greenlink.glmember.domain
