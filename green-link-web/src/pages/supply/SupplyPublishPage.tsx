@@ -24,6 +24,7 @@ import {
 } from '@/services/supplyService'
 import { uploadFileWithProgress } from '@/services/fileService'
 import type { FileUploadResult } from '@/services/fileService'
+import { useDictOptions, DICT_RESOURCE_TYPE } from '@/services/dictService'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -256,12 +257,18 @@ function Step1BasicInfo() {
   const selectedType   = watch('type')
   const contactVisible = watch('contactVisible')
 
+  // 资源类型走数据字典（#2 五大类，可后台维护）；字典未加载时回退到内置常量
+  const { data: dictTypes } = useDictOptions(DICT_RESOURCE_TYPE)
+  const typeOptions = (dictTypes && dictTypes.length > 0)
+    ? dictTypes.map((o) => ({ value: o.value, label: o.label }))
+    : RESOURCE_TYPES.map((t) => ({ value: t, label: RESOURCE_TYPE_LABELS[t] ?? t }))
+
   return (
     <div className="space-y-6">
       {/* Resource type */}
       <FormField label="资源类型" required error={errors.type?.message}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {RESOURCE_TYPES.map((t) => {
+          {typeOptions.map(({ value: t, label }) => {
             const active   = selectedType === t
             const cfg      = TYPE_CONFIG[t] ?? {
               icon: Package,
@@ -293,7 +300,7 @@ function Step1BasicInfo() {
                 ].join(' ')}>
                   <Icon icon={TypeIcon} size={20} />
                 </span>
-                {RESOURCE_TYPE_LABELS[t]}
+                {label}
               </button>
             )
           })}

@@ -24,6 +24,7 @@ import {
 } from '@/services/supplyService'
 import { uploadFileWithProgress } from '@/services/fileService'
 import type { FileUploadResult } from '@/services/fileService'
+import { useDictOptions, DICT_DEMAND_TYPE } from '@/services/dictService'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -188,50 +189,28 @@ const TYPE_CONFIG: Record<string, {
 }
 
 function Step1BasicInfo() {
-  const { register, watch, setValue, formState: { errors } } = useFormContext<FormValues>()
-  const selectedType = watch('type')
+  const { register, formState: { errors } } = useFormContext<FormValues>()
+
+  // 需求类型走数据字典（#11，下拉列表，可后台灵活增加）；字典未加载时回退内置常量
+  const { data: dictTypes } = useDictOptions(DICT_DEMAND_TYPE)
+  const typeOptions = (dictTypes && dictTypes.length > 0)
+    ? dictTypes.map((o) => ({ value: o.value, label: o.label }))
+    : DEMAND_TYPES.map((t) => ({ value: t, label: DEMAND_TYPE_LABELS[t] ?? t }))
 
   return (
     <div className="space-y-6">
-      <FormField label="需求类型" required error={errors.type?.message}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {DEMAND_TYPES.map((t) => {
-            const active = selectedType === t
-            const cfg = TYPE_CONFIG[t] ?? {
-              icon: Package,
-              activeClass: 'border-stone-300 bg-stone-50 text-stone-800',
-              iconBg: 'bg-stone-100 text-stone-600',
-              dotClass: 'bg-stone-400',
-              shadow: 'shadow-md',
-            }
-            const TypeIcon = cfg.icon
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setValue('type', t, { shouldValidate: true, shouldDirty: true })}
-                className={[
-                  'relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 px-4 py-7 text-sm font-semibold',
-                  'transition-all duration-200 hover:scale-[1.02]',
-                  active
-                    ? `${cfg.activeClass} ${cfg.shadow} scale-[1.02]`
-                    : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300 hover:bg-stone-50/80 hover:shadow-sm',
-                ].join(' ')}
-              >
-                {active && (
-                  <span className={`absolute top-2.5 right-2.5 h-2 w-2 rounded-full ${cfg.dotClass}`} />
-                )}
-                <span className={[
-                  'flex h-10 w-10 items-center justify-center rounded-xl transition-colors duration-200',
-                  active ? cfg.iconBg : 'bg-stone-100 text-stone-400',
-                ].join(' ')}>
-                  <Icon icon={TypeIcon} size={20} />
-                </span>
-                {DEMAND_TYPE_LABELS[t]}
-              </button>
-            )
-          })}
-        </div>
+      <FormField label="需求类型" htmlFor="type" required error={errors.type?.message}>
+        <select
+          id="type"
+          className="w-full rounded-xl border-2 border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-700 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors"
+          defaultValue=""
+          {...register('type')}
+        >
+          <option value="" disabled>请选择需求类型</option>
+          {typeOptions.map(({ value, label }) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
       </FormField>
 
       <FormField label="需求标题" htmlFor="title" required error={errors.title?.message}>

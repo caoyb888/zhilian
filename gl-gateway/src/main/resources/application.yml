@@ -41,7 +41,7 @@ spring:
         - id: gl-tag
           uri: ${GL_TAG_URL:http://localhost:8089}
           predicates:
-            - Path=/api/v1/tags/**,/api/v1/tag-categories/**,/api/v1/tag-relations/**
+            - Path=/api/v1/tags/**,/api/v1/tag-categories/**,/api/v1/tag-relations/**,/api/v1/dict/**
         - id: gl-supply-admin
           uri: ${GL_SUPPLY_URL:http://localhost:8084}
           predicates:
@@ -97,6 +97,7 @@ jwt:
     - /api/v1/tags/**
     - /api/v1/tag-relations
     - /api/v1/tag-relations/**
+    - /api/v1/dict/options/**
     - /actuator/**
   optional-auth:
     - /api/v1/supply/resources
