@@ -193,6 +193,7 @@ export default function MemberProfilePage() {
   const uploadFile = useUploadFile()
 
   const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null)
+  const [pendingLicenseFile, setPendingLicenseFile] = useState<File | null>(null)
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
 
   const {
@@ -221,7 +222,7 @@ export default function MemberProfilePage() {
 
   const isLoading = meLoading || detailLoading
   const isSaving = updateMember.isPending || uploadFile.isPending
-  const hasChanges = isDirty || !!pendingLogoFile
+  const hasChanges = isDirty || !!pendingLogoFile || !!pendingLicenseFile
 
   async function onSubmit(values: FormValues) {
     if (!memberId) return
@@ -236,6 +237,16 @@ export default function MemberProfilePage() {
         logoUrl = uploaded.fileUrl
         setPendingLogoFile(null)
       }
+      let licenseUrl: string | undefined
+      if (pendingLicenseFile) {
+        const uploaded = await uploadFile.mutateAsync({
+          file: pendingLicenseFile,
+          bizType: 'MEMBER',
+          bizId: memberId,
+        })
+        licenseUrl = uploaded.fileUrl
+        setPendingLicenseFile(null)
+      }
       await updateMember.mutateAsync({
         memberId,
         data: {
@@ -248,6 +259,7 @@ export default function MemberProfilePage() {
           contactPhone: values.contactPhone || undefined,
           contactEmail: values.contactEmail || undefined,
           logoUrl,
+          licenseUrl,
         },
       })
       setSavedMsg('保存成功')
@@ -416,7 +428,7 @@ export default function MemberProfilePage() {
       >
         <div className="px-5 py-3 border-b border-sky-100 border-l-[3px] border-l-sky-400 bg-sky-50/60 flex items-center gap-2">
           <Icon icon={User} size={13} className="text-sky-500" />
-          <h2 className="text-sm font-semibold text-sky-700">账号信息</h2>
+          <h2 className="text-sm font-semibold text-sky-700">会员安全信息</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-stone-100/80">
           <AccountItem icon={<Icon icon={User} size={13} />} label="用户名" value={me.username} />
@@ -456,7 +468,7 @@ export default function MemberProfilePage() {
       >
         <div className="px-6 py-4 border-b border-emerald-100 border-l-[3px] border-l-emerald-500 bg-emerald-50/50 flex items-center gap-2">
           <Icon icon={Building2} size={13} className="text-emerald-600" />
-          <h2 className="text-sm font-semibold text-emerald-800">单位信息</h2>
+          <h2 className="text-sm font-semibold text-emerald-800">会员基本信息 · 资料信息</h2>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-7">
@@ -473,6 +485,32 @@ export default function MemberProfilePage() {
                   onFileSelected={setPendingLogoFile}
                   isUploading={uploadFile.isPending}
                 />
+              </FormField>
+
+              <FormField label="资质证书 / 营业执照">
+                <div className="space-y-2">
+                  {detail.licenseUrl && !pendingLicenseFile && (
+                    <a
+                      href={detail.licenseUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700"
+                    >
+                      <Icon icon={FileText} size={14} />
+                      查看已上传证书
+                    </a>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf,.pdf"
+                    onChange={(e) => setPendingLicenseFile(e.target.files?.[0] ?? null)}
+                    className="block w-full text-sm text-stone-500 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                  {pendingLicenseFile && (
+                    <p className="text-xs text-stone-400 truncate">待上传：{pendingLicenseFile.name}</p>
+                  )}
+                  <p className="text-xs text-stone-400">支持图片或 PDF，保存后生效</p>
+                </div>
               </FormField>
 
               <FormField label="单位全称">

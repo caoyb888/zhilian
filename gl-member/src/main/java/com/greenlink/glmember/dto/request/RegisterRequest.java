@@ -24,6 +24,10 @@ public class RegisterRequest {
     private String province;
     private String city;
     private String introduction;
+
+    @Size(max = 500, message = "资质证书URL过长")
+    private String licenseUrl;
+
     private String contactName;
 
     @NotBlank(message = "联系电话不能为空")

@@ -33,6 +33,7 @@ export interface MemberDetail {
   province: string | null
   city: string | null
   logoUrl: string | null
+  licenseUrl: string | null
   isCertified: boolean
   status: number
   tags: Array<{ id: number; name: string; categoryCode: string }>
@@ -54,6 +55,7 @@ export interface UpdateMemberBody {
   contactPhone?: string
   contactEmail?: string
   logoUrl?: string
+  licenseUrl?: string
   tagIds?: number[]
 }
 

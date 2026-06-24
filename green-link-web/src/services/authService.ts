@@ -24,6 +24,7 @@ export interface RegisterParams {
   password: string
   phone: string
   smsCode: string
+  licenseUrl?: string
   tagIds?: number[]
 }
 
