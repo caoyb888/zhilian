@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X, Pencil, Trash2, Plus, BookMarked } from 'lucide-react'
@@ -25,13 +25,9 @@ interface ItemForm {
 
 export default function DictManagePage() {
   const { data: types, isLoading: typesLoading } = useDictTypes()
-  const [activeType, setActiveType] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!activeType && types && types.length > 0) {
-      setActiveType(types[0].code)
-    }
-  }, [types, activeType])
+  // 默认选中第一个类型；用户点击后以 override 为准（派生值，避免在 effect 内 setState）
+  const [activeTypeOverride, setActiveTypeOverride] = useState<string | null>(null)
+  const activeType = activeTypeOverride ?? types?.[0]?.code ?? null
 
   const { data: items, isLoading: itemsLoading } = useDictItems(activeType)
   const createMutation = useCreateDictItem()
@@ -105,7 +101,7 @@ export default function DictManagePage() {
                 <button
                   key={t.code}
                   type="button"
-                  onClick={() => setActiveType(t.code)}
+                  onClick={() => setActiveTypeOverride(t.code)}
                   className={[
                     'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
                     activeType === t.code

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
@@ -298,10 +298,9 @@ function ResourceTable({
 
   // 仅待审核项可批量；翻页/筛选变化时清空已选
   const pendingIds = records.filter((r) => r.auditStatus === 0).map((r) => r.id)
+  // 只对当前页待审核项生效，自动忽略翻页/筛选后已失效的旧选择（避免在 effect 内 setState）
+  const effectiveSelected = selectedIds.filter((id) => pendingIds.includes(id))
   const allSelected = pendingIds.length > 0 && pendingIds.every((id) => selectedIds.includes(id))
-  useEffect(() => {
-    setSelectedIds([])
-  }, [page, params.keyword, params.type, params.auditStatus])
 
   function toggleOne(id: number) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -311,9 +310,9 @@ function ResourceTable({
   }
 
   function handleBatchConfirm(remark?: string) {
-    if (!batchAction || selectedIds.length === 0) return
+    if (!batchAction || effectiveSelected.length === 0) return
     batchMutation.mutate(
-      { ids: selectedIds, action: batchAction, remark },
+      { ids: effectiveSelected, action: batchAction, remark },
       {
         onSuccess: (res) => {
           setBatchAction(null)
@@ -336,9 +335,9 @@ function ResourceTable({
 
   return (
     <>
-      {selectedIds.length > 0 && (
+      {effectiveSelected.length > 0 && (
         <div className="mb-3 flex items-center justify-between rounded-xl border border-emerald-700/40 bg-emerald-900/20 px-4 py-2.5">
-          <span className="text-sm text-emerald-300">已选 {selectedIds.length} 项</span>
+          <span className="text-sm text-emerald-300">已选 {effectiveSelected.length} 项</span>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="primary" onClick={() => setBatchAction('APPROVE')}>批量通过</Button>
             <Button size="sm" variant="danger" onClick={() => setBatchAction('REJECT')}>批量拒绝</Button>
@@ -496,10 +495,9 @@ function DemandTable({
   const total = data?.total ?? 0
 
   const pendingIds = records.filter((r) => r.auditStatus === 0).map((r) => r.id)
+  // 只对当前页待审核项生效，自动忽略翻页/筛选后已失效的旧选择（避免在 effect 内 setState）
+  const effectiveSelected = selectedIds.filter((id) => pendingIds.includes(id))
   const allSelected = pendingIds.length > 0 && pendingIds.every((id) => selectedIds.includes(id))
-  useEffect(() => {
-    setSelectedIds([])
-  }, [page, params.keyword, params.type, params.auditStatus])
 
   function toggleOne(id: number) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -509,9 +507,9 @@ function DemandTable({
   }
 
   function handleBatchConfirm(remark?: string) {
-    if (!batchAction || selectedIds.length === 0) return
+    if (!batchAction || effectiveSelected.length === 0) return
     batchMutation.mutate(
-      { ids: selectedIds, action: batchAction, remark },
+      { ids: effectiveSelected, action: batchAction, remark },
       {
         onSuccess: (res) => {
           setBatchAction(null)
@@ -534,9 +532,9 @@ function DemandTable({
 
   return (
     <>
-      {selectedIds.length > 0 && (
+      {effectiveSelected.length > 0 && (
         <div className="mb-3 flex items-center justify-between rounded-xl border border-emerald-700/40 bg-emerald-900/20 px-4 py-2.5">
-          <span className="text-sm text-emerald-300">已选 {selectedIds.length} 项</span>
+          <span className="text-sm text-emerald-300">已选 {effectiveSelected.length} 项</span>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="primary" onClick={() => setBatchAction('APPROVE')}>批量通过</Button>
             <Button size="sm" variant="danger" onClick={() => setBatchAction('REJECT')}>批量拒绝</Button>
