@@ -1,6 +1,8 @@
 package com.greenlink.glmatch.service;
 
+import com.greenlink.glmatch.dto.request.BatchMatchApplyRequest;
 import com.greenlink.glmatch.dto.request.MatchApplyRequest;
+import com.greenlink.glmatch.dto.response.BatchMatchApplyVO;
 import com.greenlink.glmatch.dto.response.MatchApplyVO;
 
 public interface MatchApplyService {
@@ -16,4 +18,9 @@ public interface MatchApplyService {
      * @return 新建的对接记录摘要
      */
     MatchApplyVO apply(Long accountId, Long memberId, MatchApplyRequest req);
+
+    /**
+     * 批量发起对接申请（UAT#13，1 对 N）。允许部分成功，逐条返回失败原因。
+     */
+    BatchMatchApplyVO batchApply(Long accountId, Long memberId, BatchMatchApplyRequest req);
 }
