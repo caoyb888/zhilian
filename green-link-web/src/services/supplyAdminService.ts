@@ -86,6 +86,26 @@ export function useAuditResource() {
   })
 }
 
+// 批量审核结果（#6）
+export interface BatchAuditResult {
+  total: number
+  success: number
+  failed: number
+  errors: string[]
+}
+
+export function useBatchAuditResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ids, action, remark }: { ids: number[]; action: 'APPROVE' | 'REJECT'; remark?: string }) => {
+      const path = action === 'APPROVE' ? 'batch-approve' : 'batch-reject'
+      const res = await http.patch<ApiResult<BatchAuditResult>>(`/admin/supply/resources/${path}`, { ids, remark })
+      return res.data.data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'supply', 'resources'] }),
+  })
+}
+
 // ─── Demand admin hooks ───────────────────────────────────────────────────────
 
 export function useAdminDemandList(params: AdminSupplyListParams) {
@@ -111,6 +131,18 @@ export function useAuditDemand() {
       } else {
         await http.patch(`/admin/supply/demands/${id}/reject`, { remark })
       }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'supply', 'demands'] }),
+  })
+}
+
+export function useBatchAuditDemand() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ids, action, remark }: { ids: number[]; action: 'APPROVE' | 'REJECT'; remark?: string }) => {
+      const path = action === 'APPROVE' ? 'batch-approve' : 'batch-reject'
+      const res = await http.patch<ApiResult<BatchAuditResult>>(`/admin/supply/demands/${path}`, { ids, remark })
+      return res.data.data
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'supply', 'demands'] }),
   })

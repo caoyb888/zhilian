@@ -6,6 +6,7 @@ import com.greenlink.glsupply.dto.request.CreateDemandRequest;
 import com.greenlink.glsupply.dto.request.DemandPageRequest;
 import com.greenlink.glsupply.dto.request.UpdateDemandRequest;
 import com.greenlink.glsupply.dto.response.AdminDemandVO;
+import com.greenlink.glsupply.dto.response.BatchAuditResultVO;
 import com.greenlink.glsupply.dto.response.DemandDetailVO;
 import com.greenlink.glsupply.dto.response.DemandVO;
 import com.greenlink.glsupply.dto.response.SupplyBriefVO;
@@ -34,6 +35,12 @@ public interface SupplyDemandService {
     void approve(Long id, Long auditorId);
 
     void reject(Long id, Long auditorId, String remark);
+
+    /** 批量审核通过（#6），允许部分成功，逐条返回失败原因 */
+    BatchAuditResultVO batchApprove(List<Long> ids, Long auditorId);
+
+    /** 批量审核拒绝（#6），统一 remark，允许部分成功 */
+    BatchAuditResultVO batchReject(List<Long> ids, Long auditorId, String remark);
 
     void adminOffline(Long id, Long auditorId);
 

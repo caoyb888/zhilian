@@ -45,6 +45,7 @@ const MemberAuditPage      = lazy(() => import('@/pages/admin/MemberAuditPage'))
 const ArticleListPage      = lazy(() => import('@/pages/admin/ArticleListPage'))
 const ActivityListPage     = lazy(() => import('@/pages/admin/ActivityListPage'))
 const TagListPage          = lazy(() => import('@/pages/admin/TagListPage'))
+const DictManagePage       = lazy(() => import('@/pages/admin/DictManagePage'))
 const SupplyAuditPage          = lazy(() => import('@/pages/admin/SupplyAuditPage'))
 const GlobalSearchPage         = lazy(() => import('@/pages/portal/GlobalSearchPage'))
 const AdminGlobalSearchPage    = lazy(() => import('@/pages/admin/AdminGlobalSearchPage'))
@@ -187,6 +188,14 @@ export default function App() {
                 element={
                   <PrivateRoute permission="tag:list">
                     <TagListPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="dict"
+                element={
+                  <PrivateRoute permission="tag:list">
+                    <DictManagePage />
                   </PrivateRoute>
                 }
               />

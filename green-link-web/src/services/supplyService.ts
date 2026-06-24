@@ -7,20 +7,39 @@ import type { ApiResult, PageData } from '@/types/api'
 export type ResourceType = 'PRODUCT' | 'TECHNOLOGY' | 'TALENT'
 export type DemandType = 'PRODUCT' | 'TECHNOLOGY' | 'TALENT'
 
+// 资源/需求类型展示名以数据字典（RESOURCE_TYPE / DEMAND_TYPE）为准；
+// 此处保留为「回退映射」：字典未加载或历史旧 code 时用于展示，含旧值 + 新值。
 export const RESOURCE_TYPE_LABELS: Record<string, string> = {
+  // 旧值（历史数据兼容）
   PRODUCT: '产品/物资',
   TECHNOLOGY: '技术/专利',
   TALENT: '人才/团队',
+  // 新 5 类（#2）
+  TECH_SERVICE: '技术服务',
+  PRODUCT_SERVICE: '产品服务',
+  SUPPLY_CAPABILITY: '供应能力',
+  COOPERATION_PROJECT: '合作项目',
+  TALENT_RESOURCE: '人才资源',
 }
 
 export const DEMAND_TYPE_LABELS: Record<string, string> = {
+  // 旧值（历史数据兼容）
   PRODUCT: '产品需求',
+  // 新（#11）
+  PURCHASE: '采购需求',
   TECHNOLOGY: '技术需求',
+  BUSINESS: '业务需求',
+  CAPITAL: '资金需求',
   TALENT: '人才需求',
 }
 
-export const RESOURCE_TYPES: ResourceType[] = ['PRODUCT', 'TECHNOLOGY', 'TALENT']
-export const DEMAND_TYPES: DemandType[] = ['PRODUCT', 'TECHNOLOGY', 'TALENT']
+// 回退用的内置类型顺序（字典未加载时使用）
+export const RESOURCE_TYPES: string[] = [
+  'TECH_SERVICE', 'PRODUCT_SERVICE', 'SUPPLY_CAPABILITY', 'COOPERATION_PROJECT', 'TALENT_RESOURCE',
+]
+export const DEMAND_TYPES: string[] = [
+  'PURCHASE', 'TECHNOLOGY', 'BUSINESS', 'CAPITAL', 'TALENT',
+]
 
 export const PROVINCES = [
   '山东', '北京', '上海', '广东', '江苏', '浙江', '河南', '四川',

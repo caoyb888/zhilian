@@ -18,6 +18,8 @@ import {
   useAdminDemandList,
   useAuditResource,
   useAuditDemand,
+  useBatchAuditResource,
+  useBatchAuditDemand,
   type AdminResourceVO,
   type AdminDemandVO,
 } from '@/services/supplyAdminService'
@@ -278,7 +280,10 @@ function ResourceTable({
 }) {
   const [auditItem, setAuditItem] = useState<AdminResourceVO | null>(null)
   const [quickAction, setQuickAction] = useState<{ item: AdminResourceVO; action: 'APPROVE' | 'REJECT' } | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [batchAction, setBatchAction] = useState<'APPROVE' | 'REJECT' | null>(null)
   const mutation = useAuditResource()
+  const batchMutation = useBatchAuditResource()
 
   const { data, isLoading } = useAdminResourceList({
     page,
@@ -291,6 +296,35 @@ function ResourceTable({
   const records = data?.records ?? []
   const total = data?.total ?? 0
 
+  // 仅待审核项可批量；翻页/筛选变化时清空已选
+  const pendingIds = records.filter((r) => r.auditStatus === 0).map((r) => r.id)
+  // 只对当前页待审核项生效，自动忽略翻页/筛选后已失效的旧选择（避免在 effect 内 setState）
+  const effectiveSelected = selectedIds.filter((id) => pendingIds.includes(id))
+  const allSelected = pendingIds.length > 0 && pendingIds.every((id) => selectedIds.includes(id))
+
+  function toggleOne(id: number) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+  function toggleAll() {
+    setSelectedIds(allSelected ? [] : pendingIds)
+  }
+
+  function handleBatchConfirm(remark?: string) {
+    if (!batchAction || effectiveSelected.length === 0) return
+    batchMutation.mutate(
+      { ids: effectiveSelected, action: batchAction, remark },
+      {
+        onSuccess: (res) => {
+          setBatchAction(null)
+          setSelectedIds([])
+          if (res && res.failed > 0) {
+            window.alert(`批量处理完成：成功 ${res.success} 条，失败 ${res.failed} 条\n${res.errors.join('\n')}`)
+          }
+        },
+      },
+    )
+  }
+
   function handleQuickConfirm(remark?: string) {
     if (!quickAction) return
     mutation.mutate(
@@ -301,6 +335,16 @@ function ResourceTable({
 
   return (
     <>
+      {effectiveSelected.length > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-emerald-700/40 bg-emerald-900/20 px-4 py-2.5">
+          <span className="text-sm text-emerald-300">已选 {effectiveSelected.length} 项</span>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="primary" onClick={() => setBatchAction('APPROVE')}>批量通过</Button>
+            <Button size="sm" variant="danger" onClick={() => setBatchAction('REJECT')}>批量拒绝</Button>
+            <Button size="sm" variant="secondary" onClick={() => setSelectedIds([])}>取消</Button>
+          </div>
+        </div>
+      )}
       <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80">
         {isLoading ? (
           <div className="p-4"><SkeletonList count={5} /></div>
@@ -311,7 +355,16 @@ function ResourceTable({
             <table className="w-full text-sm">
               <thead className="bg-slate-800/60 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <tr>
-                  <th className="px-4 py-3 w-8 text-slate-500">#</th>
+                  <th className="px-4 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      disabled={pendingIds.length === 0}
+                      onChange={toggleAll}
+                      aria-label="全选待审核"
+                      className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                  </th>
                   <th className="px-4 py-3">标题</th>
                   <th className="px-4 py-3">类型</th>
                   <th className="px-4 py-3">所在省份</th>
@@ -321,9 +374,21 @@ function ResourceTable({
                 </tr>
               </thead>
               <tbody>
-                {records.map((r, idx) => (
+                {records.map((r) => (
                   <tr key={r.id} className="border-t border-slate-800/60 transition-colors hover:bg-slate-800/40/80">
-                    <td className="px-4 py-3 text-xs text-slate-500">{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                    <td className="px-4 py-3">
+                      {r.auditStatus === 0 ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(r.id)}
+                          onChange={() => toggleOne(r.id)}
+                          aria-label={`选择 ${r.title}`}
+                          className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-xs text-slate-600">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 max-w-xs">
                       <p className="font-medium text-slate-100 truncate" title={r.title}>{r.title}</p>
                       {r.summary && <p className="text-xs text-slate-500 truncate mt-0.5">{r.summary}</p>}
@@ -387,6 +452,15 @@ function ResourceTable({
           onCancel={() => setQuickAction(null)}
         />
       )}
+
+      {batchAction && (
+        <QuickAuditConfirm
+          action={batchAction}
+          isPending={batchMutation.isPending}
+          onConfirm={handleBatchConfirm}
+          onCancel={() => setBatchAction(null)}
+        />
+      )}
     </>
   )
 }
@@ -404,7 +478,10 @@ function DemandTable({
 }) {
   const [auditItem, setAuditItem] = useState<AdminDemandVO | null>(null)
   const [quickAction, setQuickAction] = useState<{ item: AdminDemandVO; action: 'APPROVE' | 'REJECT' } | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [batchAction, setBatchAction] = useState<'APPROVE' | 'REJECT' | null>(null)
   const mutation = useAuditDemand()
+  const batchMutation = useBatchAuditDemand()
 
   const { data, isLoading } = useAdminDemandList({
     page,
@@ -417,6 +494,34 @@ function DemandTable({
   const records = data?.records ?? []
   const total = data?.total ?? 0
 
+  const pendingIds = records.filter((r) => r.auditStatus === 0).map((r) => r.id)
+  // 只对当前页待审核项生效，自动忽略翻页/筛选后已失效的旧选择（避免在 effect 内 setState）
+  const effectiveSelected = selectedIds.filter((id) => pendingIds.includes(id))
+  const allSelected = pendingIds.length > 0 && pendingIds.every((id) => selectedIds.includes(id))
+
+  function toggleOne(id: number) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+  function toggleAll() {
+    setSelectedIds(allSelected ? [] : pendingIds)
+  }
+
+  function handleBatchConfirm(remark?: string) {
+    if (!batchAction || effectiveSelected.length === 0) return
+    batchMutation.mutate(
+      { ids: effectiveSelected, action: batchAction, remark },
+      {
+        onSuccess: (res) => {
+          setBatchAction(null)
+          setSelectedIds([])
+          if (res && res.failed > 0) {
+            window.alert(`批量处理完成：成功 ${res.success} 条，失败 ${res.failed} 条\n${res.errors.join('\n')}`)
+          }
+        },
+      },
+    )
+  }
+
   function handleQuickConfirm(remark?: string) {
     if (!quickAction) return
     mutation.mutate(
@@ -427,6 +532,16 @@ function DemandTable({
 
   return (
     <>
+      {effectiveSelected.length > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-emerald-700/40 bg-emerald-900/20 px-4 py-2.5">
+          <span className="text-sm text-emerald-300">已选 {effectiveSelected.length} 项</span>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="primary" onClick={() => setBatchAction('APPROVE')}>批量通过</Button>
+            <Button size="sm" variant="danger" onClick={() => setBatchAction('REJECT')}>批量拒绝</Button>
+            <Button size="sm" variant="secondary" onClick={() => setSelectedIds([])}>取消</Button>
+          </div>
+        </div>
+      )}
       <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80">
         {isLoading ? (
           <div className="p-4"><SkeletonList count={5} /></div>
@@ -437,7 +552,16 @@ function DemandTable({
             <table className="w-full text-sm">
               <thead className="bg-slate-800/60 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <tr>
-                  <th className="px-4 py-3 w-8 text-slate-500">#</th>
+                  <th className="px-4 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      disabled={pendingIds.length === 0}
+                      onChange={toggleAll}
+                      aria-label="全选待审核"
+                      className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                    />
+                  </th>
                   <th className="px-4 py-3">标题</th>
                   <th className="px-4 py-3">类型</th>
                   <th className="px-4 py-3">所在省份</th>
@@ -447,9 +571,21 @@ function DemandTable({
                 </tr>
               </thead>
               <tbody>
-                {records.map((r, idx) => (
+                {records.map((r) => (
                   <tr key={r.id} className="border-t border-slate-800/60 transition-colors hover:bg-slate-800/40/80">
-                    <td className="px-4 py-3 text-xs text-slate-500">{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                    <td className="px-4 py-3">
+                      {r.auditStatus === 0 ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(r.id)}
+                          onChange={() => toggleOne(r.id)}
+                          aria-label={`选择 ${r.title}`}
+                          className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-xs text-slate-600">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 max-w-xs">
                       <p className="font-medium text-slate-100 truncate" title={r.title}>{r.title}</p>
                       {r.summary && <p className="text-xs text-slate-500 truncate mt-0.5">{r.summary}</p>}
@@ -511,6 +647,15 @@ function DemandTable({
           isPending={mutation.isPending}
           onConfirm={handleQuickConfirm}
           onCancel={() => setQuickAction(null)}
+        />
+      )}
+
+      {batchAction && (
+        <QuickAuditConfirm
+          action={batchAction}
+          isPending={batchMutation.isPending}
+          onConfirm={handleBatchConfirm}
+          onCancel={() => setBatchAction(null)}
         />
       )}
     </>

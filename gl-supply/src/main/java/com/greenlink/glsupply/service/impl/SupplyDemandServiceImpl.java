@@ -15,6 +15,7 @@ import com.greenlink.glsupply.dto.request.DemandPageRequest;
 import com.greenlink.glsupply.dto.request.UpdateDemandRequest;
 import com.greenlink.glsupply.dto.response.AdminDemandVO;
 import com.greenlink.glsupply.dto.response.AttachmentVO;
+import com.greenlink.glsupply.dto.response.BatchAuditResultVO;
 import com.greenlink.glsupply.dto.response.DemandDetailVO;
 import com.greenlink.glsupply.dto.response.DemandVO;
 import com.greenlink.glsupply.dto.response.SupplyBriefVO;
@@ -430,6 +431,40 @@ public class SupplyDemandServiceImpl implements SupplyDemandService {
         demand.setAuditRemark(remark);
         demandMapper.updateById(demand);
         log.info("审核拒绝需求 id={} auditorId={} remark={}", id, auditorId, remark);
+    }
+
+    @Override
+    public BatchAuditResultVO batchApprove(List<Long> ids, Long auditorId) {
+        BatchAuditResultVO result = new BatchAuditResultVO();
+        result.setTotal(ids.size());
+        for (Long id : ids) {
+            try {
+                approve(id, auditorId);
+                result.addSuccess();
+            } catch (BizException e) {
+                result.addError(id, e.getMessage());
+            }
+        }
+        log.info("批量审核通过需求 total={} success={} failed={} auditorId={}",
+                result.getTotal(), result.getSuccess(), result.getFailed(), auditorId);
+        return result;
+    }
+
+    @Override
+    public BatchAuditResultVO batchReject(List<Long> ids, Long auditorId, String remark) {
+        BatchAuditResultVO result = new BatchAuditResultVO();
+        result.setTotal(ids.size());
+        for (Long id : ids) {
+            try {
+                reject(id, auditorId, remark);
+                result.addSuccess();
+            } catch (BizException e) {
+                result.addError(id, e.getMessage());
+            }
+        }
+        log.info("批量审核拒绝需求 total={} success={} failed={} auditorId={}",
+                result.getTotal(), result.getSuccess(), result.getFailed(), auditorId);
+        return result;
     }
 
     @Override

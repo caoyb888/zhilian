@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Tag,
   Search,
+  BookMarked,
 } from 'lucide-react'
 
 export interface MenuItem {
@@ -24,5 +25,6 @@ export const adminMenuConfig: MenuItem[] = [
   { path: '/admin/articles',      label: '文章管理', icon: FileText, permission: 'portal:article:list' },
   { path: '/admin/activities',    label: '活动管理', icon: CalendarDays, permission: 'portal:activity:list' },
   { path: '/admin/tags',          label: '标签管理', icon: Tag, permission: 'tag:list' },
+  { path: '/admin/dict',          label: '数据字典', icon: BookMarked, permission: 'tag:list' },
   { path: '/admin/supply-audit',  label: '供需审核', icon: Search, permission: 'supply:resource:audit' },
 ]
